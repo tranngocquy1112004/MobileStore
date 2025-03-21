@@ -1,0 +1,157 @@
+/* Tổng thể */
+.cart-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #fff; /* Nền trắng */
+    border-radius: 15px; /* Bo góc mềm mại hơn */
+    box-shadow: 0 4px 10px rgba(255, 111, 145, 0.2); /* Đổ bóng hồng nhạt */
+    text-align: center;
+    font-family: 'Quicksand', sans-serif; /* Font dễ thương */
+  }
+  
+  /* Tiêu đề */
+  h2 {
+    font-size: 28px;
+    color: #ff6f91; /* Hồng hoa đào */
+    margin-bottom: 20px;
+    font-weight: 700; /* Đậm hơn */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Danh sách sản phẩm */
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  /* Mỗi sản phẩm trong giỏ hàng */
+  .cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #ffd1dc; /* Viền hồng nhạt */
+  }
+  
+  /* Hình ảnh sản phẩm */
+  .cart-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 10px;
+    box-shadow: 0 2px 5px rgba(255, 111, 145, 0.2); /* Đổ bóng nhẹ */
+  }
+  
+  /* Tên sản phẩm */
+  .cart-name {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: #ff85a2; /* Hồng đào */
+  }
+  
+  /* Giá sản phẩm */
+  .cart-price {
+    font-size: 16px;
+    color: #ff85a2; /* Hồng đào */
+    font-weight: 700;
+  }
+  
+  /* 🔼🔽 Tăng/Giảm số lượng */
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+  }
+  
+  .quantity-controls button {
+    background: #ffccd5; /* Hồng nhạt */
+    border: 1px solid #ffd1dc;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 0 5px;
+    border-radius: 20px; /* Bo góc tròn hơn */
+    color: #ff6f91; /* Hồng đậm */
+    font-weight: 500;
+    transition: background 0.3s ease;
+  }
+  
+  .quantity-controls button:hover {
+    background: #ff99ac; /* Hồng đậm hơn khi hover */
+  }
+  
+  .quantity-controls span {
+    font-size: 18px;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+    color: #ff6f91;
+  }
+  
+  /* 🗑 Nút xóa */
+  .remove-button {
+    background: #ff85a2; /* Hồng đào đậm */
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px; /* Bo góc tròn hơn */
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.3s ease;
+  }
+  
+  .remove-button:hover {
+    background: #ff6f91; /* Đậm hơn khi hover */
+  }
+  
+  /* 💰 Tổng tiền */
+  .total-price {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ff85a2; /* Hồng đào */
+    margin-top: 20px;
+  }
+  
+  /* 🛍 Nút mua hàng */
+  .checkout-button {
+    background: #ffccd5; /* Hồng nhạt */
+    color: #ff6f91;
+    border: none;
+    padding: 12px 20px;
+    font-size: 18px;
+    border-radius: 20px; /* Bo góc tròn hơn */
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: 500;
+    transition: background 0.3s ease;
+  }
+  
+  .checkout-button:hover {
+    background: #ff99ac; /* Hồng đậm hơn khi hover */
+  }
+  
+  /* 🔙 Nút quay lại */
+  .back-button {
+    display: inline-block; /* Để áp dụng căn giữa */
+    background-color: #87ceeb; /* Màu xanh nhạt */
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px; /* Khoảng cách từ nội dung phía trên */
+  }
+  
+  /* Căn giữa nút "Quay lại" */
+  .back-button-container {
+    text-align: center; /* Căn giữa theo chiều ngang */
+    margin-top: 20px; /* Khoảng cách từ nội dung phía trên */
+  }
+  
+  .back-button:hover {
+    background: #ff99ac; /* Đậm hơn khi hover */
+    text-decoration: none;
+  }
+ 

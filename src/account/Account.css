@@ -1,0 +1,111 @@
+/* Account.css */
+.login-message {
+  transition: opacity 0.5s ease;
+}
+
+.login-message.success {
+  animation: fadeInOut 1s ease-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.account-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fce4ec; /* Nền hồng nhạt như hoa anh đào */
+}
+
+.account-box {
+  background: #fff5f7; /* Nền trắng ngọc trai với chút hồng */
+  padding: 20px;
+  border-radius: 10px; /* Bo góc mềm mại */
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.2); /* Bóng nhẹ với màu hồng */
+  text-align: center;
+  width: 300px;
+  transition: transform 0.3s ease; /* Hiệu ứng chuyển động mượt */
+}
+
+.account-box:hover {
+  transform: translateY(-5px); /* Nhẹ nhàng nâng lên khi hover */
+}
+
+.account-input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ffccd5; /* Viền hồng nhạt */
+  border-radius: 5px;
+  background-color: #fff;
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+.account-input:focus {
+  border-color: #ff69b4; /* Viền hồng đậm khi focus */
+  outline: none;
+}
+
+.account-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ff80ab; /* Màu hồng đậm như hoa anh đào */
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.account-button:hover {
+  background-color: #ff69b4; /* Tối hơn khi hover */
+  transform: scale(1.05); /* Phóng to nhẹ */
+}
+
+.login-btn {
+  background-color: #ff80ab;
+}
+
+.register-btn {
+  background-color: #ff80ab;
+}
+
+.logout-btn {
+  background-color: #ff4d88; /* Hồng đậm hơn cho nút đăng xuất */
+}
+
+.link-to-home {
+  padding: 10px;
+  background-color: #ff80ab;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  display: inline-block;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.link-to-home:hover {
+  background-color: #ff69b4;
+  transform: scale(1.05);
+}
+
+.login-message {
+  color: #ff4d88; /* Màu hồng đậm cho tin nhắn lỗi/thành công */
+  margin: 5px 0;
+  font-size: 14px;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.login-message.success {
+  color: #ff80ab; /* Màu nhẹ nhàng cho thông báo thành công */
+}
