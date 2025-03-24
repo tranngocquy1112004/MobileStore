@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Account.css";
 
 const Account = () => {
@@ -83,12 +83,12 @@ const Account = () => {
     }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setCurrentUser(null);
-    localStorage.removeItem("currentUser");
-    // Không cần navigate, để người dùng ở trang Account
-  };
+  // const handleLogout = () => {
+  //   setIsLoggedIn(false);
+  //   setCurrentUser(null);
+  //   localStorage.removeItem("currentUser");
+  //   // Không cần navigate, để người dùng ở trang Account
+  // };
 
   return (
     <div className="account-container">

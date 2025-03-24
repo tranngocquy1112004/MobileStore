@@ -7,7 +7,7 @@ import "./ProductPage.css";
 const PRODUCTS_PER_PAGE = 8;
 const API_URL = `${process.env.PUBLIC_URL}/db.json`;
 const ProductPage = () => {
-  const { addToCart } = useContext(CartContext);
+  // const { addToCart } = useContext(CartContext);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
