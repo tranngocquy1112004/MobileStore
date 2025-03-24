@@ -5,8 +5,7 @@ import "./ProductPage.css";
 
 // Constants
 const PRODUCTS_PER_PAGE = 8;
-const API_URL = "http://localhost:4000/products";
-
+const API_URL = `${process.env.PUBLIC_URL}/db.json`;
 const ProductPage = () => {
   const { addToCart } = useContext(CartContext);
   const [products, setProducts] = useState([]);
@@ -14,7 +13,7 @@ const ProductPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all"); // Thêm trạng thái cho thương hiệu
+  const [selectedBrand, setSelectedBrand] = useState("all");
   const navigate = useNavigate();
 
   // Fetch products and user on mount
@@ -22,11 +21,26 @@ const ProductPage = () => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(API_URL);
-        const data = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const text = await response.text(); // Lấy nội dung thô trước khi parse JSON
+        console.log("Raw response from /db.json:", text); // Debug: In nội dung thô
+        const data = JSON.parse(text); // Parse JSON từ nội dung thô
+        console.log("Parsed data from db.json:", data); // Debug: In dữ liệu đã parse
+        // Kiểm tra xem data có key "products" không
+        if (data && data.products) {
+          setProducts(data.products);
+          setFilteredProducts(data.products);
+        } else {
+          console.error("No 'products' key found in db.json");
+          setProducts([]);
+          setFilteredProducts([]);
+        }
       } catch (error) {
         console.error("Error fetching products:", error);
+        setProducts([]);
+        setFilteredProducts([]);
       }
     };
 
