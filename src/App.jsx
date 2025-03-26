@@ -1,6 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import ProductPage from "./pages/ProductPage";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";import ProductPage from "./pages/ProductPage";
 import ProductDetail from "./components/ProductDetail";
 import Account from "./account/Account";
 import CartPage from "./pages/CartPage";
