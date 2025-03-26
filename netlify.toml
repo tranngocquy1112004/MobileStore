@@ -1,3 +1,4 @@
 [build]
   command = "npm run build"
   publish = "build"
+  environment = { BROWSER = "", PORT = "", CI = "false", ESLINT_NO_DEV_ERRORS = "true" }

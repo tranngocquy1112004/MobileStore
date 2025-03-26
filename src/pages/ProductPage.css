@@ -1,12 +1,17 @@
-/* Reset cơ bản */
+/* Reset cơ bản cho toàn bộ trang */
+/* - Đặt margin, padding về 0 và sử dụng box-sizing: border-box để tính toán kích thước chính xác */
+/* - Sử dụng font Quicksand cho toàn bộ trang */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
 }
 
 /* Container chính */
+/* - max-width: 1200px để giới hạn chiều rộng trên desktop */
+/* - min-height: 100vh để đảm bảo container chiếm toàn bộ chiều cao màn hình */
+/* - background: Gradient màu hồng nhạt để tạo cảm giác nhẹ nhàng */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -17,7 +22,9 @@
   overflow: hidden;
 }
 
-/* Hiệu ứng hoa đào rơi */
+/* Hiệu ứng hoa đào rơi (sakura) */
+/* - Đặt position: absolute để hiệu ứng phủ toàn bộ container */
+/* - pointer-events: none để không cho phép tương tác với các cánh hoa */
 .sakura-fall {
   position: absolute;
   top: 0;
@@ -28,6 +35,9 @@
   z-index: 0;
 }
 
+/* Cánh hoa */
+/* - Hình dạng cánh hoa: Hình tròn với border-radius không đều để giống cánh hoa */
+/* - opacity: 0.7 để tạo cảm giác mờ nhẹ */
 .sakura-fall span {
   position: absolute;
   display: block;
@@ -39,16 +49,56 @@
   animation: fall linear infinite;
 }
 
-.sakura-fall span:nth-child(1) { left: 10%; animation-duration: 6s; animation-delay: 0s; }
-.sakura-fall span:nth-child(2) { left: 20%; animation-duration: 8s; animation-delay: 1s; }
-.sakura-fall span:nth-child(3) { left: 30%; animation-duration: 7s; animation-delay: 2s; }
-.sakura-fall span:nth-child(4) { left: 40%; animation-duration: 9s; animation-delay: 0.5s; }
-.sakura-fall span:nth-child(5) { left: 50%; animation-duration: 6s; animation-delay: 1.5s; }
-.sakura-fall span:nth-child(6) { left: 60%; animation-duration: 8s; animation-delay: 3s; }
-.sakura-fall span:nth-child(7) { left: 70%; animation-duration: 7s; animation-delay: 2.5s; }
-.sakura-fall span:nth-child(8) { left: 80%; animation-duration: 9s; animation-delay: 1s; }
-.sakura-fall span:nth-child(9) { left: 90%; animation-duration: 6s; animation-delay: 0.8s; }
+/* Định vị và thời gian rơi cho từng cánh hoa */
+/* - Mỗi cánh hoa có vị trí left khác nhau và thời gian rơi khác nhau để tạo hiệu ứng tự nhiên */
+.sakura-fall span:nth-child(1) {
+  left: 10%;
+  animation-duration: 6s;
+  animation-delay: 0s;
+}
+.sakura-fall span:nth-child(2) {
+  left: 20%;
+  animation-duration: 8s;
+  animation-delay: 1s;
+}
+.sakura-fall span:nth-child(3) {
+  left: 30%;
+  animation-duration: 7s;
+  animation-delay: 2s;
+}
+.sakura-fall span:nth-child(4) {
+  left: 40%;
+  animation-duration: 9s;
+  animation-delay: 0.5s;
+}
+.sakura-fall span:nth-child(5) {
+  left: 50%;
+  animation-duration: 6s;
+  animation-delay: 1.5s;
+}
+.sakura-fall span:nth-child(6) {
+  left: 60%;
+  animation-duration: 8s;
+  animation-delay: 3s;
+}
+.sakura-fall span:nth-child(7) {
+  left: 70%;
+  animation-duration: 7s;
+  animation-delay: 2.5s;
+}
+.sakura-fall span:nth-child(8) {
+  left: 80%;
+  animation-duration: 9s;
+  animation-delay: 1s;
+}
+.sakura-fall span:nth-child(9) {
+  left: 90%;
+  animation-duration: 6s;
+  animation-delay: 0.8s;
+}
 
+/* Animation cho hiệu ứng rơi */
+/* - Từ trên xuống dưới (translateY), xoay 360 độ (rotate), và mờ dần (opacity) */
 @keyframes fall {
   0% {
     transform: translateY(-100px) rotate(0deg);
@@ -61,6 +111,8 @@
 }
 
 /* Header */
+/* - Sử dụng flex để căn chỉnh tiêu đề và các nút hành động */
+/* - z-index: 1 để đảm bảo header nằm trên hiệu ứng hoa rơi */
 .header {
   display: flex;
   justify-content: space-between;
@@ -74,6 +126,7 @@
   z-index: 1;
 }
 
+/* Tiêu đề cửa hàng */
 .store-title {
   font-size: 28px;
   color: #ff6f91;
@@ -81,24 +134,28 @@
   font-weight: 700;
 }
 
+/* Nhóm các hành động trong header */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
+/* Phần hiển thị thông tin người dùng */
 .user-section {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Thông báo chào mừng */
 .welcome-msg {
   color: #ff85a2;
   font-size: 16px;
   font-weight: 500;
 }
 
+/* Nút đăng xuất */
 .logout-button {
   background: #ffccd5;
   border: none;
@@ -110,11 +167,14 @@
   transition: background 0.3s ease;
 }
 
+/* Hiệu ứng hover cho nút đăng xuất */
 .logout-button:hover {
   background: #ff99ac;
 }
 
-.cart-link, .login-link {
+/* Link đến giỏ hàng và đăng nhập */
+.cart-link,
+.login-link {
   text-decoration: none;
   color: #ff6f91;
   font-size: 16px;
@@ -125,7 +185,9 @@
   transition: background 0.3s ease;
 }
 
-.cart-link:hover, .login-link:hover {
+/* Hiệu ứng hover cho link */
+.cart-link:hover,
+.login-link:hover {
   background: #ffd1dc;
 }
 
@@ -141,7 +203,7 @@
   z-index: 1;
 }
 
-/* Thanh tìm kiếm */
+/* Thanh tìm kiếm và tiêu đề sản phẩm */
 .product-header {
   display: flex;
   justify-content: space-between;
@@ -149,10 +211,12 @@
   margin-bottom: 20px;
 }
 
+/* Thanh tìm kiếm */
 .search-bar {
   margin-left: 20px;
 }
 
+/* Input tìm kiếm */
 .search-input {
   padding: 8px 12px;
   border: 1px solid #ffd1dc;
@@ -165,10 +229,12 @@
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
+/* Placeholder của input */
 .search-input::placeholder {
   color: #ff99ac;
 }
 
+/* Hiệu ứng focus cho input */
 .search-input:focus {
   border-color: #ff85a2;
   box-shadow: 0 0 5px rgba(255, 111, 145, 0.3);
@@ -182,6 +248,7 @@
   margin-bottom: 20px;
 }
 
+/* Nút thương hiệu */
 .brand-button {
   background: #ffccd5;
   border: 1px solid #ffd1dc;
@@ -193,17 +260,20 @@
   transition: all 0.3s ease;
 }
 
+/* Hiệu ứng hover cho nút thương hiệu */
 .brand-button:hover {
   background: #ff99ac;
   color: #fff;
 }
 
+/* Trạng thái active cho nút thương hiệu */
 .brand-button.active {
   background: #ff85a2;
   color: #fff;
   border-color: #ff6f91;
 }
 
+/* Thông báo không có kết quả */
 .no-results {
   text-align: center;
   color: #ff99ac;
@@ -213,6 +283,7 @@
 }
 
 /* Grid sản phẩm */
+/* - Sử dụng grid với 4 cột trên desktop */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -222,6 +293,7 @@
   z-index: 1;
 }
 
+/* Card sản phẩm */
 .product-card {
   background: #fff5f7;
   border-radius: 15px;
@@ -231,15 +303,18 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Hiệu ứng hover cho card sản phẩm */
 .product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 15px rgba(255, 111, 145, 0.3);
 }
 
+/* Link đến chi tiết sản phẩm */
 .product-link {
   text-decoration: none;
 }
 
+/* Hình ảnh sản phẩm */
 .product-image {
   max-width: 100%;
   height: auto;
@@ -247,6 +322,7 @@
   border: 1px solid #ffd1dc;
 }
 
+/* Tên sản phẩm */
 .product-name {
   font-size: 18px;
   color: #ff6f91;
@@ -254,12 +330,14 @@
   font-weight: 500;
 }
 
+/* Giá sản phẩm */
 .product-price {
   font-size: 16px;
   color: #ff85a2;
   font-weight: 700;
 }
 
+/* Nút thêm vào giỏ hàng */
 .product-button {
   background: #ffccd5;
   border: none;
@@ -272,6 +350,7 @@
   transition: background 0.3s ease, transform 0.3s ease;
 }
 
+/* Hiệu ứng hover cho nút */
 .product-button:hover {
   background: #ff99ac;
   transform: scale(1.05);
@@ -288,6 +367,7 @@
   z-index: 1;
 }
 
+/* Nút phân trang */
 .pagination button {
   background: #ffccd5;
   border: 1px solid #ffd1dc;
@@ -299,19 +379,148 @@
   transition: all 0.3s ease;
 }
 
+/* Trạng thái disabled cho nút phân trang */
 .pagination button:disabled {
   background: #fff0f5;
   color: #ffccd5;
   cursor: not-allowed;
 }
 
+/* Hiệu ứng hover cho nút phân trang */
 .pagination button:hover:not(:disabled) {
   background: #ff99ac;
   color: #fff;
 }
 
+/* Số trang hiện tại */
 .pagination span {
   font-size: 16px;
   color: #ff6f91;
   font-weight: 500;
+}
+
+/* Responsive cho điện thoại */
+/* - Áp dụng cho màn hình nhỏ hơn 768px (tablet và mobile) */
+@media (max-width: 768px) {
+  /* Container chính */
+  .container {
+    padding: 10px; /* Giảm padding để tiết kiệm không gian */
+  }
+
+  /* Header */
+  .header {
+    flex-direction: column; /* Chuyển sang layout dọc */
+    gap: 10px; /* Thêm khoảng cách giữa các phần tử */
+    padding: 10px;
+  }
+
+  /* Tiêu đề cửa hàng */
+  .store-title {
+    font-size: 24px; /* Giảm kích thước font */
+  }
+
+  /* Nhóm hành động trong header */
+  .header-actions {
+    flex-direction: column; /* Chuyển sang layout dọc */
+    gap: 10px;
+  }
+
+  /* Thanh tìm kiếm */
+  .product-header {
+    flex-direction: column; /* Chuyển sang layout dọc */
+    gap: 10px;
+  }
+
+  /* Input tìm kiếm */
+  .search-input {
+    width: 100%; /* Chiếm toàn bộ chiều rộng */
+    margin-left: 0;
+  }
+
+  /* Nút lọc thương hiệu */
+  .brand-filter {
+    flex-wrap: wrap; /* Cho phép các nút xuống dòng */
+    gap: 8px;
+  }
+
+  /* Nút thương hiệu */
+  .brand-button {
+    padding: 6px 12px; /* Giảm padding */
+    font-size: 14px; /* Giảm kích thước font */
+  }
+
+  /* Grid sản phẩm */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr); /* Chuyển thành 2 cột */
+    gap: 15px; /* Giảm khoảng cách giữa các card */
+    padding: 10px;
+  }
+
+  /* Card sản phẩm */
+  .product-card {
+    padding: 10px; /* Giảm padding */
+  }
+
+  /* Tên sản phẩm */
+  .product-name {
+    font-size: 16px; /* Giảm kích thước font */
+  }
+
+  /* Giá sản phẩm */
+  .product-price {
+    font-size: 14px; /* Giảm kích thước font */
+  }
+
+  /* Nút thêm vào giỏ hàng */
+  .product-button {
+    padding: 8px 15px; /* Giảm padding */
+    font-size: 14px; /* Giảm kích thước font */
+  }
+
+  /* Phân trang */
+  .pagination {
+    gap: 10px; /* Giảm khoảng cách giữa các nút */
+  }
+
+  /* Nút phân trang */
+  .pagination button {
+    padding: 6px 12px; /* Giảm padding */
+    font-size: 14px; /* Giảm kích thước font */
+  }
+
+  /* Số trang hiện tại */
+  .pagination span {
+    font-size: 14px; /* Giảm kích thước font */
+  }
+}
+
+/* Responsive cho điện thoại nhỏ (dưới 480px) */
+@media (max-width: 480px) {
+  /* Grid sản phẩm */
+  .product-grid {
+    grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+    gap: 10px; /* Giảm khoảng cách giữa các card */
+  }
+
+  /* Card sản phẩm */
+  .product-card {
+    padding: 8px; /* Giảm padding thêm */
+  }
+
+  /* Tiêu đề cửa hàng */
+  .store-title {
+    font-size: 20px; /* Giảm kích thước font thêm */
+  }
+
+  /* Nút thương hiệu */
+  .brand-button {
+    padding: 5px 10px; /* Giảm padding thêm */
+    font-size: 12px; /* Giảm kích thước font thêm */
+  }
+
+  /* Nút thêm vào giỏ hàng */
+  .product-button {
+    padding: 6px 12px; /* Giảm padding thêm */
+    font-size: 12px; /* Giảm kích thước font thêm */
+  }
 }
