@@ -1,136 +1,104 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react"; // Loại bỏ useContext không dùng
 import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "./CartContext";
 import "./ProductPage.css";
 
-// Constants
-const PRODUCTS_PER_PAGE = 8;
-const API_URL = `${process.env.PUBLIC_URL}/db.json`;
-const ProductPage = () => {
-  // const { addToCart } = useContext(CartContext);
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
-  const navigate = useNavigate();
+// Hằng số được định nghĩa ở đầu file
+const PRODUCTS_PER_PAGE = 8; // Số sản phẩm mỗi trang
+const API_URL = `${process.env.PUBLIC_URL}/db.json`; // URL API lấy dữ liệu
+const BRANDS = ["all", "Apple", "Samsung", "Xiaomi"]; // Danh sách thương hiệu cố định để dễ quản lý
 
-  // Fetch products and user on mount
+const ProductPage = () => {
+  // Khai báo state ngắn gọn, rõ ràng
+  const [products, setProducts] = useState([]); // Danh sách tất cả sản phẩm
+  const [filteredProducts, setFilteredProducts] = useState([]); // Danh sách sản phẩm đã lọc
+  const [currentUser, setCurrentUser] = useState(null); // Thông tin người dùng hiện tại
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const [searchTerm, setSearchTerm] = useState(""); // Từ khóa tìm kiếm
+  const [selectedBrand, setSelectedBrand] = useState("all"); // Thương hiệu được chọn
+  const navigate = useNavigate(); // Hook điều hướng của React Router
+
+  // Lấy dữ liệu sản phẩm và người dùng khi component mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const text = await response.text(); // Lấy nội dung thô trước khi parse JSON
-        console.log("Raw response from /db.json:", text); // Debug: In nội dung thô
-        const data = JSON.parse(text); // Parse JSON từ nội dung thô
-        console.log("Parsed data from db.json:", data); // Debug: In dữ liệu đã parse
-        // Kiểm tra xem data có key "products" không
-        if (data && data.products) {
-          setProducts(data.products);
-          setFilteredProducts(data.products);
-        } else {
-          console.error("No 'products' key found in db.json");
-          setProducts([]);
-          setFilteredProducts([]);
-        }
+        if (!response.ok) throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);
+        
+        const data = await response.json(); // Parse JSON trực tiếp, bỏ qua bước lấy text trung gian
+        const productList = data?.products || []; // Dùng optional chaining để tránh lỗi
+        
+        setProducts(productList);
+        setFilteredProducts(productList);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Lỗi khi lấy sản phẩm:", error);
         setProducts([]);
         setFilteredProducts([]);
       }
     };
 
     const loadUser = () => {
-      const savedUser = JSON.parse(localStorage.getItem("currentUser"));
-      if (savedUser) {
-        setCurrentUser(savedUser);
-      }
+      const savedUser = JSON.parse(localStorage.getItem("currentUser") || "null"); // Thêm fallback
+      setCurrentUser(savedUser);
     };
 
     fetchProducts();
     loadUser();
-  }, []);
+  }, []); // Dependency array rỗng vì chỉ chạy 1 lần khi mount
 
-  // Handle search and brand filter
+  // Lọc sản phẩm theo thương hiệu và từ khóa tìm kiếm
   useEffect(() => {
-    let filtered = products;
-
-    // Lọc theo thương hiệu
-    if (selectedBrand !== "all") {
-      filtered = filtered.filter((product) => product.brand === selectedBrand);
-    }
-
-    // Lọc theo từ khóa tìm kiếm
-    filtered = filtered.filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filtered = products
+      .filter(product => selectedBrand === "all" || product.brand === selectedBrand) // Lọc thương hiệu
+      .filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase())); // Lọc tìm kiếm
 
     setFilteredProducts(filtered);
-    setCurrentPage(1); // Reset về trang 1 khi lọc
-  }, [searchTerm, selectedBrand, products]);
+    setCurrentPage(1); // Reset về trang 1 khi có thay đổi lọc
+  }, [searchTerm, selectedBrand, products]); // Dependency array rõ ràng
 
-  // Handle logout
+  // Xử lý đăng xuất
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     setCurrentUser(null);
     navigate("/");
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-  const indexOfLastProduct = currentPage * PRODUCTS_PER_PAGE;
-  const indexOfFirstProduct = indexOfLastProduct - PRODUCTS_PER_PAGE;
-  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  // Logic phân trang được tối ưu
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE); // Tổng số trang
+  const paginatedProducts = filteredProducts.slice( // Lấy sản phẩm cho trang hiện tại
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
+  // Hàm điều hướng trang
+  const goToNextPage = () => currentPage < totalPages && setCurrentPage(prev => prev + 1);
+  const goToPrevPage = () => currentPage > 1 && setCurrentPage(prev => prev - 1);
 
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  // Render sakura falling animation
-  const renderSakuraSpans = () => {
-    return Array.from({ length: 30 }, (_, index) => <span key={index} />);
-  };
+  // Tạo hiệu ứng hoa anh đào rơi
+  const renderSakuraSpans = () => (
+    Array.from({ length: 30 }, (_, index) => <span key={index} />) // Trả về trực tiếp JSX
+  );
 
   return (
     <div className="container">
       <div className="sakura-fall">{renderSakuraSpans()}</div>
 
+      {/* Header */}
       <header className="header">
-        <Link to="/home" className="store-title">
-          📱MobileStore
-        </Link>
-
+        <Link to="/home" className="store-title">📱MobileStore</Link>
         <div className="header-actions">
           {currentUser ? (
             <div className="user-section">
               <p className="welcome-msg">👋 Xin chào, {currentUser.username}!</p>
-              <button className="logout-button" onClick={handleLogout}>
-                🚪 Đăng xuất
-              </button>
+              <button className="logout-button" onClick={handleLogout}>🚪 Đăng xuất</button>
             </div>
           ) : (
-            <Link to="/" className="login-link">
-              Đăng nhập
-            </Link>
+            <Link to="/" className="login-link">Đăng nhập</Link>
           )}
-          <Link to="/cart" className="cart-link">
-            🛒 Xem giỏ hàng
-          </Link>
+          <Link to="/cart" className="cart-link">🛒 Xem giỏ hàng</Link>
         </div>
       </header>
 
+      {/* Phần sản phẩm */}
       <section className="product-section">
         <div className="product-header">
           <h2 className="product-title">Danh sách sản phẩm</h2>
@@ -139,71 +107,51 @@ const ProductPage = () => {
               type="text"
               placeholder="Tìm kiếm sản phẩm..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="search-input"
             />
           </div>
         </div>
 
-        {/* Thêm các nút lọc thương hiệu */}
+        {/* Bộ lọc thương hiệu dùng map để ngắn gọn */}
         <div className="brand-filter">
-          <button
-            className={`brand-button ${selectedBrand === "all" ? "active" : ""}`}
-            onClick={() => setSelectedBrand("all")}
-          >
-            Tất cả
-          </button>
-          <button
-            className={`brand-button ${selectedBrand === "Apple" ? "active" : ""}`}
-            onClick={() => setSelectedBrand("Apple")}
-          >
-            Apple
-          </button>
-          <button
-            className={`brand-button ${selectedBrand === "Samsung" ? "active" : ""}`}
-            onClick={() => setSelectedBrand("Samsung")}
-          >
-            Samsung
-          </button>
-          <button
-            className={`brand-button ${selectedBrand === "Xiaomi" ? "active" : ""}`}
-            onClick={() => setSelectedBrand("Xiaomi")}
-          >
-            Xiaomi
-          </button>
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <p className="no-results">Không tìm thấy sản phẩm nào.</p>
-        )}
-        <div className="product-grid">
-          {currentProducts.map((product) => (
-            <div key={product.id} className="product-card">
-              <Link to={`/products/${product.id}`} className="product-link">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="product-image"
-                />
-                <p className="product-name">{product.name}</p>
-                <p className="product-price">💰 {product.price} VNĐ</p>
-              </Link>
-              <Link to={`/products/${product.id}`}>
-                <button className="product-button">Xem chi tiết</button>
-              </Link>
-            </div>
+          {BRANDS.map(brand => (
+            <button
+              key={brand}
+              className={`brand-button ${selectedBrand === brand ? "active" : ""}`}
+              onClick={() => setSelectedBrand(brand)}
+            >
+              {brand === "all" ? "Tất cả" : brand}
+            </button>
           ))}
         </div>
+
+        {/* Hiển thị sản phẩm */}
+        {filteredProducts.length === 0 ? (
+          <p className="no-results">Không tìm thấy sản phẩm nào.</p>
+        ) : (
+          <div className="product-grid">
+            {paginatedProducts.map(product => (
+              <div key={product.id} className="product-card">
+                <Link to={`/products/${product.id}`} className="product-link">
+                  <img src={product.image} alt={product.name} className="product-image" />
+                  <p className="product-name">{product.name}</p>
+                  <p className="product-price">💰 {product.price} VNĐ</p>
+                </Link>
+                <Link to={`/products/${product.id}`}>
+                  <button className="product-button">Xem chi tiết</button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
+      {/* Phân trang */}
       <div className="pagination">
-        <button onClick={goToPrevPage} disabled={currentPage === 1}>
-          ⬅ Trang trước
-        </button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1}>⬅ Trang trước</button>
         <span>Trang {currentPage}</span>
-        <button onClick={goToNextPage} disabled={currentPage === totalPages}>
-          Trang sau ➡
-        </button>
+        <button onClick={goToNextPage} disabled={currentPage === totalPages}>Trang sau ➡</button>
       </div>
     </div>
   );

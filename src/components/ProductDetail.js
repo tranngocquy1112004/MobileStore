@@ -4,7 +4,7 @@ import { CartContext } from "../pages/CartContext";
 import "./ProductDetail.css";
 
 // Constants
-const API_BASE_URL = "http://localhost:4000/products";
+const API_URL = `${process.env.PUBLIC_URL}/db.json`; // Fetch từ file db.json trong public
 const SUCCESS_MESSAGE_TIMEOUT = 2000; // 2 seconds
 
 const ProductDetail = () => {
@@ -19,12 +19,17 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/${id}`);
+        const response = await fetch(API_URL);
         if (!response.ok) {
-          throw new Error("Sản phẩm không tồn tại!");
+          throw new Error("Không thể tải dữ liệu sản phẩm!");
         }
         const data = await response.json();
-        setProduct(data);
+        const productList = data?.products || [];
+        const foundProduct = productList.find(p => p.id === parseInt(id)); // Tìm sản phẩm theo id
+        if (!foundProduct) {
+          throw new Error("Sản phẩm không tồn tại!");
+        }
+        setProduct(foundProduct);
       } catch (err) {
         setError(err.message);
       } finally {
