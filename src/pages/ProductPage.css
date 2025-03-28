@@ -1,359 +1,257 @@
-/* Reset cơ bản cho toàn bộ trang */
-/* - Đặt margin, padding về 0 và sử dụng box-sizing: border-box để tính toán kích thước chính xác */
-/* - Sử dụng font Quicksand cho toàn bộ trang */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Quicksand", sans-serif;
-}
-
-/* Container chính */
-/* - max-width: 1200px để giới hạn chiều rộng trên desktop */
-/* - min-height: 100vh để đảm bảo container chiếm toàn bộ chiều cao màn hình */
-/* - background: Gradient màu hồng nhạt để tạo cảm giác nhẹ nhàng */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  background: linear-gradient(135deg, #fff0f5, #ffe4e9);
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Hiệu ứng hoa đào rơi (sakura) */
-/* - Đặt position: absolute để hiệu ứng phủ toàn bộ container */
-/* - pointer-events: none để không cho phép tương tác với các cánh hoa */
-.sakura-fall {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Cánh hoa */
-/* - Hình dạng cánh hoa: Hình tròn với border-radius không đều để giống cánh hoa */
-/* - opacity: 0.7 để tạo cảm giác mờ nhẹ */
-.sakura-fall span {
-  position: absolute;
-  display: block;
-  width: 10px;
-  height: 10px;
-  background: #ff85a2;
-  border-radius: 50% 20% 50% 20%;
-  opacity: 0.7;
-  animation: fall linear infinite;
-}
-
-/* Định vị và thời gian rơi cho từng cánh hoa */
-/* - Mỗi cánh hoa có vị trí left khác nhau và thời gian rơi khác nhau để tạo hiệu ứng tự nhiên */
-.sakura-fall span:nth-child(1) {
-  left: 10%;
-  animation-duration: 6s;
-  animation-delay: 0s;
-}
-.sakura-fall span:nth-child(2) {
-  left: 20%;
-  animation-duration: 8s;
-  animation-delay: 1s;
-}
-.sakura-fall span:nth-child(3) {
-  left: 30%;
-  animation-duration: 7s;
-  animation-delay: 2s;
-}
-.sakura-fall span:nth-child(4) {
-  left: 40%;
-  animation-duration: 9s;
-  animation-delay: 0.5s;
-}
-.sakura-fall span:nth-child(5) {
-  left: 50%;
-  animation-duration: 6s;
-  animation-delay: 1.5s;
-}
-.sakura-fall span:nth-child(6) {
-  left: 60%;
-  animation-duration: 8s;
-  animation-delay: 3s;
-}
-.sakura-fall span:nth-child(7) {
-  left: 70%;
-  animation-duration: 7s;
-  animation-delay: 2.5s;
-}
-.sakura-fall span:nth-child(8) {
-  left: 80%;
-  animation-duration: 9s;
-  animation-delay: 1s;
-}
-.sakura-fall span:nth-child(9) {
-  left: 90%;
-  animation-duration: 6s;
-  animation-delay: 0.8s;
-}
-
-/* Animation cho hiệu ứng rơi */
-/* - Từ trên xuống dưới (translateY), xoay 360 độ (rotate), và mờ dần (opacity) */
-@keyframes fall {
-  0% {
-    transform: translateY(-100px) rotate(0deg);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(100vh) rotate(360deg);
-    opacity: 0;
-  }
+/* Container chính của trang danh sách sản phẩm */
+.product-page {
+  padding: 30px; /* Tăng padding để thoáng hơn */
+  background: linear-gradient(135deg, #fff0f5, #ffe4e9); /* Gradient hồng nhạt, đồng bộ với body */
+  min-height: 100vh; /* Đảm bảo chiều cao tối thiểu là toàn màn hình */
 }
 
 /* Header */
-/* - Sử dụng flex để căn chỉnh tiêu đề và các nút hành động */
-/* - z-index: 1 để đảm bảo header nằm trên hiệu ứng hoa rơi */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  background: #fff5f7;
-  border-bottom: 2px solid #ffd1dc;
+  background: #fff5f7; /* Hồng phấn nhạt, đồng bộ với các trang khác */
+  padding: 12px 20px; /* Tăng padding cho thoáng */
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(255, 133, 162, 0.2);
-  position: relative;
-  z-index: 1;
+  margin-bottom: 25px; /* Tăng khoảng cách dưới */
+  box-shadow: 0 2px 5px rgba(255, 105, 180, 0.2); /* Bóng nhẹ hồng */
 }
 
 /* Tiêu đề cửa hàng */
 .store-title {
-  font-size: 28px;
-  color: #ff6f91;
-  text-decoration: none;
+  font-size: 1.5rem; /* Kích thước chữ vừa phải */
   font-weight: 700;
+  text-decoration: none;
+  color: #ff69b4; /* Hồng đậm, đồng bộ với các trang khác */
+  transition: color 0.3s ease;
 }
 
-/* Nhóm các hành động trong header */
-.header-actions {
+.store-title:hover {
+  color: #ff4d88; /* Tối hơn khi hover */
+}
+
+/* Container cho phần bên phải của header (gồm user greeting và các nút) */
+.header-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 15px; /* Khoảng cách giữa các phần tử */
 }
 
 /* Phần hiển thị thông tin người dùng */
-.user-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.user-greeting {
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  color: #ff69b4; /* Hồng đậm, đồng bộ với các trang khác */
+  font-weight: 500;
+  background: #ffd1dc; /* Hồng nhạt làm nền */
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  border-radius: 20px;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Thông báo chào mừng */
-.welcome-msg {
-  color: #ff85a2;
-  font-size: 16px;
-  font-weight: 500;
+.user-greeting:hover {
+  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+}
+
+/* Container cho các nút trong header */
+.header-buttons {
+  display: flex;
+  gap: 15px; /* Khoảng cách giữa các nút */
 }
 
 /* Nút đăng xuất */
 .logout-button {
-  background: #ffccd5;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  color: white;
+  background: #ff4d88; /* Hồng đậm hơn cho nút đăng xuất */
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  border-radius: 20px;
   border: none;
-  padding: 8px 15px;
-  border-radius: 20px;
-  color: #ff6f91;
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng hover cho nút đăng xuất */
 .logout-button:hover {
-  background: #ff99ac;
+  background: #ff3366; /* Tối hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
 }
 
-/* Link đến giỏ hàng và đăng nhập */
-.cart-link,
-.login-link {
-  text-decoration: none;
-  color: #ff6f91;
-  font-size: 16px;
-  padding: 8px 15px;
+/* Nút giỏ hàng */
+.cart-button {
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  color: white;
+  background: #ff80ab; /* Hồng đậm, đồng bộ với các trang khác */
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
   border-radius: 20px;
-  background: #fff0f5;
+  text-decoration: none;
   font-weight: 500;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng hover cho link */
-.cart-link:hover,
-.login-link:hover {
-  background: #ffd1dc;
+.cart-button:hover {
+  background: #ff69b4; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
 }
 
-/* Tiêu đề sản phẩm */
-.product-title {
-  text-align: center;
-  margin: 20px 0;
-  color: #ff6f91;
-  font-size: 24px;
+/* Tiêu đề "Danh sách sản phẩm" */
+.product-page h2 {
+  color: #ff69b4; /* Hồng đậm, đồng bộ với các trang khác */
+  font-size: 1.5rem; /* Kích thước chữ vừa phải */
   font-weight: 700;
-  text-shadow: 1px 1px 2px rgba(255, 111, 145, 0.2);
-  position: relative;
-  z-index: 1;
+  text-align: center;
+  margin-bottom: 25px; /* Tăng khoảng cách dưới */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Thanh tìm kiếm và tiêu đề sản phẩm */
-.product-header {
+/* Bộ lọc */
+.filter-section {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-/* Thanh tìm kiếm */
-.search-bar {
-  margin-left: 20px;
+  flex-direction: column;
+  gap: 15px; /* Tăng khoảng cách giữa các phần tử */
+  margin-bottom: 25px; /* Tăng khoảng cách dưới */
 }
 
 /* Input tìm kiếm */
 .search-input {
-  padding: 8px 12px;
-  border: 1px solid #ffd1dc;
-  border-radius: 20px;
-  font-size: 16px;
-  width: 200px;
-  outline: none;
-  background: #fff5f7;
-  color: #ff6f91;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  padding: 12px; /* Tăng padding cho thoải mái */
+  border: 1px solid #ffccd5; /* Viền hồng nhạt */
+  border-radius: 8px; /* Bo góc mềm mại */
+  background-color: #fff;
+  color: #333;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  width: 100%;
+  max-width: 300px; /* Giới hạn chiều rộng */
+  margin: 0 auto; /* Căn giữa */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Placeholder của input */
-.search-input::placeholder {
-  color: #ff99ac;
-}
-
-/* Hiệu ứng focus cho input */
 .search-input:focus {
-  border-color: #ff85a2;
-  box-shadow: 0 0 5px rgba(255, 111, 145, 0.3);
+  border-color: #ff69b4; /* Viền hồng đậm khi focus */
+  box-shadow: 0 0 5px rgba(255, 105, 180, 0.3); /* Thêm bóng nhẹ khi focus */
+  outline: none;
+}
+
+/* Container cho các nút lọc thương hiệu */
+.brand-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Khoảng cách giữa các nút */
+  flex-wrap: wrap; /* Cho phép xuống dòng trên thiết bị nhỏ */
 }
 
 /* Nút lọc thương hiệu */
-.brand-filter {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-/* Nút thương hiệu */
-.brand-button {
-  background: #ffccd5;
-  border: 1px solid #ffd1dc;
-  padding: 8px 15px;
+.brand-buttons button {
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  border: none;
   border-radius: 20px;
-  color: #ff6f91;
+  background: #ffd1dc; /* Hồng nhạt */
+  color: #ff69b4; /* Màu chữ hồng đậm */
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  font-weight: 500;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng hover cho nút thương hiệu */
-.brand-button:hover {
-  background: #ff99ac;
-  color: #fff;
+.brand-buttons button:hover {
+  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
 }
 
-/* Trạng thái active cho nút thương hiệu */
-.brand-button.active {
-  background: #ff85a2;
-  color: #fff;
-  border-color: #ff6f91;
+.brand-buttons button.active {
+  background: #ff80ab; /* Hồng đậm khi được chọn */
+  color: white;
 }
 
-/* Thông báo không có kết quả */
-.no-results {
-  text-align: center;
-  color: #ff99ac;
-  font-size: 16px;
-  margin: 20px 0;
-  font-weight: 500;
+/* Container cho danh sách sản phẩm */
+.product-list {
+  display: flex;
+  flex-wrap: wrap; /* Cho phép xuống dòng */
+  justify-content: center;
+  gap: 20px; /* Khoảng cách giữa các sản phẩm */
+  max-width: 1000px; /* Giới hạn chiều rộng để đảm bảo 4 sản phẩm trên 1 dòng */
+  margin: 0 auto; /* Căn giữa */
 }
 
-/* Grid sản phẩm */
-/* - Sử dụng grid với 4 cột trên desktop */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-/* Card sản phẩm */
+/* Thẻ sản phẩm */
 .product-card {
-  background: #fff5f7;
-  border-radius: 15px;
-  padding: 15px;
+  border: 1px solid #ffccd5; /* Viền hồng nhạt */
+  padding: 15px; /* Tăng padding cho thoáng */
+  width: calc(25% - 20px); /* 4 sản phẩm trên 1 dòng, trừ khoảng cách gap */
+  max-width: 200px; /* Giới hạn chiều rộng tối đa */
   text-align: center;
-  box-shadow: 0 4px 10px rgba(255, 111, 145, 0.2);
+  background: #fff5f7; /* Nền trắng ngọc trai với chút hồng */
+  border-radius: 10px; /* Bo góc mềm mại */
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ */
+  color: #333; /* Màu chữ mặc định */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */
 }
 
-/* Hiệu ứng hover cho card sản phẩm */
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 15px rgba(255, 111, 145, 0.3);
+  transform: translateY(-5px); /* Nhẹ nhàng nâng lên khi hover */
+  box-shadow: 0 8px 16px rgba(255, 105, 180, 0.4); /* Bóng đậm hơn khi hover */
 }
 
-/* Link đến chi tiết sản phẩm */
-.product-link {
-  text-decoration: none;
-}
-
-/* Hình ảnh sản phẩm */
+/* Ảnh sản phẩm */
 .product-image {
   max-width: 100%;
   height: auto;
-  border-radius: 10px;
-  border: 1px solid #ffd1dc;
+  border-radius: 8px; /* Bo góc ảnh */
+  transition: transform 0.3s ease;
+}
+
+.product-image:hover {
+  transform: scale(1.02); /* Phóng to nhẹ khi hover */
 }
 
 /* Tên sản phẩm */
-.product-name {
-  font-size: 18px;
-  color: #ff6f91;
-  margin: 10px 0;
-  font-weight: 500;
+.product-card h3 {
+  font-size: 1.1rem; /* Kích thước chữ vừa phải */
+  margin: 10px 0; /* Tăng khoảng cách trên dưới */
+  color: #ff69b4; /* Hồng đậm, đồng bộ với các trang khác */
+  font-weight: 600;
 }
 
 /* Giá sản phẩm */
-.product-price {
-  font-size: 16px;
-  color: #ff85a2;
+.product-card .price {
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  color: #ff85a2; /* Hồng đào */
   font-weight: 700;
+  margin-bottom: 10px; /* Thêm khoảng cách dưới */
 }
 
-/* Nút thêm vào giỏ hàng */
-.product-button {
-  background: #ffccd5;
+/* Nút "Xem chi tiết" */
+.detail-button {
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  background: #ff80ab; /* Hồng đậm */
+  color: white;
   border: none;
-  padding: 10px 20px;
   border-radius: 20px;
-  color: #ff6f91;
-  cursor: pointer;
-  margin-top: 10px;
+  font-size: 0.9rem; /* Kích thước chữ vừa phải */
   font-weight: 500;
-  transition: background 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng hover cho nút */
-.product-button:hover {
-  background: #ff99ac;
-  transform: scale(1.05);
+.detail-button:hover {
+  background: #ff69b4; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+}
+
+/* Thông báo loading, error, warning */
+.loading,
+.error,
+.warning {
+  font-size: 1.1rem; /* Kích thước chữ vừa phải */
+  color: #ff4d88; /* Hồng đậm, đồng bộ với các trang khác */
+  font-weight: 700;
+  text-align: center;
+  margin: 20px 0;
 }
 
 /* Phân trang */
@@ -361,166 +259,246 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
-  margin-top: 20px;
-  position: relative;
-  z-index: 1;
+  gap: 15px; /* Khoảng cách giữa các phần tử */
+  margin-top: 30px; /* Tăng khoảng cách trên */
 }
 
-/* Nút phân trang */
-.pagination button {
-  background: #ffccd5;
-  border: 1px solid #ffd1dc;
-  padding: 8px 15px;
+/* Nút Previous và Next */
+.pagination-button {
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  border: none;
   border-radius: 20px;
-  color: #ff6f91;
-  cursor: pointer;
+  background: #ffd1dc; /* Hồng nhạt */
+  color: #ff69b4; /* Màu chữ hồng đậm */
+  font-size: 1rem; /* Kích thước chữ vừa phải */
   font-weight: 500;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Trạng thái disabled cho nút phân trang */
-.pagination button:disabled {
-  background: #fff0f5;
-  color: #ffccd5;
+.pagination-button:hover:not(:disabled) {
+  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+}
+
+.pagination-button:disabled {
+  background: #f0f0f0; /* Màu xám nhạt khi bị vô hiệu hóa */
+  color: #ccc;
   cursor: not-allowed;
 }
 
-/* Hiệu ứng hover cho nút phân trang */
-.pagination button:hover:not(:disabled) {
-  background: #ff99ac;
-  color: #fff;
+/* Container cho các số trang */
+.pagination-numbers {
+  display: flex;
+  gap: 8px; /* Khoảng cách giữa các số trang */
 }
 
-/* Số trang hiện tại */
-.pagination span {
-  font-size: 16px;
-  color: #ff6f91;
+/* Nút số trang */
+.pagination-number {
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  border: none;
+  border-radius: 20px;
+  background: #ffd1dc; /* Hồng nhạt */
+  color: #ff69b4; /* Màu chữ hồng đậm */
+  font-size: 1rem; /* Kích thước chữ vừa phải */
   font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.pagination-number:hover {
+  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+}
+
+.pagination-number.active {
+  background: #ff80ab; /* Hồng đậm khi được chọn */
+  color: white;
 }
 
 /* Responsive cho điện thoại */
 /* - Áp dụng cho màn hình nhỏ hơn 768px (tablet và mobile) */
 @media (max-width: 768px) {
   /* Container chính */
-  .container {
-    padding: 10px; /* Giảm padding để tiết kiệm không gian */
+  .product-page {
+    padding: 20px; /* Giảm padding */
   }
 
   /* Header */
   .header {
     flex-direction: column; /* Chuyển sang layout dọc */
-    gap: 10px; /* Thêm khoảng cách giữa các phần tử */
-    padding: 10px;
+    gap: 12px; /* Tăng khoảng cách giữa các phần tử */
+    padding: 10px 15px;
+  }
+
+  /* Phần bên phải của header */
+  .header-right {
+    flex-direction: column; /* Chuyển sang layout dọc */
+    gap: 10px; /* Giảm khoảng cách */
   }
 
   /* Tiêu đề cửa hàng */
   .store-title {
-    font-size: 24px; /* Giảm kích thước font */
+    font-size: 1.3rem; /* Giảm kích thước font */
   }
 
-  /* Nhóm hành động trong header */
-  .header-actions {
-    flex-direction: column; /* Chuyển sang layout dọc */
-    gap: 10px;
+  /* Phần hiển thị người dùng */
+  .user-greeting {
+    font-size: 0.9rem; /* Giảm kích thước font */
+    padding: 6px 12px; /* Giảm padding */
   }
 
-  /* Thanh tìm kiếm */
-  .product-header {
-    flex-direction: column; /* Chuyển sang layout dọc */
-    gap: 10px;
+  /* Nút đăng xuất và giỏ hàng */
+  .logout-button,
+  .cart-button {
+    padding: 6px 12px; /* Giảm padding */
+    font-size: 0.9rem; /* Giảm kích thước font */
+  }
+
+  /* Tiêu đề "Danh sách sản phẩm" */
+  .product-page h2 {
+    font-size: 1.3rem; /* Giảm kích thước font */
   }
 
   /* Input tìm kiếm */
   .search-input {
-    width: 100%; /* Chiếm toàn bộ chiều rộng */
-    margin-left: 0;
+    max-width: 250px; /* Giảm chiều rộng */
   }
 
   /* Nút lọc thương hiệu */
-  .brand-filter {
-    flex-wrap: wrap; /* Cho phép các nút xuống dòng */
-    gap: 8px;
-  }
-
-  /* Nút thương hiệu */
-  .brand-button {
+  .brand-buttons button {
     padding: 6px 12px; /* Giảm padding */
-    font-size: 14px; /* Giảm kích thước font */
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 
-  /* Grid sản phẩm */
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr); /* Chuyển thành 2 cột */
-    gap: 15px; /* Giảm khoảng cách giữa các card */
-    padding: 10px;
-  }
-
-  /* Card sản phẩm */
+  /* Thẻ sản phẩm */
   .product-card {
+    width: calc(50% - 20px); /* 2 sản phẩm trên 1 dòng */
+    max-width: 180px; /* Giảm chiều rộng */
     padding: 10px; /* Giảm padding */
   }
 
   /* Tên sản phẩm */
-  .product-name {
-    font-size: 16px; /* Giảm kích thước font */
+  .product-card h3 {
+    font-size: 1rem; /* Giảm kích thước font */
   }
 
   /* Giá sản phẩm */
-  .product-price {
-    font-size: 14px; /* Giảm kích thước font */
+  .product-card .price {
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 
-  /* Nút thêm vào giỏ hàng */
-  .product-button {
-    padding: 8px 15px; /* Giảm padding */
-    font-size: 14px; /* Giảm kích thước font */
+  /* Nút "Xem chi tiết" */
+  .detail-button {
+    padding: 6px 12px; /* Giảm padding */
+    font-size: 0.8rem; /* Giảm kích thước font */
+  }
+
+  /* Thông báo loading, error, warning */
+  .loading,
+  .error,
+  .warning {
+    font-size: 1rem; /* Giảm kích thước font */
   }
 
   /* Phân trang */
   .pagination {
-    gap: 10px; /* Giảm khoảng cách giữa các nút */
+    gap: 10px; /* Giảm khoảng cách giữa các phần tử */
   }
 
-  /* Nút phân trang */
-  .pagination button {
+  .pagination-button,
+  .pagination-number {
     padding: 6px 12px; /* Giảm padding */
-    font-size: 14px; /* Giảm kích thước font */
-  }
-
-  /* Số trang hiện tại */
-  .pagination span {
-    font-size: 14px; /* Giảm kích thước font */
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 }
 
 /* Responsive cho điện thoại nhỏ (dưới 480px) */
 @media (max-width: 480px) {
-  /* Grid sản phẩm */
-  .product-grid {
-    grid-template-columns: 1fr; /* Chuyển thành 1 cột */
-    gap: 10px; /* Giảm khoảng cách giữa các card */
+  /* Container chính */
+  .product-page {
+    padding: 15px; /* Giảm padding thêm */
   }
 
-  /* Card sản phẩm */
-  .product-card {
-    padding: 8px; /* Giảm padding thêm */
+  /* Header */
+  .header {
+    padding: 8px 10px; /* Giảm padding thêm */
   }
 
   /* Tiêu đề cửa hàng */
   .store-title {
-    font-size: 20px; /* Giảm kích thước font thêm */
+    font-size: 1.1rem; /* Giảm kích thước font thêm */
   }
 
-  /* Nút thương hiệu */
-  .brand-button {
+  /* Phần hiển thị người dùng */
+  .user-greeting {
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
     padding: 5px 10px; /* Giảm padding thêm */
-    font-size: 12px; /* Giảm kích thước font thêm */
   }
 
-  /* Nút thêm vào giỏ hàng */
-  .product-button {
-    padding: 6px 12px; /* Giảm padding thêm */
-    font-size: 12px; /* Giảm kích thước font thêm */
+  /* Nút đăng xuất và giỏ hàng */
+  .logout-button,
+  .cart-button {
+    padding: 5px 10px; /* Giảm padding thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Tiêu đề "Danh sách sản phẩm" */
+  .product-page h2 {
+    font-size: 1.1rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Input tìm kiếm */
+  .search-input {
+    max-width: 200px; /* Giảm chiều rộng thêm */
+  }
+
+  /* Nút lọc thương hiệu */
+  .brand-buttons button {
+    padding: 5px 10px; /* Giảm padding thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Thẻ sản phẩm */
+  .product-card {
+    width: calc(50% - 20px); /* 2 sản phẩm trên 1 dòng */
+    max-width: 150px; /* Giảm chiều rộng thêm */
+    padding: 8px; /* Giảm padding thêm */
+  }
+
+  /* Tên sản phẩm */
+  .product-card h3 {
+    font-size: 0.9rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Giá sản phẩm */
+  .product-card .price {
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Nút "Xem chi tiết" */
+  .detail-button {
+    padding: 5px 10px; /* Giảm padding thêm */
+    font-size: 0.7rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Thông báo loading, error, warning */
+  .loading,
+  .error,
+  .warning {
+    font-size: 0.9rem; /* Giảm kích thước font thêm */
+  }
+
+  /* Phân trang */
+  .pagination {
+    gap: 8px; /* Giảm khoảng cách giữa các phần tử thêm */
+  }
+
+  .pagination-button,
+  .pagination-number {
+    padding: 5px 10px; /* Giảm padding thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
   }
 }

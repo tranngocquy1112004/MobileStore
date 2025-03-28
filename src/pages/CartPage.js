@@ -1,49 +1,37 @@
 import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext";
+import { AuthContext } from "../account/AuthContext";
 import "./CartPage.css";
 
-// Constants
-// - MESSAGES: Các thông báo cố định để dễ quản lý và bảo trì
 const MESSAGES = {
   EMPTY_CART: "Giỏ hàng trống",
   CHECKOUT_SUCCESS: "Đặt hàng thành công!",
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!",
 };
 
-// Component: CartItem
-// - Hiển thị thông tin của một sản phẩm trong giỏ hàng
-// - Nhận props: item (sản phẩm), onIncrease, onDecrease, onRemove (các hàm xử lý)
+// Component hiển thị từng sản phẩm trong giỏ hàng
 const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
-  // Kiểm tra xem nút giảm số lượng có bị vô hiệu hóa không
-  // - Nếu quantity = 1, nút giảm sẽ bị vô hiệu hóa (vì giảm nữa sẽ xóa sản phẩm)
   const isDecreaseDisabled = item.quantity === 1;
 
   return (
     <li className="cart-item">
-      {/* Hình ảnh sản phẩm */}
       <img src={item.image} alt={item.name} className="cart-image" />
-      {/* Tên sản phẩm */}
-      <p className="cart-name">{item.name}</p>
-      {/* Giá sản phẩm */}
-      <p className="cart-price">💰 {item.price.toLocaleString("vi-VN")} VNĐ</p>
-
-      {/* Điều khiển số lượng */}
-      <div className="quantity-controls">
-        {/* Nút giảm số lượng */}
-        <button
-          onClick={() => onDecrease(item.id)}
-          disabled={isDecreaseDisabled}
-          className={isDecreaseDisabled ? "disabled" : ""}
-        >
-          -
-        </button>
-        {/* Hiển thị số lượng */}
-        <span>{item.quantity}</span>
-        {/* Nút tăng số lượng */}
-        <button onClick={() => onIncrease(item.id)}>+</button>
+      <div className="cart-item-details">
+        <p className="cart-name">{item.name}</p>
+        <p className="cart-price">💰 {item.price.toLocaleString("vi-VN")} VNĐ</p>
+        <div className="quantity-controls">
+          <button
+            onClick={() => onDecrease(item.id)}
+            disabled={isDecreaseDisabled}
+            className={isDecreaseDisabled ? "disabled" : ""}
+          >
+            -
+          </button>
+          <span>{item.quantity}</span>
+          <button onClick={() => onIncrease(item.id)}>+</button>
+        </div>
       </div>
-
-      {/* Nút xóa sản phẩm khỏi giỏ */}
       <button className="remove-button" onClick={() => onRemove(item.id)}>
         Xóa
       </button>
@@ -51,28 +39,31 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
   );
 };
 
-// Component chính: CartPage
-// - Hiển thị danh sách sản phẩm trong giỏ hàng và tổng tiền
+// Component hiển thị tổng tiền và nút thanh toán
+const CartSummary = ({ totalPrice, onCheckout }) => (
+  <div className="cart-summary">
+    <h3 className="total-price">
+      Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ
+    </h3>
+    <button className="checkout-button" onClick={onCheckout}>
+      🛍 Mua hàng
+    </button>
+  </div>
+);
+
 const CartPage = () => {
-  // Lấy các giá trị và hàm từ CartContext
-  // - cart: Mảng chứa các sản phẩm trong giỏ
-  // - removeFromCart, increaseQuantity, decreaseQuantity, clearCart: Các hàm xử lý giỏ hàng
-  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } =
-    useContext(CartContext);
-
-  // Hook để điều hướng người dùng (ví dụ: quay lại trang chủ sau khi đặt hàng)
   const navigate = useNavigate();
+  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useContext(CartContext);
+  const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false };
 
-  // Tính tổng tiền của giỏ hàng
-  // - reduce: Duyệt qua mảng cart, tính tổng = giá * số lượng của từng sản phẩm
-  const totalPrice = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Hàm xử lý đặt hàng
-  // - Hiển thị thông báo thành công, xóa giỏ hàng, và điều hướng về trang chủ
   const handleCheckout = () => {
+    if (!isLoggedIn) {
+      alert(MESSAGES.LOGIN_REQUIRED);
+      return navigate("/");
+    }
+
     alert(MESSAGES.CHECKOUT_SUCCESS);
     clearCart();
     navigate("/home");
@@ -80,47 +71,37 @@ const CartPage = () => {
 
   return (
     <div className="cart-container">
-      {/* Tiêu đề trang giỏ hàng */}
       <h2>🛍 Giỏ Hàng</h2>
 
-      {/* Kiểm tra nếu giỏ hàng trống */}
       {cart.length === 0 ? (
-        <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p>
+        <EmptyCart />
       ) : (
         <>
-          {/* Danh sách sản phẩm trong giỏ */}
           <ul className="cart-list">
             {cart.map((item) => (
               <CartItem
-                key={item.id} // Key để React nhận diện từng item trong danh sách
-                item={item} // Sản phẩm hiện tại
-                onIncrease={increaseQuantity} // Hàm tăng số lượng
-                onDecrease={decreaseQuantity} // Hàm giảm số lượng
-                onRemove={removeFromCart} // Hàm xóa sản phẩm
+                key={item.id}
+                item={item}
+                onIncrease={increaseQuantity}
+                onDecrease={decreaseQuantity}
+                onRemove={removeFromCart}
               />
             ))}
           </ul>
-
-          {/* Hiển thị tổng tiền */}
-          <h3 className="total-price">
-            Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ
-          </h3>
-
-          {/* Nút đặt hàng */}
-          <button className="checkout-button" onClick={handleCheckout}>
-            🛍 Mua hàng
-          </button>
+          <CartSummary totalPrice={totalPrice} onCheckout={handleCheckout} />
         </>
       )}
 
-      {/* Nút quay lại trang chủ */}
-      <div className="back-button-container">
-        <Link to="/home" className="back-button">
-          ⬅ Quay lại cửa hàng
-        </Link>
-      </div>
+      <Link to="/home" className="back-button">
+        ⬅ Quay lại cửa hàng
+      </Link>
     </div>
   );
 };
+
+// Component hiển thị khi giỏ hàng trống
+const EmptyCart = () => (
+  <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p>
+);
 
 export default CartPage;

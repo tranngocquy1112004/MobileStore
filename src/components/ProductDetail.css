@@ -14,11 +14,17 @@ body {
 .product-detail {
   max-width: 800px;
   margin: 20px auto;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 20px;
-  border-radius: 15px;
+  background: #fff5f7; /* Nền trắng ngọc trai với chút hồng, đồng bộ với Account */
+  padding: 30px; /* Tăng padding để thoáng hơn */
+  border-radius: 15px; /* Bo góc mềm mại hơn */
   text-align: center;
-  box-shadow: 0px 4px 10px rgba(255, 111, 145, 0.2); /* Đổ bóng hồng nhạt */
+  box-shadow: 0 6px 12px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ, đồng bộ với Account */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Hiệu ứng mượt mà */
+}
+
+.product-detail:hover {
+  transform: translateY(-5px); /* Nhẹ nhàng nâng lên khi hover */
+  box-shadow: 0 8px 16px rgba(255, 105, 180, 0.4); /* Bóng đậm hơn khi hover */
 }
 
 /* Header */
@@ -27,36 +33,42 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff5f7; /* Hồng phấn nhạt */
-  padding: 10px 15px;
+  background: #fff5f7; /* Hồng phấn nhạt, đồng bộ với Account */
+  padding: 12px 20px; /* Tăng padding cho thoáng */
   border-radius: 10px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px; /* Tăng khoảng cách dưới */
+  box-shadow: 0 2px 5px rgba(255, 105, 180, 0.2); /* Bóng nhẹ hồng */
 }
 
 /* Tiêu đề cửa hàng */
 .store-title {
-  font-size: 24px;
+  font-size: 1.5rem; /* Kích thước chữ vừa phải */
   font-weight: 700;
   text-decoration: none;
-  color: #ff6f91; /* Hồng hoa đào */
+  color: #ff69b4; /* Hồng đậm, đồng bộ với Account */
+  transition: color 0.3s ease;
+}
+
+.store-title:hover {
+  color: #ff4d88; /* Tối hơn khi hover */
 }
 
 /* Nút giỏ hàng */
 .cart-button {
-  font-size: 16px;
-  color: #ff6f91;
-  background: #ffccd5; /* Hồng nhạt */
-  padding: 8px 12px;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  color: white;
+  background: #ff80ab; /* Hồng đậm, đồng bộ với Account */
+  padding: 8px 15px; /* Tăng padding cho thoải mái */
   border-radius: 20px;
   text-decoration: none;
   font-weight: 500;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng hover cho nút giỏ hàng */
 .cart-button:hover {
-  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  background: #ff69b4; /* Hồng đậm hơn khi hover, đồng bộ với Account */
+  transform: scale(1.03); /* Phóng to nhẹ, đồng bộ với Account */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
 }
 
 /* Nội dung chính của sản phẩm */
@@ -64,7 +76,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 20px; /* Tăng khoảng cách giữa các phần tử */
 }
 
 /* Ảnh sản phẩm */
@@ -73,13 +85,18 @@ body {
   width: 300px;
   max-height: 400px;
   border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(255, 111, 145, 0.2); /* Đổ bóng hồng nhạt */
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ, đồng bộ với Account */
+  transition: transform 0.3s ease;
+}
+
+.product-image:hover {
+  transform: scale(1.02); /* Phóng to nhẹ khi hover */
 }
 
 /* Tiêu đề sản phẩm */
 h2 {
-  color: #ff6f91; /* Hồng hoa đào */
-  font-size: 24px;
+  color: #ff69b4; /* Hồng đậm, đồng bộ với Account */
+  font-size: 1.5rem; /* Kích thước chữ vừa phải */
   margin-top: 10px;
   font-weight: 700;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
@@ -87,14 +104,14 @@ h2 {
 
 /* Giá sản phẩm */
 .price {
-  font-size: 20px;
+  font-size: 1.25rem; /* Kích thước chữ vừa phải */
   color: #ff85a2; /* Hồng đào */
   font-weight: 700;
 }
 
 /* Mô tả sản phẩm */
 .description {
-  font-size: 16px;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
   color: #ff85a2;
   margin: 10px 0;
   font-weight: 500;
@@ -105,17 +122,19 @@ h2 {
 .specs {
   text-align: left;
   background: rgba(255, 245, 247, 0.9); /* Nền hồng phấn mờ */
-  padding: 15px;
+  padding: 20px; /* Tăng padding cho thoáng */
   border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(255, 111, 145, 0.2);
-  margin-top: 15px;
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ */
+  margin-top: 20px; /* Tăng khoảng cách trên */
   width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng */
 }
 
 /* Tiêu đề thông số kỹ thuật */
 .specs h3 {
-  color: #ff6f91; /* Hồng hoa đào */
+  color: #ff69b4; /* Hồng đậm, đồng bộ với Account */
   font-weight: 700;
+  font-size: 1.2rem; /* Kích thước chữ vừa phải */
+  margin-bottom: 10px; /* Thêm khoảng cách dưới */
 }
 
 /* Danh sách thông số */
@@ -126,25 +145,35 @@ h2 {
 
 /* Mỗi mục thông số */
 .specs li {
-  font-size: 16px;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
   color: #ff85a2;
-  padding: 5px 0;
+  padding: 6px 0; /* Tăng padding cho thoáng */
   font-weight: 500;
 }
 
 /* Thông báo thành công */
 .success-message {
-  font-size: 16px;
-  color: #ff6f91;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
+  color: #ff80ab; /* Màu hồng nhẹ, đồng bộ với Account */
   background: rgba(255, 204, 213, 0.3); /* Hồng nhạt mờ */
   padding: 10px;
-  border-radius: 5px;
-  margin-top: 10px;
+  border-radius: 8px; /* Bo góc mềm mại hơn */
+  margin-top: 15px; /* Tăng khoảng cách trên */
+  opacity: 1;
+  animation: fadeInOut 2s ease-out; /* Đồng bộ animation với Account */
+}
+
+/* Animation cho thông báo thành công */
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Nhóm nút điều khiển */
 .button-group {
-  margin-top: 20px;
+  margin-top: 25px; /* Tăng khoảng cách trên */
   display: flex;
   justify-content: center;
   gap: 15px;
@@ -153,45 +182,48 @@ h2 {
 /* Nút chung (thêm vào giỏ và quay lại) */
 .add-to-cart,
 .back-button {
-  padding: 10px 15px;
+  padding: 12px 20px; /* Tăng padding cho thoải mái */
   border: none;
   border-radius: 20px;
-  font-size: 16px;
+  font-size: 1rem; /* Kích thước chữ vừa phải */
   cursor: pointer;
   font-family: "Quicksand", sans-serif;
   font-weight: 500;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 /* Nút thêm vào giỏ hàng */
 .add-to-cart {
-  background: #ffccd5; /* Hồng nhạt */
-  color: #ff6f91;
+  background: #ff80ab; /* Hồng đậm, đồng bộ với Account */
+  color: white;
 }
 
-/* Hiệu ứng hover cho nút thêm vào giỏ */
 .add-to-cart:hover {
-  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  background: #ff69b4; /* Hồng đậm hơn khi hover, đồng bộ với Account */
+  transform: scale(1.03); /* Phóng to nhẹ, đồng bộ với Account */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
 }
 
 /* Nút quay lại */
 .back-button {
-  background: #ffd1dc;
-  color: #ff6f91;
+  background: #ffd1dc; /* Hồng nhạt hơn */
+  color: #ff69b4; /* Màu chữ hồng đậm */
 }
 
-/* Hiệu ứng hover cho nút quay lại */
 .back-button:hover {
-  background: #ff99ac;
+  background: #ff99ac; /* Hồng đậm hơn khi hover */
+  transform: scale(1.03); /* Phóng to nhẹ */
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
 }
 
 /* Thông báo loading, error, warning */
 .loading,
 .error,
 .warning {
-  font-size: 18px;
-  color: #ff6f91; /* Hồng hoa đào */
+  font-size: 1.1rem; /* Kích thước chữ vừa phải */
+  color: #ff4d88; /* Hồng đậm, đồng bộ với Account */
   font-weight: 700;
+  margin: 20px 0;
 }
 
 /* Responsive cho điện thoại */
@@ -200,25 +232,25 @@ h2 {
   /* Container chính */
   .product-detail {
     margin: 10px; /* Giảm margin */
-    padding: 15px; /* Giảm padding */
+    padding: 20px; /* Giảm padding */
   }
 
   /* Header */
   .header {
     flex-direction: column; /* Chuyển sang layout dọc */
-    gap: 10px; /* Thêm khoảng cách giữa các phần tử */
-    padding: 8px 10px;
+    gap: 12px; /* Tăng khoảng cách giữa các phần tử */
+    padding: 10px 15px;
   }
 
   /* Tiêu đề cửa hàng */
   .store-title {
-    font-size: 20px; /* Giảm kích thước font */
+    font-size: 1.3rem; /* Giảm kích thước font */
   }
 
   /* Nút giỏ hàng */
   .cart-button {
-    padding: 6px 10px; /* Giảm padding */
-    font-size: 14px; /* Giảm kích thước font */
+    padding: 6px 12px; /* Giảm padding */
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 
   /* Ảnh sản phẩm */
@@ -229,53 +261,58 @@ h2 {
 
   /* Tiêu đề sản phẩm */
   h2 {
-    font-size: 20px; /* Giảm kích thước font */
+    font-size: 1.3rem; /* Giảm kích thước font */
   }
 
   /* Giá sản phẩm */
   .price {
-    font-size: 18px; /* Giảm kích thước font */
+    font-size: 1.1rem; /* Giảm kích thước font */
   }
 
   /* Mô tả sản phẩm */
   .description {
-    font-size: 14px; /* Giảm kích thước font */
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 
   /* Thông số kỹ thuật */
   .specs {
-    padding: 10px; /* Giảm padding */
+    padding: 15px; /* Giảm padding */
+  }
+
+  /* Tiêu đề thông số kỹ thuật */
+  .specs h3 {
+    font-size: 1.1rem; /* Giảm kích thước font */
   }
 
   /* Mỗi mục thông số */
   .specs li {
-    font-size: 14px; /* Giảm kích thước font */
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 
   /* Thông báo thành công */
   .success-message {
-    font-size: 14px; /* Giảm kích thước font */
+    font-size: 0.9rem; /* Giảm kích thước font */
     padding: 8px; /* Giảm padding */
   }
 
   /* Nhóm nút điều khiển */
   .button-group {
     flex-direction: column; /* Chuyển sang layout dọc */
-    gap: 10px;
+    gap: 12px;
   }
 
   /* Nút thêm vào giỏ và quay lại */
   .add-to-cart,
   .back-button {
-    padding: 8px 12px; /* Giảm padding */
-    font-size: 14px; /* Giảm kích thước font */
+    padding: 10px 15px; /* Giảm padding */
+    font-size: 0.9rem; /* Giảm kích thước font */
   }
 
   /* Thông báo loading, error, warning */
   .loading,
   .error,
   .warning {
-    font-size: 16px; /* Giảm kích thước font */
+    font-size: 1rem; /* Giảm kích thước font */
   }
 }
 
@@ -284,23 +321,23 @@ h2 {
   /* Container chính */
   .product-detail {
     margin: 5px; /* Giảm margin thêm */
-    padding: 10px; /* Giảm padding thêm */
+    padding: 15px; /* Giảm padding thêm */
   }
 
   /* Header */
   .header {
-    padding: 6px 8px; /* Giảm padding thêm */
+    padding: 8px 10px; /* Giảm padding thêm */
   }
 
   /* Tiêu đề cửa hàng */
   .store-title {
-    font-size: 18px; /* Giảm kích thước font thêm */
+    font-size: 1.1rem; /* Giảm kích thước font thêm */
   }
 
   /* Nút giỏ hàng */
   .cart-button {
-    padding: 5px 8px; /* Giảm padding thêm */
-    font-size: 12px; /* Giảm kích thước font thêm */
+    padding: 5px 10px; /* Giảm padding thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
   }
 
   /* Ảnh sản phẩm */
@@ -311,46 +348,51 @@ h2 {
 
   /* Tiêu đề sản phẩm */
   h2 {
-    font-size: 18px; /* Giảm kích thước font thêm */
+    font-size: 1.1rem; /* Giảm kích thước font thêm */
   }
 
   /* Giá sản phẩm */
   .price {
-    font-size: 16px; /* Giảm kích thước font thêm */
+    font-size: 1rem; /* Giảm kích thước font thêm */
   }
 
   /* Mô tả sản phẩm */
   .description {
-    font-size: 12px; /* Giảm kích thước font thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
   }
 
   /* Thông số kỹ thuật */
   .specs {
-    padding: 8px; /* Giảm padding thêm */
+    padding: 10px; /* Giảm padding thêm */
+  }
+
+  /* Tiêu đề thông số kỹ thuật */
+  .specs h3 {
+    font-size: 1rem; /* Giảm kích thước font thêm */
   }
 
   /* Mỗi mục thông số */
   .specs li {
-    font-size: 12px; /* Giảm kích thước font thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
   }
 
   /* Thông báo thành công */
   .success-message {
-    font-size: 12px; /* Giảm kích thước font thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
     padding: 6px; /* Giảm padding thêm */
   }
 
   /* Nút thêm vào giỏ và quay lại */
   .add-to-cart,
   .back-button {
-    padding: 6px 10px; /* Giảm padding thêm */
-    font-size: 12px; /* Giảm kích thước font thêm */
+    padding: 8px 12px; /* Giảm padding thêm */
+    font-size: 0.8rem; /* Giảm kích thước font thêm */
   }
 
   /* Thông báo loading, error, warning */
   .loading,
   .error,
   .warning {
-    font-size: 14px; /* Giảm kích thước font thêm */
+    font-size: 0.9rem; /* Giảm kích thước font thêm */
   }
 }
