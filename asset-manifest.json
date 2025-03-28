@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/MobileStore/static/css/main.b4e39d5f.css",
-    "main.js": "/MobileStore/static/js/main.cad57001.js",
+    "main.css": "/MobileStore/static/css/main.29c3da30.css",
+    "main.js": "/MobileStore/static/js/main.56573934.js",
     "static/js/453.761f05ea.chunk.js": "/MobileStore/static/js/453.761f05ea.chunk.js",
     "index.html": "/MobileStore/index.html",
-    "main.b4e39d5f.css.map": "/MobileStore/static/css/main.b4e39d5f.css.map",
-    "main.cad57001.js.map": "/MobileStore/static/js/main.cad57001.js.map",
+    "main.29c3da30.css.map": "/MobileStore/static/css/main.29c3da30.css.map",
+    "main.56573934.js.map": "/MobileStore/static/js/main.56573934.js.map",
     "453.761f05ea.chunk.js.map": "/MobileStore/static/js/453.761f05ea.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.b4e39d5f.css",
-    "static/js/main.cad57001.js"
+    "static/css/main.29c3da30.css",
+    "static/js/main.56573934.js"
   ]
 }
