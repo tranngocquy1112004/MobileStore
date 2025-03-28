@@ -25,14 +25,12 @@ const ProductPage = () => {
   const [selectedBrand, setSelectedBrand] = useState("Tất cả");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error(MESSAGES.ERROR_FETCH);
         const { products: productList = [] } = await response.json();
-        
         setProducts(productList);
         setFilteredProducts(productList);
       } catch (error) {
@@ -45,7 +43,6 @@ const ProductPage = () => {
     fetchProducts();
   }, []);
 
-  // Filter products
   useEffect(() => {
     const filtered = products
       .filter(product => selectedBrand === "Tất cả" || product.brand === selectedBrand)
@@ -55,13 +52,11 @@ const ProductPage = () => {
     setCurrentPage(1);
   }, [products, selectedBrand, searchTerm]);
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const indexOfLastProduct = currentPage * PRODUCTS_PER_PAGE;
   const indexOfFirstProduct = indexOfLastProduct - PRODUCTS_PER_PAGE;
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
-  // Event handlers
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -69,16 +64,21 @@ const ProductPage = () => {
 
   const handleSearch = (e) => setSearchTerm(e.target.value);
   const handleBrandFilter = (brand) => setSelectedBrand(brand);
-  
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
-  const goToPage = (page) => {
-    setCurrentPage(page);
-    scrollToTop();
-  };
-  const previousPage = () => currentPage > 1 && goToPage(currentPage - 1);
-  const nextPage = () => currentPage < totalPages && goToPage(currentPage + 1);
 
-  // Loading/Error states
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const previousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      scrollToTop();
+    }
+  };
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      scrollToTop();
+    }
+  };
+
   if (loading) return <p className="loading">{MESSAGES.LOADING}</p>;
   if (error) return <p className="error">❌ {error}</p>;
   if (!products.length) return <p className="warning">{MESSAGES.NO_DATA}</p>;
@@ -94,12 +94,11 @@ const ProductPage = () => {
       />
       <ProductList products={currentProducts} />
       {totalPages > 1 && (
-        <Pagination
+        <SimplePagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPrevious={previousPage}
           onNext={nextPage}
-          onPageChange={goToPage}
         />
       )}
     </div>
@@ -161,7 +160,8 @@ const ProductList = ({ products }) => (
   </div>
 );
 
-const Pagination = ({ currentPage, totalPages, onPrevious, onNext, onPageChange }) => (
+// Component phân trang mới
+const SimplePagination = ({ currentPage, totalPages, onPrevious, onNext }) => (
   <div className="pagination">
     <button
       onClick={onPrevious}
@@ -170,17 +170,7 @@ const Pagination = ({ currentPage, totalPages, onPrevious, onNext, onPageChange 
     >
       Trang trước
     </button>
-    <div className="pagination-numbers">
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`pagination-number ${currentPage === page ? "active" : ""}`}
-        >
-          Trang {page}
-        </button>
-      ))}
-    </div>
+    <span className="pagination-current">Trang {currentPage}</span>
     <button
       onClick={onNext}
       disabled={currentPage === totalPages}
