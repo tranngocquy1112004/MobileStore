@@ -1,0 +1,45 @@
+/* pages/OrderHistory.css */
+.order-history-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .order-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .order-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background-color: #fff5f7;
+  }
+  
+  .order-item h3 {
+    margin-top: 0;
+  }
+  
+  .order-item ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+  
+  .order-item li {
+    margin: 5px 0;
+  }
+  
+  .total-price {
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  .back-button {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    color: #ff80ab;
+  }

@@ -5,19 +5,19 @@
   align-items: center;
   min-height: 100vh; /* Đảm bảo chiều cao tối thiểu là toàn màn hình */
   background-color: #fce4ec; /* Nền hồng nhạt như hoa anh đào */
-  padding: 20px; /* Thêm padding để tránh sát mép trên thiết bị nhỏ */
+  padding: 20px; /* Padding để tránh sát mép trên thiết bị nhỏ */
 }
 
 /* Hộp chứa form đăng nhập/đăng ký */
 .account-box {
   background: #fff5f7; /* Nền trắng ngọc trai với chút hồng */
-  padding: 30px; /* Tăng padding để thoáng hơn */
-  border-radius: 15px; /* Bo góc mềm mại hơn */
-  box-shadow: 0 6px 12px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ, đậm hơn một chút */
+  padding: 40px 30px; /* Tăng padding trên/dưới để thoáng hơn */
+  border-radius: 15px; /* Bo góc mềm mại */
+  box-shadow: 0 6px 12px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ */
   text-align: center;
   width: 100%;
-  max-width: 350px; /* Tăng chiều rộng một chút cho thoải mái */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Hiệu ứng mượt mà */
+  max-width: 400px; /* Tăng chiều rộng để cân đối hơn */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .account-box:hover {
@@ -27,48 +27,63 @@
 
 /* Tiêu đề (h1) */
 .account-box h1 {
-  font-size: 1.5rem; /* Kích thước chữ vừa phải */
+  font-size: 1.8rem; /* Tăng kích thước chữ để nổi bật hơn */
   color: #ff69b4; /* Màu hồng đậm cho tiêu đề */
-  margin-bottom: 20px; /* Khoảng cách dưới tiêu đề */
+  margin-bottom: 25px; /* Tăng khoảng cách dưới tiêu đề */
+  font-weight: 600; /* Chữ đậm hơn một chút */
 }
 
 /* Input */
 .account-input {
   width: 100%;
-  padding: 12px; /* Tăng padding cho input thoải mái hơn */
-  margin: 10px 0;
+  padding: 14px; /* Tăng padding để input thoáng hơn */
+  margin: 12px 0; /* Tăng khoảng cách giữa các input */
   border: 1px solid #ffccd5; /* Viền hồng nhạt */
-  border-radius: 8px; /* Bo góc mềm mại hơn */
+  border-radius: 10px; /* Bo góc mềm mại hơn */
   background-color: #fff;
   color: #333;
-  font-size: 1rem; /* Kích thước chữ vừa phải */
+  font-size: 1rem;
+  font-family: "Quicksand", sans-serif; /* Đồng bộ font với giao diện */
+  line-height: 1.5; /* Đảm bảo chiều cao dòng đồng bộ */
+  box-sizing: border-box; /* Đảm bảo padding không làm lệch kích thước */
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  -webkit-appearance: none; /* Loại bỏ style mặc định của trình duyệt */
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .account-input:focus {
   border-color: #ff69b4; /* Viền hồng đậm khi focus */
-  box-shadow: 0 0 5px rgba(255, 105, 180, 0.3); /* Thêm bóng nhẹ khi focus */
+  box-shadow: 0 0 5px rgba(255, 105, 180, 0.3); /* Bóng nhẹ khi focus */
   outline: none;
+}
+
+/* Placeholder */
+.account-input::placeholder {
+  color: #ff99ac; /* Màu placeholder hồng nhạt */
+  font-size: 1rem; /* Đồng bộ kích thước chữ */
+  font-family: "Quicksand", sans-serif; /* Đồng bộ font */
 }
 
 /* Container cho các nút */
 .account-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Tăng khoảng cách giữa các nút */
-  margin-top: 15px; /* Thêm khoảng cách trên */
+  gap: 15px; /* Tăng khoảng cách giữa các nút */
+  margin-top: 20px; /* Tăng khoảng cách trên để cân đối */
 }
 
 /* Nút chung */
 .account-button {
-  padding: 12px; /* Tăng padding cho nút */
+  padding: 14px; /* Tăng padding để nút lớn hơn */
   border: none;
-  border-radius: 8px; /* Bo góc mềm mại hơn */
+  border-radius: 10px; /* Bo góc mềm mại hơn */
   cursor: pointer;
   background-color: #ff80ab; /* Màu hồng đậm như hoa anh đào */
   color: white;
-  font-size: 1rem; /* Kích thước chữ vừa phải */
-  font-weight: 500; /* Chữ hơi đậm */
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: "Quicksand", sans-serif; /* Đồng bộ font */
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
@@ -99,14 +114,15 @@
 
 /* Nút liên kết (Quay lại đăng nhập / Chưa có tài khoản) */
 .link-to-home {
-  padding: 12px;
+  padding: 14px;
   background-color: #ff80ab; /* Màu hồng đậm */
   color: white;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 10px;
   display: inline-block;
   font-size: 1rem;
   font-weight: 500;
+  font-family: "Quicksand", sans-serif; /* Đồng bộ font */
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
@@ -119,16 +135,17 @@
 /* Thông báo (lỗi/thành công) */
 .login-message {
   color: #ff4d88; /* Màu hồng đậm cho tin nhắn lỗi */
-  margin: 10px 0;
-  font-size: 0.9rem; /* Kích thước chữ nhỏ hơn một chút */
+  margin: 12px 0; /* Tăng khoảng cách để cân đối */
+  font-size: 0.9rem;
   text-align: center;
   opacity: 1;
-  transition: opacity 0.5s ease; /* Hiệu ứng mờ dần */
+  font-family: "Quicksand", sans-serif; /* Đồng bộ font */
+  transition: opacity 0.5s ease;
 }
 
 .login-message.success {
   color: #ff80ab; /* Màu nhẹ nhàng cho thông báo thành công */
-  animation: fadeInOut 2s ease-out; /* Tăng thời gian animation */
+  animation: fadeInOut 2s ease-out;
 }
 
 /* Animation cho thông báo thành công */
@@ -137,4 +154,67 @@
   20% { opacity: 1; }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* Responsive cho tablet và mobile (dưới 768px) */
+@media (max-width: 768px) {
+  .account-box {
+    max-width: 350px; /* Giảm chiều rộng */
+    padding: 30px 20px; /* Giảm padding */
+  }
+
+  .account-box h1 {
+    font-size: 1.5rem; /* Giảm kích thước chữ */
+    margin-bottom: 20px;
+  }
+
+  .account-input {
+    padding: 12px;
+    margin: 10px 0;
+  }
+
+  .account-button,
+  .link-to-home {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .account-buttons {
+    gap: 12px;
+    margin-top: 15px;
+  }
+}
+
+/* Responsive cho điện thoại nhỏ (dưới 480px) */
+@media (max-width: 480px) {
+  .account-box {
+    max-width: 300px; /* Giảm chiều rộng thêm */
+    padding: 25px 15px; /* Giảm padding thêm */
+  }
+
+  .account-box h1 {
+    font-size: 1.3rem; /* Giảm kích thước chữ thêm */
+    margin-bottom: 15px;
+  }
+
+  .account-input {
+    padding: 10px;
+    margin: 8px 0;
+  }
+
+  .account-button,
+  .link-to-home {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .account-buttons {
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .login-message {
+    font-size: 0.8rem;
+    margin: 10px 0;
+  }
 }

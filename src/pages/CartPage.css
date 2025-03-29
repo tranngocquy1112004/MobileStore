@@ -329,3 +329,13 @@ h2 {
     font-size: 12px; /* Giảm kích thước font thêm */
   }
 }
+.cart-links {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.order-history-link {
+  text-decoration: none;
+  color: #ff80ab;
+}
