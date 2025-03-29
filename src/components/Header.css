@@ -1,0 +1,162 @@
+/* components/Header.css */
+
+/* Header chính */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff5f7; /* Hồng phấn nhạt */
+    padding: 15px 30px; /* Tăng padding cho thoáng */
+    border-radius: 12px; /* Bo góc mềm mại */
+    margin: 20px 30px; /* Tạo khoảng cách với các phần tử xung quanh */
+    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2); /* Bóng hồng nhẹ */
+    position: sticky; /* Giữ header cố định khi cuộn */
+    top: 0;
+    z-index: 1000; /* Đảm bảo header nằm trên các phần tử khác */
+    transition: all 0.3s ease;
+  }
+  
+  /* Tiêu đề cửa hàng */
+  .store-title {
+    font-size: 1.8rem; /* Tăng kích thước chữ */
+    font-weight: 700;
+    text-decoration: none;
+    color: #ff69b4; /* Hồng đậm */
+    transition: color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .store-title:hover {
+    color: #ff4d88; /* Tối hơn khi hover */
+    transform: scale(1.05); /* Phóng to nhẹ khi hover */
+  }
+  
+  /* Container cho các nút và thông tin bên phải */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Khoảng cách giữa các phần tử */
+  }
+  
+  /* Nút "Xin Chào Qúy cuti" (Profile) */
+  .profile-button {
+    font-size: 1rem;
+    color: #ff69b4; /* Hồng đậm */
+    background: #ffd1dc; /* Hồng nhạt làm nền */
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  .profile-button:hover {
+    background: #ff99ac; /* Hồng đậm hơn khi hover */
+    transform: scale(1.05); /* Phóng to nhẹ */
+    box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  }
+  
+  /* Nút đăng xuất */
+  .logout-button {
+    font-size: 1rem;
+    color: white;
+    background: #ff4d88; /* Hồng đậm hơn cho nút đăng xuất */
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  .logout-button:hover {
+    background: #ff3366; /* Tối hơn khi hover */
+    transform: scale(1.05); /* Phóng to nhẹ */
+    box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  }
+  
+  /* Nút giỏ hàng */
+  .cart-button {
+    font-size: 1rem;
+    color: white;
+    background: #ff80ab; /* Hồng đậm */
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  .cart-button:hover {
+    background: #ff69b4; /* Hồng đậm hơn khi hover */
+    transform: scale(1.05); /* Phóng to nhẹ */
+    box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  }
+  
+  /* Nút đăng nhập (khi chưa đăng nhập) */
+  .login-button {
+    font-size: 1rem;
+    color: white;
+    background: #ff80ab; /* Hồng đậm */
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background: #ff69b4; /* Hồng đậm hơn khi hover */
+    transform: scale(1.05); /* Phóng to nhẹ */
+    box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  }
+  
+  /* Responsive cho tablet và mobile (dưới 768px) */
+  @media (max-width: 768px) {
+    .header {
+      flex-direction: column; /* Chuyển sang layout dọc */
+      gap: 15px; /* Tăng khoảng cách giữa các phần tử */
+      padding: 15px 20px;
+      margin: 15px 20px;
+    }
+  
+    .store-title {
+      font-size: 1.5rem; /* Giảm kích thước font */
+    }
+  
+    .header-actions {
+      flex-direction: column; /* Chuyển sang layout dọc */
+      gap: 10px; /* Giảm khoảng cách */
+      width: 100%; /* Đảm bảo các nút chiếm toàn bộ chiều rộng */
+    }
+  
+    .profile-button,
+    .logout-button,
+    .cart-button,
+    .login-button {
+      width: 100%; /* Nút chiếm toàn bộ chiều rộng */
+      text-align: center;
+      padding: 10px 15px; /* Giảm padding */
+      font-size: 0.9rem; /* Giảm kích thước font */
+    }
+  }
+  
+  /* Responsive cho điện thoại nhỏ (dưới 480px) */
+  @media (max-width: 480px) {
+    .header {
+      padding: 10px 15px;
+      margin: 10px 15px;
+    }
+  
+    .store-title {
+      font-size: 1.3rem; /* Giảm kích thước font thêm */
+    }
+  
+    .profile-button,
+    .logout-button,
+    .cart-button,
+    .login-button {
+      padding: 8px 12px; /* Giảm padding thêm */
+      font-size: 0.8rem; /* Giảm kích thước font thêm */
+    }
+  }

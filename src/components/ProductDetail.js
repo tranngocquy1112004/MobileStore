@@ -1,144 +1,123 @@
+// components/ProductDetail.jsx
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../pages/CartContext"; // Import CartContext để quản lý giỏ hàng
-import { AuthContext } from "../account/AuthContext"; // Import AuthContext để kiểm tra trạng thái đăng nhập
-import "./ProductDetail.css"; // Import file CSS để định dạng giao diện
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { CartContext } from "../pages/CartContext";
+import { AuthContext } from "../account/AuthContext";
+import "./ProductDetail.css";
 
-// Constants - Các hằng số cố định để dễ quản lý và tái sử dụng
-const API_URL = `${process.env.PUBLIC_URL}/db.json`; // URL API lấy dữ liệu từ file JSON
-const SUCCESS_MESSAGE_TIMEOUT = 2000; // Thời gian hiển thị thông báo thành công (2 giây)
+// Constants
+const API_URL = `${process.env.PUBLIC_URL}/db.json`;
+const SUCCESS_MESSAGE_TIMEOUT = 2000;
 const MESSAGES = {
-  LOADING: "⏳ Đang tải...", // Thông báo khi đang tải dữ liệu
-  ERROR_FETCH: "Không thể tải dữ liệu sản phẩm!", // Thông báo khi fetch dữ liệu thất bại
-  ERROR_NOT_FOUND: "Sản phẩm không tồn tại!", // Thông báo khi không tìm thấy sản phẩm
-  WARNING_NO_DATA: "⚠ Không có dữ liệu sản phẩm!", // Thông báo khi không có sản phẩm
-  SUCCESS_ADD_TO_CART: "✅ Thêm vào giỏ hàng thành công!", // Thông báo khi thêm vào giỏ thành công
-  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Thông báo khi chưa đăng nhập
+  LOADING: "⏳ Đang tải...",
+  ERROR_FETCH: "Không thể tải dữ liệu sản phẩm!",
+  ERROR_NOT_FOUND: "Sản phẩm không tồn tại!",
+  WARNING_NO_DATA: "⚠ Không có dữ liệu sản phẩm!",
+  SUCCESS_ADD_TO_CART: "✅ Thêm vào giỏ hàng thành công!",
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!",
 };
 
-// Component ProductDetail - Hiển thị chi tiết sản phẩm
+// Component ProductDetail
 const ProductDetail = () => {
-  const { id } = useParams(); // Lấy id sản phẩm từ URL params
-  const { addToCart, cart } = useContext(CartContext); // Lấy hàm addToCart và danh sách cart từ CartContext
-  const authContext = useContext(AuthContext); // Lấy AuthContext để kiểm tra trạng thái đăng nhập
-  const { isLoggedIn } = authContext || { isLoggedIn: false }; // Giải cấu trúc isLoggedIn, mặc định là false nếu không có context
-  const navigate = useNavigate(); // Hook để điều hướng giữa các trang
+  const { id } = useParams();
+  const { addToCart, cart } = useContext(CartContext);
+  const authContext = useContext(AuthContext);
+  const { isLoggedIn } = authContext || { isLoggedIn: false };
+  const navigate = useNavigate();
 
-  const [product, setProduct] = useState(null); // State lưu thông tin sản phẩm, ban đầu là null
-  const [loading, setLoading] = useState(true); // State theo dõi trạng thái tải dữ liệu, ban đầu là true
-  const [error, setError] = useState(null); // State lưu thông báo lỗi, ban đầu là null
-  const [successMessage, setSuccessMessage] = useState(""); // State lưu thông báo thành công, ban đầu rỗng
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Hook useEffect để lấy dữ liệu sản phẩm khi component mount hoặc id thay đổi
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        setLoading(true); // Đặt trạng thái đang tải
-        const response = await fetch(API_URL); // Gửi yêu cầu lấy dữ liệu từ API_URL
+        setLoading(true);
+        const response = await fetch(API_URL);
         if (!response.ok) {
-          throw new Error(MESSAGES.ERROR_FETCH); // Ném lỗi nếu response không thành công
+          throw new Error(MESSAGES.ERROR_FETCH);
         }
-        const data = await response.json(); // Chuyển dữ liệu phản hồi thành JSON
-        const productList = data?.products || []; // Lấy danh sách sản phẩm từ dữ liệu, mặc định là mảng rỗng
-        const foundProduct = productList.find((p) => p.id === parseInt(id)); // Tìm sản phẩm theo id
+        const data = await response.json();
+        const productList = data?.products || [];
+        const foundProduct = productList.find((p) => p.id === parseInt(id));
         if (!foundProduct) {
-          throw new Error(MESSAGES.ERROR_NOT_FOUND); // Ném lỗi nếu không tìm thấy sản phẩm
+          throw new Error(MESSAGES.ERROR_NOT_FOUND);
         }
-        setProduct(foundProduct); // Cập nhật state với sản phẩm tìm thấy
+        setProduct(foundProduct);
       } catch (err) {
-        setError(err.message); // Lưu thông báo lỗi vào state nếu có lỗi xảy ra
+        setError(err.message);
       } finally {
-        setLoading(false); // Tắt trạng thái đang tải dù thành công hay thất bại
+        setLoading(false);
       }
     };
 
-    fetchProduct(); // Gọi hàm lấy dữ liệu
-  }, [id]); // Chạy lại khi id thay đổi
+    fetchProduct();
+  }, [id]);
 
-  // Hàm xử lý thêm sản phẩm vào giỏ hàng, dùng useCallback để tối ưu hiệu năng
   const handleAddToCart = useCallback(() => {
     if (!isLoggedIn) {
-      setSuccessMessage(MESSAGES.LOGIN_REQUIRED); // Hiển thị thông báo nếu chưa đăng nhập
-      setTimeout(() => navigate("/"), 1000); // Chuyển hướng về trang đăng nhập sau 1 giây
+      setSuccessMessage(MESSAGES.LOGIN_REQUIRED);
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
       return;
     }
 
-    if (!product) return; // Thoát nếu không có sản phẩm
-    addToCart(product); // Gọi hàm từ CartContext để thêm sản phẩm vào giỏ
-    setSuccessMessage(MESSAGES.SUCCESS_ADD_TO_CART); // Hiển thị thông báo thành công
+    if (!product) return;
+    addToCart(product);
+    setSuccessMessage(MESSAGES.SUCCESS_ADD_TO_CART);
 
     const timer = setTimeout(() => {
-      setSuccessMessage(""); // Xóa thông báo sau SUCCESS_MESSAGE_TIMEOUT
+      setSuccessMessage("");
     }, SUCCESS_MESSAGE_TIMEOUT);
 
-    return () => clearTimeout(timer); // Dọn dẹp timer khi component unmount
-  }, [product, addToCart, isLoggedIn, navigate]); // Phụ thuộc vào các giá trị này
+    return () => clearTimeout(timer);
+  }, [product, addToCart, isLoggedIn, navigate]);
 
-  // Xử lý giao diện khi đang tải
   if (loading) {
     return <p className="loading">{MESSAGES.LOADING}</p>;
   }
 
-  // Xử lý giao diện khi có lỗi
   if (error) {
     return <p className="error">❌ {error}</p>;
   }
 
-  // Xử lý giao diện khi không có sản phẩm
   if (!product) {
     return <p className="warning">{MESSAGES.WARNING_NO_DATA}</p>;
   }
 
-  // Render giao diện chi tiết sản phẩm
   return (
     <div className="product-detail">
-      <header className="header">
-        {/* Link quay lại trang chủ */}
-        <Link to="/home" className="store-title">
-          📱 MobileStore
-        </Link>
-        {/* Link đến trang giỏ hàng, hiển thị số lượng sản phẩm */}
-        <Link to="/cart" className="cart-button">
-          🛍 Giỏ hàng ({cart.length})
-        </Link>
-      </header>
-
       <section className="product-content">
-        <h2>{product.name}</h2> {/* Tên sản phẩm */}
-        <img
-          src={product.image}
-          alt={product.name}
-          className="product-image"
-        /> {/* Hình ảnh sản phẩm */}
+        <h2>{product.name}</h2>
+        <img src={product.image} alt={product.name} className="product-image" />
         <p className="price">
-          💰 {product.price.toLocaleString("vi-VN")} VNĐ {/* Giá sản phẩm, định dạng tiền tệ VN */}
-        </p>
-        <p className="description">{product.description}</p> {/* Mô tả sản phẩm */}
+          💰 {product.price.toLocaleString("vi-VN")} VNĐ
+        </p> {/* Đóng thẻ p của price */}
+        <p className="description">{product.description}</p> {/* Thẻ p riêng cho description */}
 
         <div className="specs">
-          <h3>⚙️ Thông số kỹ thuật</h3> {/* Tiêu đề thông số kỹ thuật */}
+          <h3>⚙️ Thông số kỹ thuật</h3>
           <ul>
-            <li>📱 Màn hình: {product.screen}</li> {/* Thông số màn hình */}
-            <li>⚡ Chip: {product.chip}</li> {/* Thông số chip */}
-            <li>💾 RAM: {product.ram}</li> {/* Thông số RAM */}
-            <li>💽 Bộ nhớ: {product.storage}</li> {/* Thông số bộ nhớ */}
-            <li>📷 Camera: {product.camera}</li> {/* Thông số camera */}
-            <li>🔋 Pin: {product.battery}</li> {/* Thông số pin */}
+            <li>📱 Màn hình: {product.screen}</li>
+            <li>⚡ Chip: {product.chip}</li>
+            <li>💾 RAM: {product.ram}</li>
+            <li>💽 Bộ nhớ: {product.storage}</li>
+            <li>📷 Camera: {product.camera}</li>
+            <li>🔋 Pin: {product.battery}</li>
           </ul>
         </div>
 
-        {/* Hiển thị thông báo thành công hoặc yêu cầu đăng nhập nếu có */}
         {successMessage && (
           <p className="success-message">{successMessage}</p>
         )}
       </section>
 
       <div className="button-group">
-        {/* Nút thêm vào giỏ hàng */}
         <button className="add-to-cart" onClick={handleAddToCart}>
           🛒 Thêm vào giỏ
         </button>
-        {/* Nút quay lại trang chủ */}
         <Link to="/home">
           <button className="back-button">⬅ Quay lại</button>
         </Link>
@@ -147,4 +126,4 @@ const ProductDetail = () => {
   );
 };
 
-export default ProductDetail; // Xuất component để sử dụng ở nơi khác
+export default ProductDetail;

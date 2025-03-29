@@ -3,11 +3,10 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./OrderHistory.css";
 
-// Component OrderHistory - Hiển thị lịch sử đơn hàng
+// Component OrderHistory
 const OrderHistory = () => {
-  const [orders, setOrders] = useState([]); // State lưu danh sách đơn hàng
+  const [orders, setOrders] = useState([]);
 
-  // Lấy danh sách đơn hàng từ localStorage khi component mount
   useEffect(() => {
     const storedOrders = JSON.parse(localStorage.getItem("orders")) || [];
     setOrders(storedOrders);
@@ -15,7 +14,7 @@ const OrderHistory = () => {
 
   return (
     <div className="order-history-container">
-      <h2>📜 Lịch sử đơn hàng</h2>
+      <h2>📜 Lịch sử đơn hàng</h2> {/* Giữ tiêu đề này vì đây là nội dung chính */}
       {orders.length === 0 ? (
         <p>Chưa có đơn hàng nào.</p>
       ) : (

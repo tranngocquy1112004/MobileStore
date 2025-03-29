@@ -10,7 +10,7 @@ import { AuthContext } from "./account/AuthContext"; // Context quản lý trạ
 import { AuthProvider } from "./account/AuthContext"; // Provider cho AuthContext
 import { CartProvider } from "./pages/CartContext"; // Provider cho CartContext
 import Footer from "./components/Footer"; // Component Footer chung
-
+import Header from "./components/Header";
 // Component ProtectedRoute - Bảo vệ các route yêu cầu đăng nhập
 const ProtectedRoute = ({ children }) => {
   const authContext = useContext(AuthContext); // Lấy AuthContext từ useContext
@@ -31,6 +31,7 @@ const App = () => {
     <AuthProvider>
       <CartProvider>
         <Router>
+          <Header /> {/* Thêm Header vào đây */}
           <Routes>
             <Route path="/" element={<Account />} />
             <Route

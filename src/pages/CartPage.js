@@ -1,8 +1,9 @@
-import React, { useContext, useState } from "react"; // Thêm useState
+// pages/CartPage.jsx
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext";
 import { AuthContext } from "../account/AuthContext";
-import CheckoutModal from "../components/CheckoutModal"; // Import modal
+import CheckoutModal from "../components/CheckoutModal";
 import "./CartPage.css";
 
 // Constants
@@ -64,24 +65,21 @@ const CartPage = () => {
   const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } =
     useContext(CartContext);
   const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false };
-  const [showModal, setShowModal] = useState(false); // State để hiển thị modal
+  const [showModal, setShowModal] = useState(false);
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Xử lý khi nhấn nút "Mua hàng"
   const handleCheckout = () => {
     if (!isLoggedIn) {
       alert(MESSAGES.LOGIN_REQUIRED);
       return navigate("/");
     }
-    setShowModal(true); // Hiển thị modal xác nhận
+    setShowModal(true);
   };
 
-  // Xử lý khi xác nhận thanh toán
   const handleConfirmCheckout = (shippingInfo) => {
-    // Lưu đơn hàng vào localStorage (sẽ dùng cho Lịch sử đơn hàng)
     const order = {
-      id: Date.now(), // ID đơn hàng dựa trên timestamp
+      id: Date.now(),
       items: cart,
       totalPrice,
       shippingInfo,
@@ -96,14 +94,13 @@ const CartPage = () => {
     navigate("/home");
   };
 
-  // Xử lý khi hủy modal
   const handleCancelCheckout = () => {
     setShowModal(false);
   };
 
   return (
     <div className="cart-container">
-      <h2>🛍 Giỏ Hàng</h2>
+      <h2>🛍 Giỏ Hàng</h2> {/* Giữ tiêu đề này vì đây là nội dung chính */}
 
       {cart.length === 0 ? (
         <EmptyCart />
@@ -133,14 +130,14 @@ const CartPage = () => {
         />
       )}
 
-    <div className="cart-links">
+      <div className="cart-links">
         <Link to="/orders" className="order-history-link">
           📜 Xem lịch sử đơn hàng
         </Link>
         <Link to="/home" className="back-button">
           ⬅ Quay lại cửa hàng
         </Link>
-    </div>
+      </div>
     </div>
   );
 };
