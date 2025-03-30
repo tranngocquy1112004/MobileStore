@@ -2,18 +2,18 @@
 
 /* Container chính của trang danh sách sản phẩm */
 .product-page {
-  padding: 30px; /* Tăng padding để thoáng hơn */
-  background: linear-gradient(135deg, #fff0f5, #ffe4e9); /* Gradient hồng nhạt */
-  min-height: 100vh; /* Đảm bảo chiều cao tối thiểu là toàn màn hình */
+  padding: 30px;
+  background: linear-gradient(135deg, #fff0f5, #ffe4e9);
+  min-height: 100vh;
 }
 
 /* Tiêu đề "Danh sách sản phẩm" */
 .product-page h2 {
-  color: #ff69b4; /* Hồng đậm */
-  font-size: 1.5rem; /* Kích thước chữ vừa phải */
+  color: #ff69b4;
+  font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 25px; /* Tăng khoảng cách dưới */
+  margin-bottom: 25px;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -21,27 +21,27 @@
 .filter-section {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Tăng khoảng cách giữa các phần tử */
-  margin-bottom: 25px; /* Tăng khoảng cách dưới */
+  gap: 15px;
+  margin-bottom: 25px;
 }
 
 /* Input tìm kiếm */
 .search-input {
-  padding: 12px; /* Tăng padding cho thoải mái */
-  border: 1px solid #ffccd5; /* Viền hồng nhạt */
-  border-radius: 8px; /* Bo góc mềm mại */
+  padding: 12px;
+  border: 1px solid #ffccd5;
+  border-radius: 8px;
   background-color: #fff;
   color: #333;
-  font-size: 1rem; /* Kích thước chữ vừa phải */
+  font-size: 1rem;
   width: 100%;
-  max-width: 300px; /* Giới hạn chiều rộng */
-  margin: 0 auto; /* Căn giữa */
+  max-width: 300px;
+  margin: 0 auto;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .search-input:focus {
-  border-color: #ff69b4; /* Viền hồng đậm khi focus */
-  box-shadow: 0 0 5px rgba(255, 105, 180, 0.3); /* Thêm bóng nhẹ khi focus */
+  border-color: #ff69b4;
+  box-shadow: 0 0 5px rgba(255, 105, 180, 0.3);
   outline: none;
 }
 
@@ -49,114 +49,102 @@
 .brand-buttons {
   display: flex;
   justify-content: center;
-  gap: 10px; /* Khoảng cách giữa các nút */
-  flex-wrap: wrap; /* Cho phép xuống dòng trên thiết bị nhỏ */
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Nút lọc thương hiệu */
 .brand-button {
-  padding: 8px 15px; /* Tăng padding cho thoải mái */
+  padding: 8px 15px;
   border: none;
   border-radius: 20px;
-  background: #ffd1dc; /* Hồng nhạt */
-  color: #ff69b4; /* Màu chữ hồng đậm */
-  font-size: 1rem; /* Kích thước chữ vừa phải */
+  background: #ffd1dc;
+  color: #ff69b4;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .brand-button:hover {
-  background: #ff99ac; /* Hồng đậm hơn khi hover */
-  transform: scale(1.03); /* Phóng to nhẹ */
-  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  background: #ff99ac;
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3);
 }
 
 .brand-button.active {
-  background: #ff80ab; /* Hồng đậm khi được chọn */
+  background: #ff80ab;
   color: white;
 }
 
 /* Container cho danh sách sản phẩm */
 .product-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 sản phẩm mỗi dòng */
-  gap: 20px; /* Khoảng cách giữa các sản phẩm */
-  max-width: 1000px; /* Giới hạn chiều rộng để đảm bảo 4 sản phẩm trên 1 dòng */
-  margin: 0 auto; /* Căn giữa */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Liên kết bao quanh thẻ sản phẩm */
+.product-card-link {
+  text-decoration: none; /* Loại bỏ gạch chân mặc định của Link */
+  display: block; /* Đảm bảo Link bao quanh toàn bộ card */
 }
 
 /* Thẻ sản phẩm */
 .product-card {
-  border: 1px solid #ffccd5; /* Viền hồng nhạt */
-  padding: 15px; /* Tăng padding cho thoáng */
+  border: 1px solid #ffccd5;
+  padding: 15px;
   text-align: center;
-  background: #fff5f7; /* Nền trắng ngọc trai với chút hồng */
-  border-radius: 10px; /* Bo góc mềm mại */
-  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3); /* Bóng hồng nhẹ */
-  color: #333; /* Màu chữ mặc định */
+  background: #fff5f7;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3);
+  color: #333;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */
+  box-sizing: border-box;
+  cursor: pointer; /* Thêm con trỏ để người dùng biết có thể nhấp */
 }
 
 .product-card:hover {
-  transform: translateY(-5px); /* Nhẹ nhàng nâng lên khi hover */
-  box-shadow: 0 8px 16px rgba(255, 105, 180, 0.4); /* Bóng đậm hơn khi hover */
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(255, 105, 180, 0.4);
 }
 
 /* Ảnh sản phẩm */
 .product-image {
   max-width: 100%;
   height: auto;
-  border-radius: 8px; /* Bo góc ảnh */
+  border-radius: 8px;
   transition: transform 0.3s ease;
 }
 
 .product-image:hover {
-  transform: scale(1.02); /* Phóng to nhẹ khi hover */
+  transform: scale(1.02);
 }
 
 /* Tên sản phẩm */
 .product-card h3 {
-  font-size: 1.1rem; /* Kích thước chữ vừa phải */
-  margin: 10px 0; /* Tăng khoảng cách trên dưới */
-  color: #ff69b4; /* Hồng đậm */
+  font-size: 1.1rem;
+  margin: 10px 0;
+  color: #ff69b4;
   font-weight: 600;
 }
 
 /* Giá sản phẩm */
 .product-card .price {
-  font-size: 1rem; /* Kích thước chữ vừa phải */
-  color: #ff85a2; /* Hồng đào */
+  font-size: 1rem;
+  color: #ff85a2;
   font-weight: 700;
-  margin-bottom: 10px; /* Thêm khoảng cách dưới */
-}
-
-/* Nút "Xem chi tiết" */
-.detail-button {
-  padding: 8px 15px; /* Tăng padding cho thoải mái */
-  background: #ff80ab; /* Hồng đậm */
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.9rem; /* Kích thước chữ vừa phải */
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-}
-
-.detail-button:hover {
-  background: #ff69b4; /* Hồng đậm hơn khi hover */
-  transform: scale(1.03); /* Phóng to nhẹ */
-  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  margin-bottom: 10px;
 }
 
 /* Thông báo loading, error, và không có sản phẩm */
 .loading,
 .error,
 .no-products {
-  font-size: 1.1rem; /* Kích thước chữ vừa phải */
-  color: #ff4d88; /* Hồng đậm */
+  font-size: 1.1rem;
+  color: #ff4d88;
   font-weight: 700;
   text-align: center;
   margin: 20px 0;
@@ -165,35 +153,33 @@
 /* Phần phân trang */
 .pagination {
   display: flex;
-  justify-content: center; /* Căn giữa */
+  justify-content: center;
   align-items: center;
-  gap: 10px; /* Khoảng cách giữa các phần tử */
+  gap: 10px;
   margin-top: 20px;
 }
 
 /* Nút "Trang trước" và "Trang sau" */
 .pagination-button {
-  background: #ffd1dc; /* Hồng nhạt */
-  color: #ff69b4; /* Hồng đậm */
+  background: #ffd1dc;
+  color: #ff69b4;
   border: none;
   padding: 10px 15px;
   font-size: 16px;
-  border-radius: 20px; /* Bo góc tròn */
+  border-radius: 20px;
   cursor: pointer;
   font-weight: 500;
   transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng hover cho nút */
 .pagination-button:hover:not(:disabled) {
-  background: #ff99ac; /* Hồng đậm hơn khi hover */
-  transform: scale(1.03); /* Phóng to nhẹ */
-  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3); /* Thêm bóng khi hover */
+  background: #ff99ac;
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3);
 }
 
-/* Trạng thái disabled cho nút */
 .pagination-button:disabled {
-  background: #fff0f5; /* Màu nhạt khi disabled */
+  background: #fff0f5;
   color: #ffccd5;
   cursor: not-allowed;
 }
@@ -204,59 +190,54 @@
   font-weight: 700;
   color: white;
   padding: 10px 15px;
-  background: #ff80ab; /* Hồng đậm */
+  background: #ff80ab;
   border-radius: 20px;
 }
 
 /* Responsive cho tablet và mobile (dưới 768px) */
 @media (max-width: 768px) {
   .product-page {
-    padding: 20px; /* Giảm padding */
+    padding: 20px;
   }
 
   .product-page h2 {
-    font-size: 1.3rem; /* Giảm kích thước font */
+    font-size: 1.3rem;
   }
 
   .filter-section {
-    gap: 10px; /* Giảm khoảng cách */
+    gap: 10px;
   }
 
   .search-input {
-    max-width: 250px; /* Giảm chiều rộng */
+    max-width: 250px;
   }
 
   .brand-button {
-    padding: 6px 12px; /* Giảm padding */
-    font-size: 0.9rem; /* Giảm kích thước font */
+    padding: 6px 12px;
+    font-size: 0.9rem;
   }
 
   .product-list {
-    grid-template-columns: repeat(2, 1fr); /* 2 sản phẩm mỗi dòng */
-    gap: 15px; /* Giảm khoảng cách */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
   }
 
   .product-card {
-    padding: 10px; /* Giảm padding */
+    padding: 10px;
   }
 
   .product-card h3 {
-    font-size: 1rem; /* Giảm kích thước font */
+    font-size: 1rem;
   }
 
   .product-card .price {
-    font-size: 0.9rem; /* Giảm kích thước font */
-  }
-
-  .detail-button {
-    padding: 6px 12px; /* Giảm padding */
-    font-size: 0.8rem; /* Giảm kích thước font */
+    font-size: 0.9rem;
   }
 
   .loading,
   .error,
   .no-products {
-    font-size: 1rem; /* Giảm kích thước font */
+    font-size: 1rem;
   }
 
   .pagination-button {
@@ -273,48 +254,43 @@
 /* Responsive cho điện thoại nhỏ (dưới 480px) */
 @media (max-width: 480px) {
   .product-page {
-    padding: 15px; /* Giảm padding thêm */
+    padding: 15px;
   }
 
   .product-page h2 {
-    font-size: 1.1rem; /* Giảm kích thước font thêm */
+    font-size: 1.1rem;
   }
 
   .search-input {
-    max-width: 200px; /* Giảm chiều rộng thêm */
+    max-width: 200px;
   }
 
   .brand-button {
-    padding: 5px 10px; /* Giảm padding thêm */
-    font-size: 0.8rem; /* Giảm kích thước font thêm */
+    padding: 5px 10px;
+    font-size: 0.8rem;
   }
 
   .product-list {
-    grid-template-columns: repeat(2, 1fr); /* 2 sản phẩm mỗi dòng */
-    gap: 10px; /* Giảm khoảng cách thêm */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .product-card {
-    padding: 8px; /* Giảm padding thêm */
+    padding: 8px;
   }
 
   .product-card h3 {
-    font-size: 0.9rem; /* Giảm kích thước font thêm */
+    font-size: 0.9rem;
   }
 
   .product-card .price {
-    font-size: 0.8rem; /* Giảm kích thước font thêm */
-  }
-
-  .detail-button {
-    padding: 5px 10px; /* Giảm padding thêm */
-    font-size: 0.7rem; /* Giảm kích thước font thêm */
+    font-size: 0.8rem;
   }
 
   .loading,
   .error,
   .no-products {
-    font-size: 0.9rem; /* Giảm kích thước font thêm */
+    font-size: 0.9rem;
   }
 
   .pagination-button {

@@ -1,4 +1,3 @@
-// pages/CartPage.jsx
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext";
@@ -6,14 +5,12 @@ import { AuthContext } from "../account/AuthContext";
 import CheckoutModal from "../components/CheckoutModal";
 import "./CartPage.css";
 
-// Constants
 const MESSAGES = {
   EMPTY_CART: "Giỏ hàng trống",
   CHECKOUT_SUCCESS: "Đặt hàng thành công!",
   LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!",
 };
 
-// Component CartItem
 const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
   const isDecreaseDisabled = item.quantity === 1;
 
@@ -42,7 +39,6 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
   );
 };
 
-// Component CartSummary
 const CartSummary = ({ totalPrice, onCheckout }) => (
   <div className="cart-summary">
     <h3 className="total-price">
@@ -54,16 +50,13 @@ const CartSummary = ({ totalPrice, onCheckout }) => (
   </div>
 );
 
-// Component EmptyCart
 const EmptyCart = () => (
   <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p>
 );
 
-// Component CartPage
 const CartPage = () => {
   const navigate = useNavigate();
-  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } =
-    useContext(CartContext);
+  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useContext(CartContext);
   const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false };
   const [showModal, setShowModal] = useState(false);
 
@@ -72,7 +65,8 @@ const CartPage = () => {
   const handleCheckout = () => {
     if (!isLoggedIn) {
       alert(MESSAGES.LOGIN_REQUIRED);
-      return navigate("/");
+      navigate("/");
+      return;
     }
     setShowModal(true);
   };
@@ -87,21 +81,18 @@ const CartPage = () => {
     };
     const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
     localStorage.setItem("orders", JSON.stringify([...existingOrders, order]));
-
+    
     alert(MESSAGES.CHECKOUT_SUCCESS);
     clearCart();
     setShowModal(false);
     navigate("/home");
   };
 
-  const handleCancelCheckout = () => {
-    setShowModal(false);
-  };
+  const handleCancelCheckout = () => setShowModal(false);
 
   return (
     <div className="cart-container">
-      <h2>🛍 Giỏ Hàng</h2> {/* Giữ tiêu đề này vì đây là nội dung chính */}
-
+      <h2>🛍 Giỏ Hàng</h2>
       {cart.length === 0 ? (
         <EmptyCart />
       ) : (
@@ -120,7 +111,6 @@ const CartPage = () => {
           <CartSummary totalPrice={totalPrice} onCheckout={handleCheckout} />
         </>
       )}
-
       {showModal && (
         <CheckoutModal
           cart={cart}
@@ -129,7 +119,6 @@ const CartPage = () => {
           onCancel={handleCancelCheckout}
         />
       )}
-
       <div className="cart-links">
         <Link to="/orders" className="order-history-link">
           📜 Xem lịch sử đơn hàng

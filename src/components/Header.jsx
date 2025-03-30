@@ -1,4 +1,3 @@
-// components/Header.jsx
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "../pages/CartContext";
@@ -6,14 +5,12 @@ import { AuthContext } from "../account/AuthContext";
 import UserProfileModal from "./UserProfileModal";
 import "./Header.css";
 
-// Component Header - Hiển thị header chung cho các trang
 const Header = () => {
-  const { cart } = useContext(CartContext); // Lấy giỏ hàng từ CartContext
-  const { isLoggedIn, logout } = useContext(AuthContext); // Lấy trạng thái đăng nhập và hàm logout
+  const { cart } = useContext(CartContext);
+  const { user, isLoggedIn, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [showProfileModal, setShowProfileModal] = useState(false); // State để hiển thị modal thông tin người dùng
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // Xử lý đăng xuất
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -22,7 +19,7 @@ const Header = () => {
   return (
     <header className="header">
       <Link to="/home" className="store-title">
-         MobileStore
+        MobileStore
       </Link>
       <div className="header-actions">
         {isLoggedIn ? (
@@ -31,7 +28,7 @@ const Header = () => {
               className="profile-button"
               onClick={() => setShowProfileModal(true)}
             >
-              Xin Chào Qúy cuti
+              Xin Chào {user?.username || "Khách"}
             </button>
             <button className="logout-button" onClick={handleLogout}>
               Đăng xuất
