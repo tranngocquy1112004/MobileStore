@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import "./ProductList.css";
 
-// Constants
 const API_URL = `${process.env.PUBLIC_URL}/db.json`;
 const MESSAGES = {
   LOADING: "⏳ Đang tải...",
@@ -11,48 +10,50 @@ const MESSAGES = {
   NO_PRODUCTS: "Không có sản phẩm nào để hiển thị",
 };
 
-// Utility Functions
 const fetchProducts = async (signal) => {
   try {
     const response = await fetch(API_URL, { signal });
-    
     if (!response.ok) throw new Error(MESSAGES.ERROR);
     
     const data = await response.json();
     return Array.isArray(data) ? data : data.products || [];
   } catch (error) {
-    if (error.name !== "AbortError") {
-      console.error("API fetch error:", error);
-      throw error;
-    }
+    if (error.name !== "AbortError") throw error;
   }
 };
 
-// Sub-components
 const StatusMessage = ({ type }) => (
-  <p className={`status-message ${type}-message`}>
-    {MESSAGES[type.toUpperCase()]}
-  </p>
+  <div className={`status-container ${type}`}>
+    <p className="status-message">{MESSAGES[type.toUpperCase()]}</p>
+  </div>
 );
 
-const ProductCard = ({ id, name, image, price }) => (
+const ProductCard = ({ product }) => (
   <div className="product-card">
     <div className="product-image-container">
-      <img src={image} alt={name} className="product-image" loading="lazy" />
+      <img 
+        src={product.image} 
+        alt={product.name} 
+        className="product-image" 
+        loading="lazy"
+      />
     </div>
     <div className="product-info">
-      <h3 className="product-name">{name}</h3>
+      <h3 className="product-name">{product.name}</h3>
       <p className="product-price">
-        💰 {price.toLocaleString("vi-VN")} VNĐ
+        💰 {product.price.toLocaleString("vi-VN")} VNĐ
       </p>
-      <Link to={`/products/${id}`} className="product-details-link">
+      <Link 
+        to={`/products/${product.id}`} 
+        className="product-details-link"
+        aria-label={`Xem chi tiết ${product.name}`}
+      >
         <button className="details-button">Chi tiết</button>
       </Link>
     </div>
   </div>
 );
 
-// Main Component
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [status, setStatus] = useState("loading");
@@ -63,12 +64,9 @@ const ProductList = () => {
     const loadProducts = async () => {
       try {
         const productList = await fetchProducts(controller.signal);
-        if (!productList?.length) return setStatus("no_products");
-        
-        setProducts(productList);
-        setStatus("loaded");
-      } catch (err) {
-        console.error("Product loading error:", err);
+        setProducts(productList || []);
+        setStatus(productList?.length ? "loaded" : "no_products");
+      } catch {
         setStatus("error");
       }
     };
@@ -82,23 +80,24 @@ const ProductList = () => {
   }
 
   return (
-    <div className="product-list-container">
-      <h2 className="product-list-title">📱 Danh sách sản phẩm</h2>
+    <main className="product-list-container">
+      <h1 className="product-list-title">📱 Danh sách sản phẩm</h1>
       <div className="product-grid">
-        {products.map((product) => (
-          <ProductCard key={product.id} {...product} />
+        {products.map(product => (
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
-    </div>
+    </main>
   );
 };
 
-// Prop Types
 ProductCard.propTypes = {
-  id: PropTypes.number.isRequired,
-  name: PropTypes.string.isRequired,
-  image: PropTypes.string.isRequired,
-  price: PropTypes.number.isRequired,
+  product: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    image: PropTypes.string.isRequired,
+    price: PropTypes.number.isRequired,
+  }).isRequired,
 };
 
 StatusMessage.propTypes = {
