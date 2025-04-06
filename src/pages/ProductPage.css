@@ -402,3 +402,60 @@
       font-size: 0.8rem;
     }
   }
+  .view-details-button {
+    display: inline-block;
+    background: #ffccd5; /* Hồng nhạt */
+    color: #ff6f91; /* Màu chữ hồng đậm */
+    padding: 8px 15px;
+    border-radius: 20px; /* Bo góc tròn */
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  /* Hiệu ứng hover cho nút "Xem chi tiết" */
+  .view-details-button:hover {
+    background: #ff99ac; /* Hồng đậm hơn khi hover */
+    transform: scale(1.05);
+  }
+  
+  /* Điều chỉnh trong ProductCard để chứa nút "Xem chi tiết" */
+  .product-card {
+    border: 1px solid #ffccd5;
+    padding: 15px;
+    text-align: center;
+    background: #fff5f7;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3);
+    color: #333;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+    min-height: 320px; /* Tăng min-height để chứa nút */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  /* Responsive cho nút "Xem chi tiết" */
+  @media (max-width: 768px) {
+    .view-details-button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+  
+    .product-card {
+      min-height: 300px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .view-details-button {
+      padding: 5px 10px;
+      font-size: 11px;
+    }
+  
+    .product-card {
+      min-height: 280px;
+    }
+  }
