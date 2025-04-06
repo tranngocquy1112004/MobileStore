@@ -1,79 +1,66 @@
+// Import các thư viện và hook cần thiết từ React
 import React, { createContext, useState, useEffect } from "react";
 
-// Constants
-const LOCAL_STORAGE_KEY = "currentUser"; // Khai báo key cố định dùng để lưu trữ dữ liệu user trong localStorage
+// Định nghĩa key cố định dùng cho localStorage
+const LOCAL_STORAGE_KEY = "currentUser"; // Key để lưu thông tin người dùng hiện tại trong localStorage
 
-// Default context value
+// Giá trị mặc định cho AuthContext
 const defaultAuthContext = {
-  isLoggedIn: false, // Giá trị mặc định: người dùng chưa đăng nhập
-  user: null, // Giá trị mặc định: không có thông tin user
-  login: () => {}, // Hàm login mặc định, chưa làm gì cả
-  logout: () => {}, // Hàm logout mặc định, chưa làm gì cả
+  isLoggedIn: false, // Trạng thái mặc định: chưa đăng nhập
+  user: null, // Thông tin người dùng mặc định: không có
+  login: () => {}, // Hàm đăng nhập mặc định (không làm gì)
+  logout: () => {}, // Hàm đăng xuất mặc định (không làm gì)
 };
 
-// Create AuthContext
-export const AuthContext = createContext(defaultAuthContext); // Tạo Context với giá trị mặc định là defaultAuthContext
+// Tạo AuthContext với giá trị mặc định
+export const AuthContext = createContext(defaultAuthContext); // Context để chia sẻ trạng thái xác thực
 
-// AuthProvider Component
-export const AuthProvider = ({ children }) => {
-  // Khai báo state để theo dõi trạng thái đăng nhập, giá trị ban đầu là false
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // Khai báo state để lưu thông tin user, giá trị ban đầu là null
-  const [user, setUser] = useState(null);
+// Component AuthProvider - Cung cấp context xác thực cho các component con
+export const AuthProvider = ({ children }) => { // Nhận props children (các component con)
+  // State quản lý trạng thái đăng nhập
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Khởi tạo: chưa đăng nhập
+  // State quản lý thông tin người dùng
+  const [user, setUser] = useState(null); // Khởi tạo: không có thông tin người dùng
 
-  // Hook useEffect chạy một lần khi component mount để kiểm tra trạng thái đăng nhập
+  // useEffect để kiểm tra trạng thái đăng nhập khi component mount
   useEffect(() => {
-    // Hàm khởi tạo trạng thái xác thực từ localStorage
-    const initializeAuth = () => {
-      // Lấy dữ liệu user từ localStorage dựa trên LOCAL_STORAGE_KEY
-      const savedUser = localStorage.getItem(LOCAL_STORAGE_KEY);
-      // Nếu có dữ liệu trong localStorage
-      if (savedUser) {
-        // Parse chuỗi JSON thành object
-        const parsedUser = JSON.parse(savedUser);
-        // Cập nhật trạng thái đăng nhập thành true
-        setIsLoggedIn(true);
-        // Cập nhật thông tin user từ dữ liệu đã parse
-        setUser(parsedUser);
+    const initializeAuth = () => { // Hàm khởi tạo trạng thái xác thực
+      const savedUser = localStorage.getItem(LOCAL_STORAGE_KEY); // Lấy dữ liệu người dùng từ localStorage
+      if (savedUser) { // Nếu có dữ liệu
+        const parsedUser = JSON.parse(savedUser); // Chuyển chuỗi JSON thành object
+        setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập thành true
+        setUser(parsedUser); // Cập nhật thông tin người dùng
       }
     };
 
-    // Gọi hàm khởi tạo
-    initializeAuth();
-  }, []); // Dependency array rỗng, chỉ chạy một lần khi component mount
+    initializeAuth(); // Gọi hàm khởi tạo
+  }, []); // Dependency rỗng: chỉ chạy một lần khi mount
 
   // Hàm xử lý đăng nhập
-  const login = (userData) => {
-    // Lưu thông tin userData vào localStorage dưới dạng chuỗi JSON
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData));
-    // Cập nhật trạng thái đăng nhập thành true
-    setIsLoggedIn(true);
-    // Cập nhật thông tin user từ dữ liệu truyền vào
-    setUser(userData);
+  const login = (userData) => { // Nhận dữ liệu người dùng từ tham số
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData)); // Lưu dữ liệu vào localStorage dưới dạng JSON
+    setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập thành true
+    setUser(userData); // Cập nhật thông tin người dùng
   };
 
   // Hàm xử lý đăng xuất
   const logout = () => {
-    // Xóa dữ liệu user khỏi localStorage
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    // Cập nhật trạng thái đăng nhập thành false
-    setIsLoggedIn(false);
-    // Đặt lại thông tin user về null
-    setUser(null);
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // Xóa dữ liệu người dùng khỏi localStorage
+    setIsLoggedIn(false); // Cập nhật trạng thái đăng nhập thành false
+    setUser(null); // Đặt lại thông tin người dùng về null
   };
 
-  // Tạo object chứa các giá trị sẽ cung cấp qua Context
+  // Tạo object giá trị context để cung cấp cho các component con
   const authContextValue = {
     isLoggedIn, // Trạng thái đăng nhập hiện tại
-    user, // Thông tin user hiện tại
-    login, // Hàm để đăng nhập
-    logout, // Hàm để đăng xuất
+    user, // Thông tin người dùng hiện tại
+    login, // Hàm xử lý đăng nhập
+    logout, // Hàm xử lý đăng xuất
   };
 
-  // Render AuthContext.Provider và truyền giá trị context cho các component con
   return (
-    <AuthContext.Provider value={authContextValue}>
-      {children} {/* Hiển thị các component con được bao bọc bởi AuthProvider */}
+    <AuthContext.Provider value={authContextValue}> {/* Cung cấp context cho các component con */}
+      {children} {/* Render các component con được bao bọc */}
     </AuthContext.Provider>
   );
 };

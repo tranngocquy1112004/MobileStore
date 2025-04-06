@@ -2,182 +2,143 @@
 import React, { useContext, useState } from "react";
 // Import các component từ react-router-dom để điều hướng
 import { Link, useNavigate } from "react-router-dom";
-// Import các context để truy cập dữ liệu giỏ hàng và xác thực
-import { CartContext } from "./CartContext";
-import { AuthContext } from "../account/AuthContext";
+// Import context để truy cập dữ liệu giỏ hàng và xác thực
+import { CartContext } from "./CartContext"; // Context quản lý giỏ hàng
+import { AuthContext } from "../account/AuthContext"; // Context quản lý xác thực
 // Import component modal thanh toán
-import CheckoutModal from "../components/CheckoutModal";
+import CheckoutModal from "../components/CheckoutModal"; // Modal để nhập thông tin thanh toán
 // Import file CSS cho trang giỏ hàng
-import "./CartPage.css";
+import "./CartPage.css"; // File style cho giao diện
 
-// Định nghĩa các thông báo sử dụng trong ứng dụng
+// Định nghĩa các thông báo cố định
 const MESSAGES = {
-  EMPTY_CART: "Giỏ hàng trống",
-  CHECKOUT_SUCCESS: "Đặt hàng thành công!",
-  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!",
+  EMPTY_CART: "Giỏ hàng trống", // Thông báo khi giỏ hàng rỗng
+  CHECKOUT_SUCCESS: "Đặt hàng thành công!", // Thông báo khi đặt hàng thành công
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Thông báo khi chưa đăng nhập
 };
 
-// Component CartItem hiển thị thông tin một sản phẩm trong giỏ hàng
-const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
-  // Kiểm tra nếu số lượng = 1 thì disable nút giảm số lượng
-  const isDecreaseDisabled = item.quantity === 1;
+// Component CartItem - Hiển thị thông tin một sản phẩm trong giỏ hàng
+const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => { // Nhận props: sản phẩm và các hàm xử lý
+  const isDecreaseDisabled = item.quantity === 1; // Kiểm tra nếu số lượng = 1 thì vô hiệu hóa nút giảm
 
   return (
-    <li className="cart-item">
-      {/* Ảnh sản phẩm */}
-      <img src={item.image} alt={item.name} className="cart-image" />
-      
-      {/* Chi tiết sản phẩm */}
-      <div className="cart-item-details">
+    <li className="cart-item"> {/* Một mục trong danh sách giỏ hàng */}
+      <img src={item.image} alt={item.name} className="cart-image" /> {/* Hình ảnh sản phẩm */}
+      <div className="cart-item-details"> {/* Container cho chi tiết sản phẩm */}
         <p className="cart-name">{item.name}</p> {/* Tên sản phẩm */}
-        {/* Giá sản phẩm định dạng VNĐ */}
-        <p className="cart-price">💰 {item.price.toLocaleString("vi-VN")} VNĐ</p>
-        
-        {/* Điều khiển số lượng */}
-        <div className="quantity-controls">
+        <p className="cart-price">💰 {item.price.toLocaleString("vi-VN")} VNĐ</p> {/* Giá sản phẩm định dạng VN */}
+        <div className="quantity-controls"> {/* Điều khiển số lượng */}
           <button
-            onClick={() => onDecrease(item.id)} // Xử lý giảm số lượng
-            disabled={isDecreaseDisabled} // Disable nếu số lượng = 1
-            className={isDecreaseDisabled ? "disabled" : ""} // Thêm class disabled nếu bị disable
+            onClick={() => onDecrease(item.id)} // Giảm số lượng khi nhấn
+            disabled={isDecreaseDisabled} // Vô hiệu hóa nếu số lượng = 1
+            className={isDecreaseDisabled ? "disabled" : ""} // Thêm class nếu bị vô hiệu hóa
           >
             -
           </button>
           <span>{item.quantity}</span> {/* Hiển thị số lượng hiện tại */}
-          <button onClick={() => onIncrease(item.id)}>+</button> {/* Xử lý tăng số lượng */}
+          <button onClick={() => onIncrease(item.id)}>+</button> {/* Tăng số lượng khi nhấn */}
         </div>
       </div>
-      
-      {/* Nút xóa sản phẩm khỏi giỏ hàng */}
-      <button className="remove-button" onClick={() => onRemove(item.id)}>
+      <button className="remove-button" onClick={() => onRemove(item.id)}> {/* Nút xóa sản phẩm */}
         Xóa
       </button>
     </li>
   );
 };
 
-// Component CartSummary hiển thị tổng tiền và nút thanh toán
-const CartSummary = ({ totalPrice, onCheckout }) => (
-  <div className="cart-summary">
-    {/* Hiển thị tổng tiền định dạng VNĐ */}
-    <h3 className="total-price">
+// Component CartSummary - Hiển thị tổng tiền và nút thanh toán
+const CartSummary = ({ totalPrice, onCheckout }) => ( // Nhận props: tổng tiền và hàm thanh toán
+  <div className="cart-summary"> {/* Container cho phần tóm tắt */}
+    <h3 className="total-price"> {/* Tổng tiền */}
       Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ
     </h3>
-    {/* Nút thanh toán */}
-    <button className="checkout-button" onClick={onCheckout}>
+    <button className="checkout-button" onClick={onCheckout}> {/* Nút thanh toán */}
       🛍 Mua hàng
     </button>
   </div>
 );
 
-// Component EmptyCart hiển thị khi giỏ hàng trống
-const EmptyCart = () => (
-  <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p>
+// Component EmptyCart - Hiển thị khi giỏ hàng trống
+const EmptyCart = () => ( // Không nhận props
+  <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p> // Thông báo giỏ hàng trống
 );
 
-// Component chính CartPage
+// Component chính CartPage - Trang giỏ hàng
 const CartPage = () => {
-  // Hook useNavigate để điều hướng trang
-  const navigate = useNavigate();
-  
-  // Lấy dữ liệu giỏ hàng và các hàm xử lý từ CartContext
-  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useContext(CartContext);
-  
-  // Kiểm tra trạng thái đăng nhập từ AuthContext
-  const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false };
-  
-  // State quản lý hiển thị modal thanh toán
-  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate(); // Hook để điều hướng trang
+  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useContext(CartContext); // Lấy dữ liệu và hàm từ CartContext
+  const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false }; // Lấy trạng thái đăng nhập, mặc định là false nếu không có context
+  const [showModal, setShowModal] = useState(false); // State để hiển thị/ẩn modal thanh toán
 
-  // Tính tổng tiền giỏ hàng
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Tính tổng tiền từ giỏ hàng
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0); // Tổng = giá * số lượng của từng sản phẩm
 
-  // Xử lý khi nhấn nút thanh toán
+  // Xử lý sự kiện nhấn nút thanh toán
   const handleCheckout = () => {
-    // Kiểm tra nếu chưa đăng nhập thì thông báo và chuyển hướng
-    if (!isLoggedIn) {
-      alert(MESSAGES.LOGIN_REQUIRED);
-      navigate("/");
+    if (!isLoggedIn) { // Nếu chưa đăng nhập
+      alert(MESSAGES.LOGIN_REQUIRED); // Hiển thị thông báo yêu cầu đăng nhập
+      navigate("/"); // Chuyển hướng về trang đăng nhập
       return;
     }
-    // Hiển thị modal thanh toán nếu đã đăng nhập
-    setShowModal(true);
+    setShowModal(true); // Hiển thị modal thanh toán nếu đã đăng nhập
   };
 
-  // Xử lý khi xác nhận thanh toán
-  const handleConfirmCheckout = (shippingInfo) => {
-    // Tạo đối tượng đơn hàng mới
-    const order = {
-      id: Date.now(), // ID đơn hàng là timestamp hiện tại
-      items: cart, // Danh sách sản phẩm
+  // Xử lý khi xác nhận thanh toán từ modal
+  const handleConfirmCheckout = (shippingInfo) => { // Nhận thông tin giao hàng từ modal
+    const order = { // Tạo đối tượng đơn hàng mới
+      id: Date.now(), // ID đơn hàng dựa trên timestamp
+      items: cart, // Danh sách sản phẩm trong giỏ hàng
       totalPrice, // Tổng tiền
-      shippingInfo, // Thông tin giao hàng từ modal
-      date: new Date().toISOString(), // Ngày đặt hàng
+      shippingInfo, // Thông tin giao hàng
+      date: new Date().toISOString(), // Thời gian đặt hàng
     };
-    
-    // Lấy danh sách đơn hàng cũ từ localStorage hoặc tạo mới nếu chưa có
-    const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
-    
-    // Lưu đơn hàng mới vào localStorage
-    localStorage.setItem("orders", JSON.stringify([...existingOrders, order]));
-    
-    // Thông báo thành công
-    alert(MESSAGES.CHECKOUT_SUCCESS);
-    
-    // Xóa giỏ hàng sau khi đặt hàng thành công
-    clearCart();
-    
-    // Đóng modal
-    setShowModal(false);
-    
-    // Chuyển hướng về trang chủ
-    navigate("/home");
+
+    const existingOrders = JSON.parse(localStorage.getItem("orders")) || []; // Lấy danh sách đơn hàng cũ từ localStorage
+    localStorage.setItem("orders", JSON.stringify([...existingOrders, order])); // Lưu đơn hàng mới vào localStorage
+
+    alert(MESSAGES.CHECKOUT_SUCCESS); // Thông báo đặt hàng thành công
+    clearCart(); // Xóa toàn bộ giỏ hàng
+    setShowModal(false); // Ẩn modal
+    navigate("/home"); // Chuyển hướng về trang chủ
   };
 
-  // Xử lý khi hủy thanh toán
-  const handleCancelCheckout = () => setShowModal(false);
+  // Xử lý khi hủy thanh toán từ modal
+  const handleCancelCheckout = () => setShowModal(false); // Ẩn modal khi hủy
 
   return (
-    <div className="cart-container">
+    <div className="cart-container"> {/* Container chính của trang giỏ hàng */}
       <h2>🛍 Giỏ Hàng</h2> {/* Tiêu đề trang */}
-      
-      {/* Kiểm tra nếu giỏ hàng trống thì hiển thị EmptyCart, ngược lại hiển thị danh sách sản phẩm */}
-      {cart.length === 0 ? (
-        <EmptyCart />
+      {cart.length === 0 ? ( // Kiểm tra giỏ hàng có rỗng không
+        <EmptyCart /> // Hiển thị thông báo nếu rỗng
       ) : (
-        <>
-          <ul className="cart-list">
-            {/* Render từng sản phẩm trong giỏ hàng */}
-            {cart.map((item) => (
+        <> {/* Fragment để nhóm các phần tử */}
+          <ul className="cart-list"> {/* Danh sách sản phẩm trong giỏ hàng */}
+            {cart.map((item) => ( // Duyệt qua từng sản phẩm
               <CartItem
                 key={item.id} // Key duy nhất cho mỗi sản phẩm
-                item={item} // Thông tin sản phẩm
+                item={item} // Dữ liệu sản phẩm
                 onIncrease={increaseQuantity} // Hàm tăng số lượng
                 onDecrease={decreaseQuantity} // Hàm giảm số lượng
                 onRemove={removeFromCart} // Hàm xóa sản phẩm
               />
             ))}
           </ul>
-          {/* Hiển thị tổng tiền và nút thanh toán */}
-          <CartSummary totalPrice={totalPrice} onCheckout={handleCheckout} />
+          <CartSummary totalPrice={totalPrice} onCheckout={handleCheckout} /> {/* Hiển thị tổng tiền và nút thanh toán */}
         </>
       )}
-      
-      {/* Hiển thị modal thanh toán khi showModal = true */}
-      {showModal && (
+      {showModal && ( // Hiển thị modal nếu showModal = true
         <CheckoutModal
-          cart={cart} // Truyền danh sách sản phẩm
-          totalPrice={totalPrice} // Truyền tổng tiền
-          onConfirm={handleConfirmCheckout} // Hàm xử lý khi xác nhận
-          onCancel={handleCancelCheckout} // Hàm xử lý khi hủy
+          cart={cart} // Truyền danh sách sản phẩm vào modal
+          totalPrice={totalPrice} // Truyền tổng tiền vào modal
+          onConfirm={handleConfirmCheckout} // Hàm xử lý xác nhận
+          onCancel={handleCancelCheckout} // Hàm xử lý hủy
         />
       )}
-      
-      {/* Các liên kết điều hướng */}
-      <div className="cart-links">
-        <Link to="/orders" className="order-history-link">
+      <div className="cart-links"> {/* Container cho các liên kết điều hướng */}
+        <Link to="/orders" className="order-history-link"> {/* Liên kết đến lịch sử đơn hàng */}
           📜 Xem lịch sử đơn hàng
         </Link>
-        <Link to="/home" className="back-button">
+        <Link to="/home" className="back-button"> {/* Liên kết quay lại cửa hàng */}
           ⬅ Quay lại cửa hàng
         </Link>
       </div>
