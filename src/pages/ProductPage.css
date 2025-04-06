@@ -23,67 +23,25 @@
   flex-direction: column;
   gap: 15px;
   margin-bottom: 25px;
-}
-/* Thêm vào file ProductPage.css */
-.no-products-container {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  /* min-height: 300px; */
-  text-align: center;
-  padding: 2rem;
-  /* margin: 2rem auto;  */
-  background-color: #fff5f7;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.1);
 }
 
-.no-products-message {
-  color: #ff69b4;
-  font-size: 1.2rem;
-  margin-bottom: 1.5rem;
-  font-weight: 500;
+/* Container cho thanh tìm kiếm và icon xóa */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
 }
-
-.reset-filters-button {
-  background-color: #ff69b4;
-  color: white;
-  border: none;
-  padding: 0.8rem 2rem;
-  border-radius: 30px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 2px 6px rgba(255, 105, 180, 0.3);
-}
-
-.reset-filters-button:hover {
-  background-color: #ff4d88;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
-}
-
-.reset-icon {
-  font-size: 1.1rem;
-}
-
 
 /* Input tìm kiếm */
 .search-input {
-  padding: 12px;
+  padding: 12px 30px 12px 12px; /* Thêm padding bên phải để chừa chỗ cho icon */
   border: 1px solid #ffccd5;
   border-radius: 8px;
   background-color: #fff;
   color: #333;
   font-size: 1rem;
   width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -91,6 +49,68 @@
   border-color: #ff69b4;
   box-shadow: 0 0 5px rgba(255, 105, 180, 0.3);
   outline: none;
+}
+
+/* Nút xóa trong thanh tìm kiếm */
+.clear-search-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #ff69b4;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.clear-search-button:hover {
+  color: #ff4d88;
+}
+
+/* Input lọc theo giá */
+.price-input {
+  padding: 12px;
+  border: 1px solid #ffccd5;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #333;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 150px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.price-input:focus {
+  border-color: #ff69b4;
+  box-shadow: 0 0 5px rgba(255, 105, 180, 0.3);
+  outline: none;
+}
+
+/* Nút lọc */
+.filter-button {
+  background-color: #ff69b4;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.filter-button:hover {
+  background-color: #ff4d88;
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3);
 }
 
 /* Container cho các nút lọc thương hiệu */
@@ -136,8 +156,8 @@
 
 /* Liên kết bao quanh thẻ sản phẩm */
 .product-card-link {
-  text-decoration: none; /* Loại bỏ gạch chân mặc định của Link */
-  display: block; /* Đảm bảo Link bao quanh toàn bộ card */
+  text-decoration: none;
+  display: block;
 }
 
 /* Thẻ sản phẩm */
@@ -151,7 +171,7 @@
   color: #333;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-sizing: border-box;
-  cursor: pointer; /* Thêm con trỏ để người dùng biết có thể nhấp */
+  cursor: pointer;
 }
 
 .product-card:hover {
@@ -187,10 +207,55 @@
   margin-bottom: 10px;
 }
 
-/* Thông báo loading, error, và không có sản phẩm */
+/* Thông báo khi không có sản phẩm */
+.no-products-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  background-color: #fff5f7;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.1);
+}
+
+.no-products-message {
+  color: #ff69b4;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.reset-filters-button {
+  background-color: #ff69b4;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 6px rgba(255, 105, 180, 0.3);
+}
+
+.reset-filters-button:hover {
+  background-color: #ff4d88;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+}
+
+.reset-icon {
+  font-size: 1.1rem;
+}
+
+/* Thông báo loading, error */
 .loading,
-.error,
-.no-products {
+.error {
   font-size: 1.1rem;
   color: #ff4d88;
   font-weight: 700;
@@ -248,7 +313,7 @@
     padding: 20px;
   }
 
-  .product-page h2 {
+  .product-page h1 {
     font-size: 1.3rem;
   }
 
@@ -256,8 +321,14 @@
     gap: 10px;
   }
 
-  .search-input {
+  .search-container,
+  .price-input {
     max-width: 250px;
+  }
+
+  .filter-button {
+    padding: 10px 15px;
+    font-size: 0.9rem;
   }
 
   .brand-button {
@@ -282,12 +353,6 @@
     font-size: 0.9rem;
   }
 
-  .loading,
-  .error,
-  .no-products {
-    font-size: 1rem;
-  }
-
   .pagination-button {
     padding: 8px 12px;
     font-size: 14px;
@@ -305,12 +370,18 @@
     padding: 15px;
   }
 
-  .product-page h2 {
+  .product-page h1 {
     font-size: 1.1rem;
   }
 
-  .search-input {
+  .search-container,
+  .price-input {
     max-width: 200px;
+  }
+
+  .filter-button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
   }
 
   .brand-button {
@@ -319,7 +390,7 @@
   }
 
   .product-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     gap: 10px;
   }
 
@@ -333,12 +404,6 @@
 
   .product-card .price {
     font-size: 0.8rem;
-  }
-
-  .loading,
-  .error,
-  .no-products {
-    font-size: 0.9rem;
   }
 
   .pagination-button {
