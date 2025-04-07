@@ -1,4 +1,3 @@
-// Import các thư viện và hook cần thiết từ React
 import React, { createContext, useState, useEffect } from "react";
 
 // Định nghĩa key cố định dùng cho localStorage
@@ -16,41 +15,39 @@ const defaultAuthContext = {
 export const AuthContext = createContext(defaultAuthContext); // Context để chia sẻ trạng thái xác thực
 
 // Component AuthProvider - Cung cấp context xác thực cho các component con
-export const AuthProvider = ({ children }) => { // Nhận props children (các component con)
-  // State quản lý trạng thái đăng nhập
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Khởi tạo: chưa đăng nhập
-  // State quản lý thông tin người dùng
-  const [user, setUser] = useState(null); // Khởi tạo: không có thông tin người dùng
+export const AuthProvider = ({ children }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // State quản lý trạng thái đăng nhập, mặc định là false
+  const [user, setUser] = useState(null); // State quản lý thông tin người dùng, mặc định là null
 
-  // useEffect để kiểm tra trạng thái đăng nhập khi component mount
+  // Kiểm tra trạng thái đăng nhập khi component mount
   useEffect(() => {
-    const initializeAuth = () => { // Hàm khởi tạo trạng thái xác thực
+    const initializeAuth = () => {
       const savedUser = localStorage.getItem(LOCAL_STORAGE_KEY); // Lấy dữ liệu người dùng từ localStorage
-      if (savedUser) { // Nếu có dữ liệu
-        const parsedUser = JSON.parse(savedUser); // Chuyển chuỗi JSON thành object
+      if (savedUser) {
+        const parsedUser = JSON.parse(savedUser); // Parse chuỗi JSON thành object
         setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập thành true
         setUser(parsedUser); // Cập nhật thông tin người dùng
       }
     };
 
     initializeAuth(); // Gọi hàm khởi tạo
-  }, []); // Dependency rỗng: chỉ chạy một lần khi mount
+  }, []); // Dependency rỗng: chỉ chạy một lần khi component mount
 
   // Hàm xử lý đăng nhập
-  const login = (userData) => { // Nhận dữ liệu người dùng từ tham số
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData)); // Lưu dữ liệu vào localStorage dưới dạng JSON
-    setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập thành true
+  const login = (userData) => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData)); // Lưu thông tin người dùng vào localStorage
+    setIsLoggedIn(true); // Đặt trạng thái đăng nhập thành true
     setUser(userData); // Cập nhật thông tin người dùng
   };
 
   // Hàm xử lý đăng xuất
   const logout = () => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY); // Xóa dữ liệu người dùng khỏi localStorage
-    setIsLoggedIn(false); // Cập nhật trạng thái đăng nhập thành false
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // Xóa thông tin người dùng khỏi localStorage
+    setIsLoggedIn(false); // Đặt trạng thái đăng nhập thành false
     setUser(null); // Đặt lại thông tin người dùng về null
   };
 
-  // Tạo object giá trị context để cung cấp cho các component con
+  // Object chứa các giá trị cung cấp qua Context
   const authContextValue = {
     isLoggedIn, // Trạng thái đăng nhập hiện tại
     user, // Thông tin người dùng hiện tại
@@ -58,9 +55,12 @@ export const AuthProvider = ({ children }) => { // Nhận props children (các c
     logout, // Hàm xử lý đăng xuất
   };
 
+  // Cung cấp context cho các component con
   return (
-    <AuthContext.Provider value={authContextValue}> {/* Cung cấp context cho các component con */}
+    <AuthContext.Provider value={authContextValue}>
       {children} {/* Render các component con được bao bọc */}
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider; // Xuất AuthProvider để sử dụng ở nơi khác (thường trong App)

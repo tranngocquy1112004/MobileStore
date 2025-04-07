@@ -16,113 +16,89 @@ const MESSAGES = {
 
 // Component chính hiển thị chi tiết sản phẩm
 const ProductDetail = () => {
-  // Lấy ID sản phẩm từ URL params
-  const { id } = useParams();
-  // Hook để điều hướng người dùng
-  const navigate = useNavigate();
-  // Lấy hàm addToCart từ CartContext để thêm sản phẩm vào giỏ hàng
-  const { addToCart } = useContext(CartContext);
-  // Lấy trạng thái đăng nhập từ AuthContext, mặc định là false nếu không có
-  const { isLoggedIn = false } = useContext(AuthContext) || {};
+  const { id } = useParams(); // Lấy ID sản phẩm từ URL params
+  const navigate = useNavigate(); // Hook để điều hướng người dùng
+  const { addToCart } = useContext(CartContext); // Lấy hàm addToCart từ CartContext
+  const { isLoggedIn = false } = useContext(AuthContext) || {}; // Lấy trạng thái đăng nhập, mặc định false nếu không có
 
-  // State để lưu trữ thông tin sản phẩm
-  const [product, setProduct] = useState(null);
-  // State để kiểm soát trạng thái đang tải
-  const [isLoading, setIsLoading] = useState(true);
-  // State để lưu trữ thông báo lỗi
-  const [error, setError] = useState(null);
-  // State để hiển thị thông báo thành công hoặc yêu cầu đăng nhập
-  const [successMessage, setSuccessMessage] = useState("");
+  const [product, setProduct] = useState(null); // State lưu thông tin sản phẩm
+  const [isLoading, setIsLoading] = useState(true); // State kiểm soát trạng thái đang tải
+  const [error, setError] = useState(null); // State lưu thông báo lỗi
+  const [successMessage, setSuccessMessage] = useState(""); // State lưu thông báo thành công hoặc yêu cầu đăng nhập
 
-  // useEffect để fetch dữ liệu sản phẩm khi component mount hoặc khi id thay đổi
+  // Fetch dữ liệu sản phẩm khi component mount hoặc id thay đổi
   useEffect(() => {
-    // Tạo AbortController để hủy fetch nếu component unmount
-    const controller = new AbortController();
+    const controller = new AbortController(); // Tạo AbortController để hủy fetch nếu cần
 
-    // Hàm fetch dữ liệu sản phẩm từ API
     const fetchProduct = async () => {
       try {
         setIsLoading(true); // Bật trạng thái đang tải
-        // Fetch dữ liệu từ file JSON
-        const response = await fetch(API_URL, { signal: controller.signal });
-        // Kiểm tra nếu response không thành công thì throw error
-        if (!response.ok) throw new Error(MESSAGES.ERROR_FETCH);
+        const response = await fetch(API_URL, { signal: controller.signal }); // Fetch dữ liệu từ API
+        if (!response.ok) throw new Error(MESSAGES.ERROR_FETCH); // Báo lỗi nếu fetch thất bại
 
-        // Parse dữ liệu JSON
-        const data = await response.json();
-        // Tìm sản phẩm theo id
-        const foundProduct = data.products?.find(p => p.id === Number(id));
-        // Nếu không tìm thấy sản phẩm, throw error
-        if (!foundProduct) throw new Error(MESSAGES.ERROR_NOT_FOUND);
+        const data = await response.json(); // Parse dữ liệu JSON
+        const foundProduct = data.products?.find((p) => p.id === Number(id)); // Tìm sản phẩm theo id
+        if (!foundProduct) throw new Error(MESSAGES.ERROR_NOT_FOUND); // Báo lỗi nếu không tìm thấy
 
         setProduct(foundProduct); // Lưu sản phẩm vào state
         setError(null); // Xóa thông báo lỗi nếu có
       } catch (err) {
-        // Xử lý lỗi, trừ trường hợp lỗi do hủy fetch (AbortError)
-        if (err.name !== "AbortError") setError(err.message);
+        if (err.name !== "AbortError") setError(err.message); // Xử lý lỗi, bỏ qua nếu là AbortError
       } finally {
         setIsLoading(false); // Tắt trạng thái đang tải
       }
     };
 
     fetchProduct(); // Gọi hàm fetch
-    // Cleanup: Hủy fetch nếu component unmount
-    return () => controller.abort();
+    return () => controller.abort(); // Cleanup: Hủy fetch khi component unmount
   }, [id]); // Dependency: chạy lại khi id thay đổi
 
-  // Hàm xử lý thêm sản phẩm vào giỏ hàng, sử dụng useCallback để tránh tạo lại hàm không cần thiết
+  // Xử lý thêm sản phẩm vào giỏ hàng, dùng useCallback để tối ưu
   const handleAddToCart = useCallback(() => {
-    // Kiểm tra nếu người dùng chưa đăng nhập
     if (!isLoggedIn) {
       setSuccessMessage(MESSAGES.LOGIN_REQUIRED); // Hiển thị thông báo yêu cầu đăng nhập
       setTimeout(() => navigate("/login"), 1000); // Chuyển hướng đến trang đăng nhập sau 1 giây
       return;
     }
 
-    // Kiểm tra nếu không có sản phẩm thì không làm gì
-    if (!product) return;
+    if (!product) return; // Không làm gì nếu không có sản phẩm
 
     addToCart(product); // Thêm sản phẩm vào giỏ hàng
     setSuccessMessage(MESSAGES.SUCCESS_ADD_TO_CART); // Hiển thị thông báo thành công
 
-    // Tạo timer để xóa thông báo và chuyển hướng về trang chủ sau 1 giây
     const timer = setTimeout(() => {
       setSuccessMessage(""); // Xóa thông báo
-      navigate("/home"); // Chuyển hướng về trang chủ
+      navigate("/cart"); // Chuyển hướng về trang chủ
     }, 1000);
 
-    // Cleanup: Xóa timer nếu component unmount
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timer); // Cleanup: Xóa timer nếu component unmount
   }, [product, addToCart, isLoggedIn, navigate]); // Dependencies của useCallback
 
-  // Render trạng thái loading
+  // Hiển thị trạng thái đang tải
   if (isLoading) return <p className="loading">{MESSAGES.LOADING}</p>;
-  // Render trạng thái lỗi
+  // Hiển thị trạng thái lỗi
   if (error) return <p className="error">❌ {error}</p>;
-  // Render nếu không có sản phẩm
+  // Hiển thị nếu không có sản phẩm
   if (!product) return <p className="warning">⚠ Không có dữ liệu sản phẩm</p>;
 
-  // Render chi tiết sản phẩm
+  // Giao diện chi tiết sản phẩm
   return (
     <div className="product-detail">
-      {/* Phần nội dung chính của sản phẩm */}
       <section className="product-content">
         <h2>{product.name}</h2> {/* Tên sản phẩm */}
         <img
-          src={product.image} // Hình ảnh sản phẩm
-          alt={product.name} // Alt text cho hình ảnh
-          className="product-image" // Class CSS cho hình ảnh
-          loading="lazy" // Tải hình ảnh theo kiểu lazy loading
+          src={product.image}
+          alt={product.name}
+          className="product-image"
+          loading="lazy" // Tải ảnh theo kiểu lazy để tối ưu
         />
         <div className="price-section">
-          {/* Giá sản phẩm, định dạng tiền tệ VNĐ */}
           <p className="price">
-            💰 {product.price.toLocaleString("vi-VN")} VNĐ
+            💰 {product.price.toLocaleString("vi-VN")} VNĐ {/* Giá sản phẩm, định dạng VNĐ */}
           </p>
         </div>
         <p className="description">{product.description}</p> {/* Mô tả sản phẩm */}
 
-        {/* Thông số kỹ thuật của sản phẩm */}
         <div className="specs">
           <h3>⚙️ Thông số kỹ thuật</h3>
           <ul>
@@ -135,30 +111,25 @@ const ProductDetail = () => {
           </ul>
         </div>
 
-        {/* Hiển thị thông báo thành công hoặc yêu cầu đăng nhập nếu có */}
         {successMessage && (
-          <p className="success-message">{successMessage}</p>
+          <p className="success-message">{successMessage}</p> // Hiển thị thông báo thành công hoặc yêu cầu đăng nhập
         )}
       </section>
 
-      {/* Nhóm các nút điều hướng */}
       <div className="button-group">
-        {/* Nút thêm vào giỏ hàng */}
         <button
           className="add-to-cart"
           onClick={handleAddToCart}
           disabled={!product} // Vô hiệu hóa nếu không có sản phẩm
         >
-          🛒 Thêm vào giỏ
+          🛒 Thêm vào giỏ {/* Nút thêm vào giỏ hàng */}
         </button>
-        {/* Nút quay lại trang chủ */}
         <Link to="/home" className="back-button">
-          ⬅ Quay lại
+          ⬅ Quay lại {/* Nút quay lại trang chủ */}
         </Link>
       </div>
     </div>
   );
 };
 
-// Xuất component để sử dụng ở nơi khác
-export default ProductDetail;
+export default ProductDetail; // Xuất component để sử dụng ở nơi khác
