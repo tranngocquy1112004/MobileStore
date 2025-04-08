@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext"; // Context quản lý giỏ hàng
 import { AuthContext } from "../account/AuthContext"; // Context quản lý trạng thái đăng nhập
@@ -64,7 +64,22 @@ const CartPage = () => {
   const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useContext(CartContext); // Lấy dữ liệu và hàm từ CartContext
   const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false }; // Lấy trạng thái đăng nhập, mặc định là false nếu không có
   const [showModal, setShowModal] = useState(false); // State để hiển thị modal thanh toán
-
+  const [isLoading, setIsLoading] = useState(true); // State để kiểm tra trạng thái tải dữ liệu
+  useEffect(() => {
+    const simulateLoading = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Giả lập thời gian tải 1 giây
+      setIsLoading(false); // Tắt trạng thái loading
+    };
+    simulateLoading();
+  }, []); // Dependency rỗng: chỉ chạy một lần khi component mount
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Đang tải...</p>
+      </div>
+    );
+  }
   // Tính tổng tiền và tổng số sản phẩm
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0); // Tổng tiền
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0); // Tổng số sản phẩm

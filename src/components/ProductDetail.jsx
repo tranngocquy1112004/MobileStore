@@ -33,6 +33,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         setIsLoading(true); // Bật trạng thái đang tải
+        setError(null); // Xóa lỗi cũ
         const response = await fetch(API_URL, { signal: controller.signal }); // Fetch dữ liệu từ API
         if (!response.ok) throw new Error(MESSAGES.ERROR_FETCH); // Báo lỗi nếu fetch thất bại
 
@@ -41,9 +42,10 @@ const ProductDetail = () => {
         if (!foundProduct) throw new Error(MESSAGES.ERROR_NOT_FOUND); // Báo lỗi nếu không tìm thấy
 
         setProduct(foundProduct); // Lưu sản phẩm vào state
-        setError(null); // Xóa thông báo lỗi nếu có
       } catch (err) {
-        if (err.name !== "AbortError") setError(err.message); // Xử lý lỗi, bỏ qua nếu là AbortError
+        if (err.name !== "AbortError") {
+          setError(err.message); // Xử lý lỗi, bỏ qua nếu là AbortError
+        }
       } finally {
         setIsLoading(false); // Tắt trạng thái đang tải
       }
@@ -68,7 +70,7 @@ const ProductDetail = () => {
 
     const timer = setTimeout(() => {
       setSuccessMessage(""); // Xóa thông báo
-      navigate("/cart"); // Chuyển hướng về trang chủ
+      navigate("/cart"); // Chuyển hướng đến trang giỏ hàng (CartPage.js) sau 1 giây
     }, 1000);
 
     return () => clearTimeout(timer); // Cleanup: Xóa timer nếu component unmount

@@ -13,6 +13,42 @@
   box-sizing: border-box;
   overflow-x: hidden;
 }
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff0f5, #ffe4e9); /* Nền gradient hồng nhạt */
+}
+
+/* Vòng tròn quay loading */
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid transparent;
+  border-top: 5px solid #ff69b4; /* Màu hồng giống hình ảnh */
+  border-radius: 50%;
+  animation: spin 1s linear infinite; /* Hiệu ứng quay */
+}
+
+/* Hiệu ứng quay cho vòng tròn */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dòng chữ "Đang tải..." */
+.loading-text {
+  margin-top: 10px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333; /* Màu chữ đen giống hình ảnh */
+}
 
 /* Tiêu đề giỏ hàng */
 /* - text-shadow: Tạo hiệu ứng bóng nhẹ cho chữ */
