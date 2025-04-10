@@ -1,16 +1,16 @@
 import React, { createContext, useState, useCallback } from "react";
 
 // Tạo CartContext với giá trị mặc định là undefined
-export const CartContext = createContext(undefined);
+export const CartContext = createContext(undefined); // Context để chia sẻ trạng thái và hàm quản lý giỏ hàng
 
-// Component CartProvider - Cung cấp trạng thái và hàm quản lý giỏ hàng cho các component con
+// Component CartProvider - Quản lý giỏ hàng và cung cấp dữ liệu qua Context
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]); // State lưu danh sách sản phẩm trong giỏ hàng, khởi tạo là mảng rỗng
 
   // Hàm tìm sản phẩm trong giỏ hàng theo id
-  const findItem = (id) => cart.find((item) => item.id === id); // Trả về sản phẩm nếu tìm thấy, ngược lại là undefined
+  const findItem = (id) => cart.find((item) => item.id === id); // Trả về sản phẩm nếu tìm thấy, ngược lại trả về undefined
 
-  // Hàm thêm sản phẩm vào giỏ hàng, dùng useCallback để tối ưu hiệu năng
+  // Hàm thêm sản phẩm vào giỏ hàng, tối ưu với useCallback
   const addToCart = useCallback(
     (product) => {
       setCart((prev) => {
@@ -19,28 +19,28 @@ export const CartProvider = ({ children }) => {
           // Nếu sản phẩm đã tồn tại, tăng số lượng lên 1
           return prev.map((item) =>
             item.id === product.id
-              ? { ...item, quantity: item.quantity + 1 } // Cập nhật quantity của sản phẩm
+              ? { ...item, quantity: item.quantity + 1 } // Cập nhật số lượng cho sản phẩm tương ứng
               : item // Giữ nguyên các sản phẩm khác
           );
         }
-        // Nếu sản phẩm chưa có, thêm mới với số lượng ban đầu là 1
+        // Nếu sản phẩm chưa có, thêm mới vào giỏ với số lượng ban đầu là 1
         return [...prev, { ...product, quantity: 1 }];
       });
     },
-    [findItem] // Phụ thuộc vào findItem, vì nó dùng cart từ closure
+    [findItem] // Phụ thuộc vào findItem vì nó sử dụng cart từ closure
   );
 
-  // Hàm cập nhật số lượng sản phẩm trong giỏ, dùng useCallback để tối ưu
+  // Hàm cập nhật số lượng sản phẩm trong giỏ, tối ưu với useCallback
   const updateQuantity = useCallback(
     (id, change) => {
       setCart((prev) => {
-        const item = findItem(id); // Tìm sản phẩm theo id
-        if (!item) return prev; // Nếu không tìm thấy, không thay đổi giỏ hàng
+        const item = findItem(id); // Tìm sản phẩm trong giỏ theo id
+        if (!item) return prev; // Nếu không tìm thấy sản phẩm, giữ nguyên giỏ hàng
 
-        const newQuantity = item.quantity + change; // Tính số lượng mới sau khi thay đổi
+        const newQuantity = item.quantity + change; // Tính số lượng mới dựa trên giá trị thay đổi (tăng hoặc giảm)
 
         if (newQuantity <= 0) {
-          // Nếu số lượng <= 0, xóa sản phẩm khỏi giỏ hàng
+          // Nếu số lượng mới <= 0, xóa sản phẩm khỏi giỏ hàng
           return prev.filter((item) => item.id !== id);
         }
 
@@ -50,18 +50,18 @@ export const CartProvider = ({ children }) => {
         );
       });
     },
-    [findItem] // Phụ thuộc vào findItem, vì nó dùng cart từ closure
+    [findItem] // Phụ thuộc vào findItem vì nó sử dụng cart từ closure
   );
 
-  // Hàm xóa sản phẩm khỏi giỏ hàng, dùng useCallback để tối ưu
+  // Hàm xóa sản phẩm khỏi giỏ hàng, tối ưu với useCallback
   const removeFromCart = useCallback(
     (id) => {
-      setCart((prev) => prev.filter((item) => item.id !== id)); // Lọc bỏ sản phẩm có id tương ứng
+      setCart((prev) => prev.filter((item) => item.id !== id)); // Lọc bỏ sản phẩm có id tương ứng khỏi giỏ
     },
-    [] // Không phụ thuộc vào biến nào, vì chỉ dùng id
+    [] // Không phụ thuộc vào biến nào, vì chỉ dùng id từ tham số
   );
 
-  // Hàm xóa toàn bộ giỏ hàng, dùng useCallback để tối ưu
+  // Hàm xóa toàn bộ giỏ hàng, tối ưu với useCallback
   const clearCart = useCallback(
     () => {
       setCart([]); // Đặt lại giỏ hàng về mảng rỗng
@@ -73,13 +73,13 @@ export const CartProvider = ({ children }) => {
   const cartContextValue = {
     cart, // Danh sách sản phẩm trong giỏ hàng
     addToCart, // Hàm thêm sản phẩm vào giỏ
-    increaseQuantity: (id) => updateQuantity(id, 1), // Hàm tăng số lượng sản phẩm (tăng 1)
-    decreaseQuantity: (id) => updateQuantity(id, -1), // Hàm giảm số lượng sản phẩm (giảm 1)
+    increaseQuantity: (id) => updateQuantity(id, 1), // Hàm tăng số lượng sản phẩm lên 1
+    decreaseQuantity: (id) => updateQuantity(id, -1), // Hàm giảm số lượng sản phẩm đi 1
     removeFromCart, // Hàm xóa sản phẩm khỏi giỏ
     clearCart, // Hàm xóa toàn bộ giỏ hàng
   };
 
-  // Cung cấp giá trị Context cho các component con thông qua Provider
+  // Cung cấp Context cho các component con thông qua Provider
   return (
     <CartContext.Provider value={cartContextValue}>
       {children} {/* Hiển thị các component con được bao bọc bởi CartProvider */}
@@ -87,4 +87,4 @@ export const CartProvider = ({ children }) => {
   );
 };
 
-export default CartProvider; // Xuất CartProvider để sử dụng ở nơi khác (thường trong App)
+export default CartProvider; // Xuất CartProvider để sử dụng ở nơi khác (thường bao bọc trong App)

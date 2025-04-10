@@ -1,50 +1,47 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom"; // Import Link để điều hướng
+import { Link } from "react-router-dom";
 import "./ProductPage.css";
 
 // Các hằng số cố định
-const API_URL = `${process.env.PUBLIC_URL}/db.json`; // URL API để lấy dữ liệu sản phẩm
-const PRODUCTS_PER_PAGE = 8; // Số sản phẩm hiển thị trên mỗi trang
-const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"]; // Danh sách thương hiệu để lọc
+const API_URL = `${process.env.PUBLIC_URL}/db.json`; // Đường dẫn tới file JSON chứa dữ liệu sản phẩm
+const PRODUCTS_PER_PAGE = 8; // Số lượng sản phẩm hiển thị trên mỗi trang
+const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"]; // Danh sách các thương hiệu để lọc sản phẩm
 
-// Hàm fetch dữ liệu sản phẩm từ API
+// Hàm lấy dữ liệu sản phẩm từ API
 const fetchProducts = async (signal) => {
-  const response = await fetch(API_URL, { signal }); // Gửi yêu cầu lấy dữ liệu
-  if (!response.ok) throw new Error("Không thể tải sản phẩm!"); // Báo lỗi nếu fetch thất bại
-  const data = await response.json(); // Parse dữ liệu JSON
-  return Array.isArray(data) ? data : data.products || []; // Trả về mảng sản phẩm hoặc mảng rỗng nếu không hợp lệ
+  const response = await fetch(API_URL, { signal }); // Gửi yêu cầu lấy dữ liệu với khả năng hủy (AbortController)
+  if (!response.ok) throw new Error("Không thể tải sản phẩm!"); // Ném lỗi nếu yêu cầu thất bại
+  const data = await response.json(); // Chuyển dữ liệu từ JSON sang object JavaScript
+  return Array.isArray(data) ? data : data.products || []; // Trả về mảng sản phẩm, nếu không hợp lệ thì trả mảng rỗng
 };
 
-// Component hiển thị từng sản phẩm
+// Component hiển thị thông tin của từng sản phẩm
 const ProductCard = ({ product }) => {
-  // Kiểm tra dữ liệu sản phẩm có hợp lệ không
   if (!product?.id || !product.name || !product.image || typeof product.price !== "number") {
-    console.error("Dữ liệu sản phẩm không hợp lệ:", product); // Ghi log lỗi nếu dữ liệu sai
-    return null; // Không hiển thị nếu dữ liệu không hợp lệ
+    console.error("Dữ liệu sản phẩm không hợp lệ:", product); // Ghi log lỗi nếu dữ liệu sản phẩm thiếu hoặc sai
+    return null; // Không render nếu dữ liệu không hợp lệ
   }
 
   return (
     <div className="product-card">
-      {/* Ảnh sản phẩm, bọc trong Link để nhấp vào ảnh dẫn đến trang chi tiết */}
       <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
+        {/* Liên kết đến trang chi tiết sản phẩm khi nhấp vào ảnh */}
         <img
-          src={product.image}
-          alt={product.name}
-          className="product-image"
-          loading="lazy" // Tải ảnh theo kiểu lazy để tối ưu hiệu suất
+          src={product.image} // Đường dẫn ảnh sản phẩm
+          alt={product.name} // Tên sản phẩm làm văn bản thay thế (alt text)
+          className="product-image" // Class CSS để định dạng ảnh
+          loading="lazy" // Tải ảnh theo kiểu lazy để tối ưu tốc độ
         />
       </Link>
-      {/* Tên sản phẩm */}
-      <h3>{product.name}</h3>
-      {/* Giá sản phẩm, định dạng tiền tệ VNĐ */}
+      <h3>{product.name}</h3> {/* Hiển thị tên sản phẩm */}
       <p className="price">💰 {product.price.toLocaleString("vi-VN")} VNĐ</p>
-      {/* Nút "Xem chi tiết", cũng dẫn đến trang chi tiết */}
+      {/* Hiển thị giá sản phẩm, định dạng theo kiểu tiền tệ Việt Nam */}
       <Link
-        to={`/products/${product.id}`}
-        className="view-details-button"
-        aria-label={`Xem chi tiết ${product.name}`}
+        to={`/products/${product.id}`} // Liên kết đến trang chi tiết sản phẩm
+        className="view-details-button" // Class CSS để định dạng nút
+        aria-label={`Xem chi tiết ${product.name}`} // Văn bản mô tả cho accessibility
       >
-        Xem chi tiết
+        Xem chi tiết {/* Nút để xem chi tiết sản phẩm */}
       </Link>
     </div>
   );
@@ -54,17 +51,18 @@ const ProductCard = ({ product }) => {
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   <div className="pagination">
     <button
-      className="pagination-button"
-      onClick={() => onPageChange(currentPage - 1)}
-      disabled={currentPage === 1} // Vô hiệu hóa nếu đang ở trang đầu
+      className="pagination-button" // Class CSS cho nút "Trang trước"
+      onClick={() => onPageChange(currentPage - 1)} // Chuyển sang trang trước khi nhấp
+      disabled={currentPage === 1} // Vô hiệu hóa nút nếu đang ở trang đầu tiên
     >
       Trang trước
     </button>
-    <span className="pagination-current">Trang {currentPage}</span> {/* Hiển thị trang hiện tại */}
+    <span className="pagination-current">Trang {currentPage}</span>
+    {/* Hiển thị số trang hiện tại */}
     <button
-      className="pagination-button"
-      onClick={() => onPageChange(currentPage + 1)}
-      disabled={currentPage === totalPages} // Vô hiệu hóa nếu đang ở trang cuối
+      className="pagination-button" // Class CSS cho nút "Trang sau"
+      onClick={() => onPageChange(currentPage + 1)} // Chuyển sang trang sau khi nhấp
+      disabled={currentPage === totalPages} // Vô hiệu hóa nút nếu đang ở trang cuối
     >
       Trang sau
     </button>
@@ -76,134 +74,138 @@ const BrandFilter = ({ brands, selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
     {brands.map((brand) => (
       <button
-        key={brand}
-        className={`brand-button ${selectedBrand === brand ? "active" : ""}`} // Thêm class active nếu thương hiệu được chọn
-        onClick={() => onBrandSelect(brand)}
+        key={brand} // Key duy nhất cho mỗi nút thương hiệu
+        className={`brand-button ${selectedBrand === brand ? "active" : ""}`}
+        // Thêm class "active" nếu thương hiệu đang được chọn
+        onClick={() => onBrandSelect(brand)} // Gọi hàm chọn thương hiệu khi nhấp
       >
-        {brand}
+        {brand} {/* Hiển thị tên thương hiệu */}
       </button>
     ))}
   </div>
 );
 
-// Component chính: Trang sản phẩm
+// Component chính: Trang danh sách sản phẩm
 const ProductPage = () => {
-  const [products, setProducts] = useState([]); // Danh sách sản phẩm gốc
-  const [filteredProducts, setFilteredProducts] = useState([]); // Danh sách sản phẩm đã lọc
-  const [isLoading, setIsLoading] = useState(true); // Trạng thái đang tải dữ liệu
-  const [error, setError] = useState(null); // Lưu lỗi nếu xảy ra
-  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
-  const [filters, setFilters] = useState({
-    brand: "Tất cả", // Bộ lọc thương hiệu
-    search: "", // Bộ lọc tìm kiếm
-  });
+  const [products, setProducts] = useState([]); // State lưu danh sách sản phẩm gốc
+  const [filteredProducts, setFilteredProducts] = useState([]); // State lưu danh sách sản phẩm sau khi lọc
+  const [isLoading, setIsLoading] = useState(true); // State kiểm soát trạng thái đang tải
+  const [error, setError] = useState(null); // State lưu thông báo lỗi nếu có
+  const [currentPage, setCurrentPage] = useState(1); // State lưu số trang hiện tại
+  const [filters, setFilters] = useState({ brand: "Tất cả", search: "" });
+  // State lưu các bộ lọc (thương hiệu và từ khóa tìm kiếm)
 
-  // Fetch dữ liệu sản phẩm khi component mount
+  // Lấy dữ liệu sản phẩm khi component được mount
   useEffect(() => {
-    const controller = new AbortController(); // Tạo controller để hủy fetch
+    const controller = new AbortController(); // Tạo AbortController để hủy yêu cầu fetch nếu cần
     const loadProducts = async () => {
       try {
-        const productList = await fetchProducts(controller.signal); // Lấy dữ liệu từ API
-        setProducts(productList); // Lưu danh sách sản phẩm gốc
-        setFilteredProducts(productList); // Lưu danh sách sản phẩm đã lọc
+        const productList = await fetchProducts(controller.signal); // Gọi hàm lấy dữ liệu
+        setProducts(productList); // Cập nhật danh sách sản phẩm gốc
+        setFilteredProducts(productList); // Cập nhật danh sách sản phẩm đã lọc
         setIsLoading(false); // Tắt trạng thái đang tải
       } catch (err) {
         if (err.name !== "AbortError") {
-          setError(err.message); // Lưu lỗi nếu không phải lỗi hủy fetch
+          setError(err.message); // Lưu thông báo lỗi nếu không phải lỗi hủy
           setIsLoading(false); // Tắt trạng thái đang tải
         }
       }
     };
-    loadProducts();
+    loadProducts(); // Gọi hàm tải dữ liệu
     return () => controller.abort(); // Cleanup: Hủy fetch khi component unmount
-  }, []);
+  }, []); // Dependency rỗng: chỉ chạy một lần khi mount
 
-  // Tự động lọc sản phẩm khi filters thay đổi
+  // Lọc sản phẩm khi filters thay đổi
   useEffect(() => {
-    let filtered = products;
+    let filtered = [...products]; // Tạo bản sao của danh sách sản phẩm gốc
 
-    // Lọc theo thương hiệu
     if (filters.brand !== "Tất cả") {
       filtered = filtered.filter((product) => product.brand === filters.brand);
+      // Lọc theo thương hiệu nếu không phải "Tất cả"
     }
 
-    // Lọc theo từ khóa tìm kiếm
     if (filters.search.trim()) {
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(filters.search.toLowerCase())
       );
+      // Lọc theo từ khóa tìm kiếm (không phân biệt hoa thường)
     }
 
     setFilteredProducts(filtered); // Cập nhật danh sách sản phẩm đã lọc
-    setCurrentPage(1); // Quay về trang đầu tiên
+    setCurrentPage(1); // Quay về trang đầu tiên sau khi lọc
   }, [filters, products]); // Dependency: chạy lại khi filters hoặc products thay đổi
 
-  // Xử lý thay đổi trang
+  // Hàm xử lý thay đổi trang
   const handlePageChange = useCallback(
-    (page) => setCurrentPage(Math.max(1, Math.min(page, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)))),
-    [filteredProducts] // Giới hạn trang trong khoảng hợp lệ
+    (page) => {
+      setCurrentPage(Math.max(1, Math.min(page, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE))));
+      // Giới hạn trang trong khoảng từ 1 đến tổng số trang
+    },
+    [filteredProducts] // Dependency: cập nhật khi danh sách sản phẩm lọc thay đổi
   );
 
-  // Xử lý thay đổi bộ lọc (tìm kiếm, thương hiệu)
+  // Hàm xử lý thay đổi bộ lọc
   const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value })); // Cập nhật giá trị bộ lọc
+    const { name, value } = e.target; // Lấy name và value từ input
+    setFilters((prev) => ({ ...prev, [name]: value })); // Cập nhật giá trị bộ lọc tương ứng
   };
 
-  // Xử lý chọn thương hiệu
+  // Hàm xử lý chọn thương hiệu
   const handleBrandSelect = (brand) => {
     setFilters((prev) => ({ ...prev, brand })); // Cập nhật thương hiệu được chọn
   };
 
-  // Sắp xếp sản phẩm theo giá tăng dần (thấp tới cao)
+  // Hàm sắp xếp sản phẩm theo giá tăng dần
   const sortLowToHigh = () => {
-    const sorted = [...filteredProducts].sort((a, b) => a.price - b.price); // Sắp xếp tăng dần theo giá
+    const sorted = [...filteredProducts].sort((a, b) => a.price - b.price); // Sắp xếp từ thấp đến cao
     setFilteredProducts(sorted); // Cập nhật danh sách sản phẩm
     setCurrentPage(1); // Quay về trang đầu tiên
   };
 
-  // Sắp xếp sản phẩm theo giá giảm dần (cao tới thấp)
+  // Hàm sắp xếp sản phẩm theo giá giảm dần
   const sortHighToLow = () => {
-    const sorted = [...filteredProducts].sort((a, b) => b.price - a.price); // Sắp xếp giảm dần theo giá
+    const sorted = [...filteredProducts].sort((a, b) => b.price - a.price); // Sắp xếp từ cao đến thấp
     setFilteredProducts(sorted); // Cập nhật danh sách sản phẩm
     setCurrentPage(1); // Quay về trang đầu tiên
   };
 
-  // Reset bộ lọc về mặc định
+  // Hàm reset bộ lọc về mặc định
   const resetFilters = () => {
-    setFilters({ brand: "Tất cả", search: "" }); // Đặt lại bộ lọc
+    setFilters({ brand: "Tất cả", search: "" }); // Đặt lại bộ lọc về giá trị mặc định
     setFilteredProducts(products); // Khôi phục danh sách sản phẩm gốc
-    setCurrentPage(1); // Quay về trang đầu
+    setCurrentPage(1); // Quay về trang đầu tiên
   };
 
-  // Tính toán sản phẩm hiển thị và số trang
+  // Tính toán sản phẩm hiển thị và tổng số trang
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE); // Tổng số trang
   const currentProducts = filteredProducts.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
     currentPage * PRODUCTS_PER_PAGE
-  ); // Lấy sản phẩm cho trang hiện tại
+  ); // Lấy danh sách sản phẩm cho trang hiện tại
 
-  // Hiển thị khi đang tải
+  // Hiển thị giao diện khi đang tải dữ liệu
   if (isLoading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Đang tải...</p>
+        <div className="loading-spinner"></div> {/* Hiệu ứng spinner khi tải */}
+        <p className="loading-text">Đang tải...</p> {/* Thông báo đang tải */}
       </div>
     );
   }
 
-  // Hiển thị khi có lỗi
-  if (error) return (
-    <div className="status error">
-      <p>❌ {error}</p>
-      <button onClick={() => window.location.reload()} className="retry-button">
-        Thử lại
-      </button>
-    </div>
-  );
+  // Hiển thị giao diện khi có lỗi
+  if (error) {
+    return (
+      <div className="status error">
+        <p>❌ {error}</p> {/* Hiển thị thông báo lỗi */}
+        <button onClick={() => window.location.reload()} className="retry-button">
+          Thử lại {/* Nút để thử tải lại trang */}
+        </button>
+      </div>
+    );
+  }
 
-  // Giao diện chính của trang
+  // Giao diện chính của trang sản phẩm
   return (
     <main className="product-page">
       <h1 className="page-title">Danh sách sản phẩm</h1> {/* Tiêu đề trang */}
@@ -211,45 +213,48 @@ const ProductPage = () => {
         <input
           type="text"
           name="search"
-          className="search-input"
-          placeholder="Tìm kiếm sản phẩm..."
-          value={filters.search}
-          onChange={handleFilterChange}
-          aria-label="Tìm kiếm sản phẩm"
-        /> {/* Ô tìm kiếm, tự động lọc khi nhập/xóa */}
-        <BrandFilter
-          brands={BRANDS}
-          selectedBrand={filters.brand}
-          onBrandSelect={handleBrandSelect} // Tự động lọc khi chọn thương hiệu
+          className="search-input" // Class CSS cho ô tìm kiếm
+          placeholder="Tìm kiếm sản phẩm..." // Gợi ý trong ô tìm kiếm
+          value={filters.search} // Giá trị hiện tại của ô tìm kiếm
+          onChange={handleFilterChange} // Xử lý khi nhập/xóa từ khóa
+          aria-label="Tìm kiếm sản phẩm" // Văn bản mô tả cho accessibility
         />
-        {/* Hai button sắp xếp giá */}
+        <BrandFilter
+          brands={BRANDS} // Danh sách thương hiệu
+          selectedBrand={filters.brand} // Thương hiệu đang được chọn
+          onBrandSelect={handleBrandSelect} // Hàm xử lý khi chọn thương hiệu
+        />
         <button className="sort-button" onClick={sortLowToHigh}>
-          Giá từ thấp tới cao
+          Giá từ thấp tới cao {/* Nút sắp xếp giá tăng dần */}
         </button>
         <button className="sort-button" onClick={sortHighToLow}>
-          Giá từ cao tới thấp
+          Giá từ cao tới thấp {/* Nút sắp xếp giá giảm dần */}
         </button>
       </div>
       <div className="product-list">
         {currentProducts.length > 0 ? (
           currentProducts.map((product) => (
-            <ProductCard key={product.id} product={product} /> // Hiển thị danh sách sản phẩm
+            <ProductCard key={product.id} product={product} />
+            // Hiển thị từng sản phẩm trong danh sách hiện tại
           ))
         ) : (
           <div className="no-products-container">
             <p className="no-products-message">Không có sản phẩm nào phù hợp</p>
+            {/* Thông báo khi không có sản phẩm nào khớp bộ lọc */}
             <button onClick={resetFilters} className="reset-filters-button">
-              <span className="reset-icon">✕</span> Xóa bộ lọc {/* Nút xóa bộ lọc */}
+              <span className="reset-icon">✕</span> Xóa bộ lọc
+              {/* Nút xóa bộ lọc để quay về trạng thái ban đầu */}
             </button>
           </div>
         )}
       </div>
       {totalPages > 1 && (
         <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        /> // Hiển thị phân trang nếu có hơn 1 trang
+          currentPage={currentPage} // Trang hiện tại
+          totalPages={totalPages} // Tổng số trang
+          onPageChange={handlePageChange} // Hàm xử lý khi chuyển trang
+        />
+        // Hiển thị phân trang nếu có hơn 1 trang
       )}
     </main>
   );
