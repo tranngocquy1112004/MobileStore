@@ -1,11 +1,54 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import Slider from "react-slick"; // Thư viện để tạo carousel
+import "slick-carousel/slick/slick.css"; // CSS mặc định của react-slick
+import "slick-carousel/slick/slick-theme.css"; // Theme CSS của react-slick
 import "./ProductPage.css";
 
 // Các hằng số cố định
 const API_URL = `${process.env.PUBLIC_URL}/db.json`; // Đường dẫn tới file JSON chứa dữ liệu sản phẩm
 const PRODUCTS_PER_PAGE = 8; // Số lượng sản phẩm hiển thị trên mỗi trang
 const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"]; // Danh sách các thương hiệu để lọc sản phẩm
+
+// Dữ liệu tĩnh cho các slide (dựa trên hình ảnh bạn cung cấp)
+const SLIDES = [
+  {
+    image: "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg",
+    title: "iPhone 16 Pro Max",
+    subtitle: "Thiết kế Titan tuyệt đẹp.",
+    features: [
+      "Trả góp lên đến 3 TRIỆU",
+      "Khách hàng mới GIẢM 300K",
+      "Góp 12 Tháng từ 76K/Ngày",
+    ],
+    link: "/products/4", // Liên kết đến sản phẩm iPhone 16 Pro Max (id: 4 trong JSON đã chỉnh sửa)
+    buttonText: "Mua ngay",
+  },
+  {
+    image: "https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/d/i/dien-thoai-samsung-galaxy-s25-ultra_1__3.png",
+    title: "Samsung Galaxy S25 Ultra",
+    subtitle: "Công nghệ AI tiên tiến.",
+    features: [
+      "Giảm ngay 2 TRIỆU",
+      "Tặng kèm sạc nhanh 45W",
+      "Bảo hành chính hãng 2 năm",
+    ],
+    link: "/products/1", // Liên kết đến sản phẩm Samsung Galaxy S25 Ultra (id: 1 trong JSON đã chỉnh sửa)
+    buttonText: "Mua ngay",
+  },
+  {
+    image: "https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/d/i/dien-thoai-xiaomi-15-ultra_12_.png",
+    title: "Xiaomi 15 Ultra",
+    subtitle: "Camera 200MP Leica đỉnh cao.",
+    features: [
+      "Trả góp 0% lãi suất",
+      "Giảm 500K khi thanh toán online",
+      "Tặng tai nghe Xiaomi Buds 4",
+    ],
+    link: "/products/3", // Liên kết đến sản phẩm Xiaomi 15 Ultra (id: 3 trong JSON đã chỉnh sửa)
+    buttonText: "Mua ngay",
+  },
+];
 
 // Hàm lấy dữ liệu sản phẩm từ API
 const fetchProducts = async (signal) => {
@@ -85,6 +128,30 @@ const BrandFilter = ({ brands, selectedBrand, onBrandSelect }) => (
   </div>
 );
 
+// Component hiển thị từng slide trong carousel
+const Slide = ({ slide }) => (
+  <div className="slide">
+    <div className="slide-content">
+      <div className="slide-text">
+        <h2>{slide.title}</h2>
+        <h3>{slide.subtitle}</h3>
+        <ul>
+          {slide.features.map((feature, index) => (
+            <li key={index}>{feature}</li>
+          ))}
+        </ul>
+      </div>
+      <div className="slide-image">
+        <img src={slide.image} alt={slide.title} loading="lazy" />
+      </div>
+      {/* Di chuyển nút "Mua ngay" ra ngoài slide-text để đặt dưới hình ảnh */}
+      <Link to={slide.link} className="slide-button">
+        {slide.buttonText}
+      </Link>
+    </div>
+  </div>
+);
+
 // Component chính: Trang danh sách sản phẩm
 const ProductPage = () => {
   const [products, setProducts] = useState([]); // State lưu danh sách sản phẩm gốc
@@ -94,6 +161,18 @@ const ProductPage = () => {
   const [currentPage, setCurrentPage] = useState(1); // State lưu số trang hiện tại
   const [filters, setFilters] = useState({ brand: "Tất cả", search: "" });
   // State lưu các bộ lọc (thương hiệu và từ khóa tìm kiếm)
+
+  // Cấu hình cho carousel (react-slick)
+  const sliderSettings = {
+    dots: true, // Hiển thị chấm điều hướng
+    infinite: true, // Vòng lặp vô hạn
+    speed: 500, // Tốc độ chuyển slide (ms)
+    slidesToShow: 1, // Hiển thị 1 slide mỗi lần
+    slidesToScroll: 1, // Chuyển 1 slide mỗi lần
+    autoplay: true, // Tự động chuyển slide
+    autoplaySpeed: 3000, // Thời gian giữa các lần chuyển (ms)
+    arrows: true, // Hiển thị mũi tên điều hướng
+  };
 
   // Lấy dữ liệu sản phẩm khi component được mount
   useEffect(() => {
@@ -157,7 +236,7 @@ const ProductPage = () => {
 
   // Hàm sắp xếp sản phẩm theo giá tăng dần
   const sortLowToHigh = () => {
-    const sorted = [...filteredProducts].sort((a, b) => a.price - b.price); // Sắp xếp từ thấp đến cao
+    const sorted = [...filteredProducts].sort((a, b) => a.price - a.price); // Sắp xếp từ thấp đến cao
     setFilteredProducts(sorted); // Cập nhật danh sách sản phẩm
     setCurrentPage(1); // Quay về trang đầu tiên
   };
@@ -208,6 +287,13 @@ const ProductPage = () => {
   // Giao diện chính của trang sản phẩm
   return (
     <main className="product-page">
+      <div className="carousel-section">
+        <Slider {...sliderSettings}>
+          {SLIDES.map((slide, index) => (
+            <Slide key={index} slide={slide} />
+          ))}
+        </Slider>
+      </div>
       <h1 className="page-title">Danh sách sản phẩm</h1> {/* Tiêu đề trang */}
       <div className="filter-section">
         <input
@@ -231,30 +317,30 @@ const ProductPage = () => {
           Giá từ cao tới thấp {/* Nút sắp xếp giá giảm dần */}
         </button>
       </div>
+
+      {/* Phần slide (carousel) ngay phía trên danh sách sản phẩm */}
       <div className="product-list">
         {currentProducts.length > 0 ? (
-          currentProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-            // Hiển thị từng sản phẩm trong danh sách hiện tại
-          ))
-        ) : (
-          <div className="no-products-container">
-            <p className="no-products-message">Không có sản phẩm nào phù hợp</p>
-            {/* Thông báo khi không có sản phẩm nào khớp bộ lọc */}
-            <button onClick={resetFilters} className="reset-filters-button">
-              <span className="reset-icon">✕</span> Xóa bộ lọc
-              {/* Nút xóa bộ lọc để quay về trạng thái ban đầu */}
-            </button>
-          </div>
-        )}
+          <div className="product-grid">
+         {currentProducts.slice(0, 6).map((product) => (
+    <ProductCard key={product.id} product={product} />
+      ))}
       </div>
+  ) : (
+      <div className="no-products-container">
+        <p className="no-products-message">Không có sản phẩm nào phù hợp</p>
+          <button onClick={resetFilters} className="reset-filters-button">
+            <span className="reset-icon">✕</span> Xóa bộ lọc
+          </button>
+      </div>
+  )}
+</div>
       {totalPages > 1 && (
         <Pagination
-          currentPage={currentPage} // Trang hiện tại
-          totalPages={totalPages} // Tổng số trang
-          onPageChange={handlePageChange} // Hàm xử lý khi chuyển trang
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
         />
-        // Hiển thị phân trang nếu có hơn 1 trang
       )}
     </main>
   );
