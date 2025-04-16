@@ -303,7 +303,7 @@ const ProductPage = () => {
         {isSearching ? (
           <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p className="loading-text">Đang tải kết quả...</p>
+            <p className="loading-text">Đang tải...</p>
           </div>
         ) : showNoResults ? (
           <div className="no-products-container">
