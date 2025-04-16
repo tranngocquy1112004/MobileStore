@@ -21,7 +21,6 @@ const ProductDetail = () => {
   const { addToCart } = useContext(CartContext); // Lấy hàm thêm sản phẩm vào giỏ từ CartContext
   const { isLoggedIn = false } = useContext(AuthContext) || {}; // Lấy trạng thái đăng nhập, mặc định là false
 
-  // State để quản lý dữ liệu và trạng thái giao diện
   const [product, setProduct] = useState(null); // Thông tin sản phẩm
   const [isLoading, setIsLoading] = useState(true); // Trạng thái đang tải
   const [error, setError] = useState(null); // Thông báo lỗi
@@ -35,14 +34,28 @@ const ProductDetail = () => {
       try {
         setIsLoading(true); // Bật trạng thái đang tải
         setError(null); // Xóa lỗi cũ
-        const response = await fetch(API_URL, { signal: controller.signal }); // Gửi yêu cầu fetch
-        if (!response.ok) throw new Error(MESSAGES.ERROR_FETCH); // Kiểm tra lỗi fetch
 
-        const data = await response.json(); // Chuyển đổi dữ liệu JSON
-        const foundProduct = (Array.isArray(data) ? data : data.products || []).find(
-          (p) => p.id === Number(id)
-        ); // Tìm sản phẩm theo id
-        if (!foundProduct) throw new Error(MESSAGES.ERROR_NOT_FOUND); // Kiểm tra sản phẩm tồn tại
+        // Kiểm tra localStorage trước để tăng tốc độ tải
+        const cachedProducts = localStorage.getItem("products");
+        let productList;
+
+        if (cachedProducts) {
+          productList = JSON.parse(cachedProducts); // Sử dụng dữ liệu từ localStorage nếu có
+        } else {
+          const response = await fetch(API_URL, { signal: controller.signal }); // Gửi yêu cầu fetch
+          if (!response.ok) throw new Error(MESSAGES.ERROR_FETCH); // Kiểm tra lỗi fetch
+
+          const data = await response.json(); // Chuyển đổi dữ liệu JSON
+          productList = Array.isArray(data) ? data : data.products || [];
+          localStorage.setItem("products", JSON.stringify(productList)); // Lưu vào localStorage để sử dụng sau
+        }
+
+        const foundProduct = productList.find((p) => p.id === Number(id)); // Tìm sản phẩm theo id
+
+        if (!foundProduct) {
+          setError(MESSAGES.ERROR_NOT_FOUND); // Hiển thị lỗi nếu không tìm thấy sản phẩm
+          return;
+        }
 
         setProduct(foundProduct); // Cập nhật state sản phẩm
       } catch (err) {
@@ -78,17 +91,31 @@ const ProductDetail = () => {
 
   // Hiển thị trạng thái đang tải
   if (isLoading) {
-    return <p className="loading">{MESSAGES.LOADING}</p>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">{MESSAGES.LOADING}</p>
+      </div>
+    );
   }
 
-  // Hiển thị trạng thái lỗi
+  // Hiển thị thông báo lỗi nếu có
   if (error) {
-    return <p className="error">❌ {error}</p>;
+    return (
+      <div className="product-detail">
+        <p className="error-message">❌ {error}</p>
+        <div className="button-group">
+          <Link to="/home" className="back-button" aria-label="Quay lại trang chủ">
+            ⬅ Quay lại
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  // Hiển thị nếu không có sản phẩm
+  // Hiển thị nếu không có sản phẩm (đã xử lý trong useEffect)
   if (!product) {
-    return <p className="warning">⚠ Không có dữ liệu sản phẩm</p>;
+    return null; // Đã xử lý lỗi trong useEffect
   }
 
   // Giao diện chính

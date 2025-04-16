@@ -1,81 +1,80 @@
-import React, { createContext, useState, useCallback } from "react";
+import React, { createContext, useState, useEffect } from "react";
 
 // Tạo CartContext để chia sẻ trạng thái giỏ hàng
-export const CartContext = createContext(undefined);
+export const CartContext = createContext();
 
-// Component CartProvider cung cấp context cho các component con
+// Provider để cung cấp dữ liệu giỏ hàng cho các component
 export const CartProvider = ({ children }) => {
-  // State để quản lý danh sách sản phẩm trong giỏ hàng
-  const [cart, setCart] = useState([]); // Mảng giỏ hàng ban đầu rỗng
+  // Khởi tạo giỏ hàng từ localStorage nếu có, nếu không thì rỗng
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
 
-  // Hàm tìm kiếm sản phẩm trong giỏ hàng theo ID, sử dụng useCallback để tối ưu hiệu suất
-  const findItem = useCallback(
-    (id) => cart.find((item) => item.id === id), // Tìm sản phẩm có ID tương ứng
-    [cart] // Phụ thuộc vào cart
-  );
+  // Lưu giỏ hàng vào localStorage mỗi khi cart thay đổi
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   // Hàm thêm sản phẩm vào giỏ hàng
-  const addToCart = useCallback(
-    (product) => {
-      setCart((prev) => {
-        const existingItem = findItem(product.id); // Kiểm tra sản phẩm đã có trong giỏ chưa
-        if (existingItem) {
-          // Nếu sản phẩm đã tồn tại, tăng số lượng lên 1
-          return prev.map((item) =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-          );
-        }
-        // Nếu sản phẩm chưa có, thêm mới với số lượng 1
-        return [...prev, { ...product, quantity: 1 }];
-      });
-    },
-    [findItem] // Phụ thuộc vào findItem
-  );
-
-  // Hàm cập nhật số lượng sản phẩm trong giỏ hàng
-  const updateQuantity = useCallback(
-    (id, delta) => {
-      setCart((prev) =>
-        prev
-          .map((item) =>
-            item.id === id
-              ? { ...item, quantity: item.quantity + delta } // Cập nhật số lượng
-              : item
-          )
-          .filter((item) => item.quantity > 0) // Loại bỏ sản phẩm nếu số lượng <= 0
-      );
-    },
-    [] // Không phụ thuộc vào biến nào
-  );
+  const addToCart = (product) => {
+    setCart((prevCart) => {
+      const existingProduct = prevCart.find((item) => item.id === product.id);
+      if (existingProduct) {
+        return prevCart.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  };
 
   // Hàm xóa sản phẩm khỏi giỏ hàng
-  const removeFromCart = useCallback(
-    (id) => {
-      setCart((prev) => prev.filter((item) => item.id !== id)); // Lọc bỏ sản phẩm có ID tương ứng
-    },
-    [] // Không phụ thuộc vào biến nào
-  );
+  const removeFromCart = (productId) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  };
 
-  // Hàm xóa toàn bộ giỏ hàng
-  const clearCart = useCallback(() => {
-    setCart([]); // Đặt giỏ hàng về mảng rỗng
-  }, []) // Không phụ thuộc vào biến nào);
+  // Hàm cập nhật số lượng sản phẩm trong giỏ hàng
+  const updateQuantity = (productId, quantity) => {
+    if (quantity <= 0) {
+      removeFromCart(productId);
+    } else {
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === productId ? { ...item, quantity } : item
+        )
+      );
+    }
+  };
 
-  // Đối tượng giá trị context để cung cấp cho các component con
-  const cartContextValue = {
-    cart, // Danh sách sản phẩm trong giỏ hàng
-    addToCart, // Hàm thêm sản phẩm
-    increaseQuantity: (id) => updateQuantity(id, 1), // Hàm tăng số lượng
-    decreaseQuantity: (id) => updateQuantity(id, -1), // Hàm giảm số lượng
-    removeFromCart, // Hàm xóa sản phẩm
-    clearCart, // Hàm xóa toàn bộ giỏ hàng
+  // Hàm xóa toàn bộ giỏ hàng (dùng khi thanh toán)
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  // Tính tổng giá trị giỏ hàng
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  // Tính tổng số lượng sản phẩm trong giỏ hàng
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
   return (
-    <CartContext.Provider value={cartContextValue}>
-      {children} {/* Render các component con */}
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        getTotalPrice,
+        getTotalItems,
+      }}
+    >
+      {children}
     </CartContext.Provider>
   );
 };
-
-export default CartProvider;
