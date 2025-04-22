@@ -252,7 +252,7 @@ const Account = () => {
                   </button>
                   {/* Nút "Quay lại đăng nhập" - chuyển về chế độ đăng nhập */}
                   <button
-                    className="link-button" // Class CSS chung cho các nút hoạt động như link
+                    className="link-to-home" // Class CSS chung cho các nút hoạt động như link
                     onClick={() => setIsRegistering(false)} // Gắn hàm mũi tên để chuyển state isRegistering thành false
                     aria-label="Quay lại đăng nhập" // Thuộc tính hỗ trợ khả năng tiếp cận
                   >

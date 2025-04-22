@@ -99,13 +99,24 @@
 }
 
 /* Nút đăng ký */
-.register-btn {
+.link-button {
+  padding: 14px;
   background-color: #ff80ab; /* Màu hồng đậm */
+  color: white;
+  border: none;
+  text-decoration: none;
+  border-radius: 10px;
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: "Quicksand", sans-serif; /* Đồng bộ font */
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 /* Nút đăng xuất */
 .logout-btn {
-  background-color: #ff4d88; /* Hồng đậm hơn cho nút đăng xuất */
+  background-color: #ff4d88;
+   /* Hồng đậm hơn cho nút đăng xuất */
 }
 
 .logout-btn:hover {

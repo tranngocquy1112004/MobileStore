@@ -195,7 +195,7 @@ const UserProfileModal = ({ onClose }) => {
           {/* --- Nhóm các nút hành động trong modal --- */}
           <div className="modal-buttons"> {/* Container cho các nút */}
             {/* Nút "Đổi mật khẩu" - nút submit form */}
-            <button type="submit" className="confirm-button"> // Loại nút là "submit", khi click sẽ kích hoạt hàm onSubmit của form
+            <button type="submit" className="confirm-button">
               Đổi mật khẩu {/* Nội dung nút */}
             </button>
             {/* Nút "Đóng" modal */}
