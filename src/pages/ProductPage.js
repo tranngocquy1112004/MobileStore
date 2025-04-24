@@ -68,7 +68,7 @@ const fetchProducts = async (signal) => {
   // Kiểm tra thuộc tính 'ok' của response để xác định yêu cầu có thành công hay không (status code 200-299).
   if (!response.ok) {
     // Nếu response không OK, ném ra một đối tượng Error mới với thông báo lỗi.
-    throw new Error("Không thể tải sản phẩm!"); // Sử dụng một chuỗi thông báo cố định hoặc lấy từ hằng số MESSAGES.
+    throw new Error("Không thể tải sản phẩm!"); // Sử dụng một chuỗi thông báo cố định.
   }
   const data = await response.json(); // Parse body của response thành đối tượng/mảng JavaScript từ JSON.
   // Trả về mảng sản phẩm. Kiểm tra cấu trúc dữ liệu nhận được:
@@ -79,11 +79,9 @@ const fetchProducts = async (signal) => {
 };
 
 // --- Component con: ProductCard (Hiển thị thông tin chi tiết một sản phẩm dưới dạng thẻ) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component chỉ render lại khi props của nó thay đổi (chỉ có prop 'product').
+// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
 const ProductCard = React.memo(({ product }) => {
   // Thực hiện kiểm tra cơ bản để đảm bảo dữ liệu sản phẩm hợp lệ trước khi cố gắng render.
-  // Điều này giúp tránh lỗi nếu dữ liệu từ API/file JSON bị thiếu hoặc sai định dạng.
   if (
     !product?.id || // ID phải tồn tại và không null/undefined
     !product.name || // Tên sản phẩm phải tồn tại
@@ -95,10 +93,14 @@ const ProductCard = React.memo(({ product }) => {
   }
 
   return (
-    <div className="product-card"> {/* Container chính cho một thẻ sản phẩm riêng lẻ */}
+    <div className="product-card">
+      {" "}
+      {/* Container chính cho một thẻ sản phẩm riêng lẻ */}
       {/* Liên kết (Link) bao quanh hình ảnh sản phẩm. Khi click vào ảnh, sẽ điều hướng đến trang chi tiết sản phẩm. */}
       {/* 'to={`/products/${product.id}`}' tạo đường dẫn động dựa trên ID của sản phẩm. */}
-      <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}> {/* 'aria-label' cung cấp mô tả cho người dùng trình đọc màn hình */}
+      <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
+        {" "}
+        {/* 'aria-label' cung cấp mô tả cho người dùng trình đọc màn hình */}
         {/* Hình ảnh sản phẩm */}
         <img
           src={product.image} // Đường dẫn ảnh
@@ -109,55 +111,62 @@ const ProductCard = React.memo(({ product }) => {
       </Link>
       <h3>{product.name}</h3> {/* Tiêu đề (thẻ h3) hiển thị tên sản phẩm */}
       {/* Đoạn văn bản hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam. */}
-      <p className="price">💰 {product.price.toLocaleString("vi-VN")} VNĐ</p> {/* toLocaleString("vi-VN") định dạng số thành chuỗi tiền tệ VNĐ */}
+      <p className="price">💰 {product.price.toLocaleString("vi-VN")} VNĐ</p>{" "}
+      {/* toLocaleString("vi-VN") định dạng số thành chuỗi tiền tệ VNĐ */}
       {/* Nút (Link) "Xem chi tiết" dẫn đến trang chi tiết sản phẩm */}
       <Link
         to={`/products/${product.id}`} // Đường dẫn đến trang chi tiết sản phẩm
         className="view-details-button" // Class CSS để định dạng nút
         aria-label={`Xem chi tiết ${product.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận
       >
-        Xem chi tiết {/* Nội dung hiển thị trên nút */}
+        Xem chi tiết{" "}
+        {/* Nội dung hiển thị trên nút */}
       </Link>
     </div>
   );
-}); // Kết thúc React.memo() cho component ProductCard
+});
 
 // --- Component con: Pagination (Hiển thị các nút điều hướng phân trang) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component chỉ render lại khi props của nó thay đổi (currentPage, totalPages, onPageChange).
+// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   // Nếu tổng số trang nhỏ hơn hoặc bằng 1, không hiển thị bộ phân trang.
   if (totalPages <= 1) return null;
 
   return (
-    <div className="pagination"> {/* Container cho bộ phận phân trang */}
+    <div className="pagination">
+      {" "}
+      {/* Container cho bộ phận phân trang */}
       {/* Nút "Trang trước". Bị vô hiệu hóa nếu đang ở trang đầu tiên (currentPage là 1). */}
       <button
         onClick={() => onPageChange(currentPage - 1)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onPageChange' (truyền qua props) với số trang mới là trang hiện tại trừ đi 1.
         disabled={currentPage === 1} // Thuộc tính 'disabled' dựa vào điều kiện.
         className="pagination-button" // Class CSS
       >
-        Trang trước {/* Nội dung nút */}
+        Trang trước{" "}
+        {/* Nội dung nút */}
       </button>
       {/* Hiển thị thông tin trang hiện tại. */}
-      <span className="pagination-current">Trang {currentPage}</span> {/* Hiển thị số trang hiện tại */}
+      <span className="pagination-current">Trang {currentPage}</span>{" "}
+      {/* Hiển thị số trang hiện tại */}
       {/* Nút "Trang sau". Bị vô hiệu hóa nếu đang ở trang cuối cùng (currentPage bằng totalPages). */}
       <button
         onClick={() => onPageChange(currentPage + 1)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onPageChange' với số trang mới là trang hiện tại cộng thêm 1.
         disabled={currentPage === totalPages} // Thuộc tính 'disabled' dựa vào điều kiện.
         className="pagination-button" // Class CSS
       >
-        Trang sau {/* Nội dung nút */}
+        Trang sau{" "}
+        {/* Nội dung nút */}
       </button>
     </div>
   );
-}); // Kết thúc React.memo() cho component Pagination
+});
 
 // --- Component con: BrandFilter (Hiển thị các nút lọc theo thương hiệu) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component chỉ render lại khi props của nó thay đổi (brands, selectedBrand, onBrandSelect).
+// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
 const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
-  <div className="brand-buttons"> {/* Container cho nhóm nút lọc theo thương hiệu */}
+  <div className="brand-buttons">
+    {" "}
+    {/* Container cho nhóm nút lọc theo thương hiệu */}
     {/* Lặp (map) qua mảng 'brands' để tạo một nút button cho mỗi thương hiệu */}
     {brands.map((brand) => (
       <button
@@ -165,39 +174,52 @@ const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
         className={`brand-button ${selectedBrand === brand ? "active" : ""}`} // Thêm class CSS 'active' vào nút nếu tên thương hiệu của nút đó trùng với 'selectedBrand' hiện tại
         onClick={() => onBrandSelect(brand)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onBrandSelect' (truyền qua props) với tên thương hiệu của nút đó.
       >
-        {brand} {/* Nội dung hiển thị trên nút (tên thương hiệu) */}
+        {brand}{" "}
+        {/* Nội dung hiển thị trên nút (tên thương hiệu) */}
       </button>
     ))}
   </div>
-)); // Kết thúc React.memo() cho component BrandFilter
+));
 
 // --- Component con: Slide (Hiển thị nội dung một slide trong carousel) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component chỉ render lại khi props của nó thay đổi (chỉ có prop 'slide').
+// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
 const Slide = React.memo(({ slide }) => (
-  <div className="slide"> {/* Container chính cho một slide */}
-    <div className="slide-content"> {/* Container chứa nội dung bên trong slide. Sử dụng flexbox để căn chỉnh ảnh và text. */}
-      <div className="slide-text"> {/* Phần bên trái chứa văn bản (tiêu đề, phụ đề, đặc điểm) */}
+  <div className="slide">
+    {" "}
+    {/* Container chính cho một slide */}
+    <div className="slide-content">
+      {" "}
+      {/* Container chứa nội dung bên trong slide. Sử dụng flexbox để căn chỉnh ảnh và text. */}
+      <div className="slide-text">
+        {" "}
+        {/* Phần bên trái chứa văn bản (tiêu đề, phụ đề, đặc điểm) */}
         <h2>{slide.title}</h2> {/* Tiêu đề chính của slide */}
         <h3>{slide.subtitle}</h3> {/* Phụ đề của slide */}
-        <ul> {/* Danh sách các đặc điểm hoặc ưu đãi */}
+        <ul>
+          {" "}
+          {/* Danh sách các đặc điểm hoặc ưu đãi */}
           {/* Lặp (map) qua mảng 'features' của slide để tạo các list item */}
           {slide.features.map((feature, i) => (
             <li key={i}>{feature}</li> // Hiển thị từng đặc điểm. Sử dụng index làm key (an toàn nếu mảng features không thay đổi thứ tự).
           ))}
         </ul>
       </div>
-      <div className="slide-image"> {/* Phần bên phải chứa hình ảnh của slide */}
-        <img src={slide.image} alt={slide.title} loading="lazy" /> {/* Hình ảnh slide, sử dụng tiêu đề làm alt text, lazy loading */}
+      <div className="slide-image">
+        {" "}
+        {/* Phần bên phải chứa hình ảnh của slide */}
+        <img src={slide.image} alt={slide.title} loading="lazy" />{" "}
+        {/* Hình ảnh slide, sử dụng tiêu đề làm alt text, lazy loading */}
       </div>
       {/* Nút hành động (ví dụ: "Mua ngay"), sử dụng component Link để điều hướng đến trang chi tiết sản phẩm hoặc trang khác. */}
-      <Link to={slide.link} className="slide-button"> {/* 'to={slide.link}' là đường dẫn đích */}
-        {slide.buttonText} {/* Nội dung hiển thị trên nút */}
+      <Link to={slide.link} className="slide-button">
+        {" "}
+        {/* 'to={slide.link}' là đường dẫn đích */}
+        {slide.buttonText}{" "}
+        {/* Nội dung hiển thị trên nút */}
       </Link>
     </div>
   </div>
-)); // Kết thúc React.memo() cho component Slide
-
+));
 
 // --- Component chính: ProductPage (Trang hiển thị danh sách sản phẩm) ---
 // Đây là functional component hiển thị toàn bộ nội dung của trang danh sách sản phẩm.
@@ -314,7 +336,6 @@ const ProductPage = () => {
     // Xóa bỏ hẹn giờ đã tạo (timeout) để ngăn hàm callback bên trong setTimeout chạy
     // nếu một thay đổi khác đến trước khi timeout cũ kết thúc.
     return () => clearTimeout(timeout);
-
   }, [filters, products]); // Mảng dependencies: Effect chạy lại mỗi khi state 'filters' hoặc state 'products' thay đổi.
 
   // --- Hàm xử lý khi chuyển trang (trong phân trang) ---
@@ -395,9 +416,13 @@ const ProductPage = () => {
   // Nếu state 'isLoading' là true (đang tải dữ liệu ban đầu), hiển thị giao diện loading spinner.
   if (isLoading) {
     return (
-      <div className="loading-container"> {/* Container cho giao diện loading */}
-        <div className="loading-spinner"></div> {/* Biểu tượng spinner quay */}
-        <p className="loading-text">Đang tải...</p> {/* Thông báo "Đang tải..." */}
+      <div className="loading-container">
+        {" "}
+        {/* Container cho giao diện loading */}
+        <div className="loading-spinner"></div>{" "}
+        {/* Biểu tượng spinner quay */}
+        <p className="loading-text">Đang tải...</p>{" "}
+        {/* Thông báo "Đang tải..." */}
       </div>
     );
   }
@@ -405,11 +430,15 @@ const ProductPage = () => {
   // Nếu state 'error' có giá trị (khác null), hiển thị thông báo lỗi.
   if (error) {
     return (
-      <div className="status error"> {/* Container cho thông báo lỗi */}
-        <p>❌ {error}</p> {/* Hiển thị nội dung thông báo lỗi */}
+      <div className="status error">
+        {" "}
+        {/* Container cho thông báo lỗi */}
+        <p>❌ {error}</p>{" "}
+        {/* Hiển thị nội dung thông báo lỗi */}
         {/* Nút "Thử lại", khi click sẽ tải lại toàn bộ trang trình duyệt để thử fetch lại dữ liệu. */}
         <button onClick={() => window.location.reload()} className="retry-button">
-          Thử lại {/* Nội dung nút */}
+          Thử lại{" "}
+          {/* Nội dung nút */}
         </button>
       </div>
     );
@@ -418,7 +447,9 @@ const ProductPage = () => {
   // --- Render giao diện chính của trang sản phẩm khi dữ liệu đã tải xong và không có lỗi ---
   // Đây là phần giao diện hiển thị sau khi quá trình tải dữ liệu ban đầu hoàn tất thành công.
   return (
-    <main className="product-page"> {/* Thẻ <main> bao bọc nội dung chính của trang */}
+    <main className="product-page">
+      {" "}
+      {/* Thẻ <main> bao bọc nội dung chính của trang */}
       {/* Phần hiển thị Carousel (banner quảng cáo) ở đầu trang */}
       <div className="carousel-section">
         {/* Sử dụng component Slider từ react-slick. Thuộc tính {...sliderSettings} áp dụng tất cả các cài đặt đã định nghĩa trước đó. */}
@@ -431,10 +462,13 @@ const ProductPage = () => {
       </div>
 
       {/* Tiêu đề chính của trang danh sách sản phẩm */}
-      <h1 className="page-title">Danh sách sản phẩm</h1> {/* Tiêu đề trang */}
+      <h1 className="page-title">Danh sách sản phẩm</h1>{" "}
+      {/* Tiêu đề trang */}
 
       {/* Phần chứa các bộ lọc và sắp xếp sản phẩm */}
-      <div className="filter-section"> {/* Container cho các bộ điều khiển lọc và sắp xếp */}
+      <div className="filter-section">
+        {" "}
+        {/* Container cho các bộ điều khiển lọc và sắp xếp */}
         {/* Input để tìm kiếm sản phẩm theo tên */}
         <input
           type="text" // Kiểu input là text
@@ -453,35 +487,49 @@ const ProductPage = () => {
         />
         {/* Nút để sắp xếp danh sách sản phẩm theo giá từ thấp đến cao */}
         <button className="sort-button" onClick={sortLowToHigh}>
-          Giá từ thấp tới cao {/* Nội dung nút */}
+          Giá từ thấp tới cao{" "}
+          {/* Nội dung nút */}
         </button>
         {/* Nút để sắp xếp danh sách sản phẩm theo giá từ cao đến thấp */}
         <button className="sort-button" onClick={sortHighToLow}>
-          Giá từ cao tới thấp {/* Nội dung nút */}
+          Giá từ cao tới thấp{" "}
+          {/* Nội dung nút */}
         </button>
       </div>
 
       {/* Khu vực hiển thị danh sách sản phẩm hoặc các thông báo trạng thái khác */}
-      <div className="product-list"> {/* Container chính hiển thị danh sách sản phẩm hoặc thông báo */}
+      <div className="product-list">
+        {" "}
+        {/* Container chính hiển thị danh sách sản phẩm hoặc thông báo */}
         {/* Conditional Rendering: Hiển thị spinner nếu đang tìm kiếm, thông báo "Không có kết quả" nếu không tìm thấy, hoặc lưới sản phẩm. */}
         {isSearching ? ( // Nếu state 'isSearching' là true
-          <div className="loading-container"> {/* Container cho spinner loading */}
-            <div className="loading-spinner"></div> {/* Biểu tượng spinner quay */}
-            <p className="loading-text">Đang tải...</p> {/* Thông báo "Đang tải..." */}
+          <div className="loading-container">
+            {" "}
+            {/* Container cho spinner loading */}
+            <div className="loading-spinner"></div>{" "}
+            {/* Biểu tượng spinner quay */}
+            <p className="loading-text">Đang tải...</p>{" "}
+            {/* Thông báo "Đang tải..." */}
           </div>
         ) : showNoResults ? ( // Nếu KHÔNG đang tìm kiếm VÀ state 'showNoResults' là true (nghĩa là không có sản phẩm nào khớp bộ lọc)
-          <div className="no-products-container"> {/* Container thông báo không có kết quả */}
-            <p className="no-products-message">Không có sản phẩm nào phù hợp</p> {/* Thông báo "Không có sản phẩm nào phù hợp" */}
+          <div className="no-products-container">
+            {" "}
+            {/* Container thông báo không có kết quả */}
+            <p className="no-products-message">Không có sản phẩm nào phù hợp</p>{" "}
+            {/* Thông báo "Không có sản phẩm nào phù hợp" */}
             {/* Nút "Xóa bộ lọc", khi click sẽ gọi hàm resetFilters để đặt lại tất cả các bộ lọc. */}
             <button onClick={resetFilters} className="reset-filters-button">
-              <span className="reset-icon">✕</span> Xóa bộ lọc {/* Nội dung nút */}
+              <span className="reset-icon">✕</span> Xóa bộ lọc{" "}
+              {/* Nội dung nút */}
             </button>
           </div>
         ) : (
           // Nếu KHÔNG đang tìm kiếm VÀ state 'showNoResults' là false (nghĩa là có sản phẩm sau khi lọc)
-          <div className="product-grid"> {/* Container dạng lưới để hiển thị các thẻ sản phẩm */}
+          <div className="product-grid">
+            {" "}
+            {/* Container dạng lưới để hiển thị các thẻ sản phẩm */}
             {/* Lặp (map) qua mảng 'currentProducts' (các sản phẩm chỉ trên trang hiện tại)
-                để render một component ProductCard cho mỗi sản phẩm. */}
+                      để render một component ProductCard cho mỗi sản phẩm. */}
             {currentProducts.map((product) => (
               <ProductCard key={product.id} product={product} /> // Render component con ProductCard, truyền ID sản phẩm làm key và đối tượng product làm prop.
             ))}
