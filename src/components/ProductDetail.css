@@ -396,3 +396,38 @@ h2 {
     font-size: 0.9rem; /* Giảm kích thước font thêm */
   }
 }
+  /* Đảm bảo ảnh không tương tác với chuột trong quá trình bay
+  pointer-events: none;
+}
+
+/* Bạn có thể thêm keyframes animation phức tạp hơn nếu muốn thay vì transition */
+/* Ví dụ: */
+ @keyframes flyToCart {
+  0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+  }
+  50% {
+       transform: translate(var(--translate-x), var(--translate-y)) scale(0.8);
+       opacity: 0.8;
+  }
+  100% {
+      transform: translate(var(--translate-x-final), var(--translate-y-final)) scale(0.3);
+      opacity: 0;
+  }
+}
+
+.flying-to-cart {
+   position: fixed;
+   z-index: 1000;
+   pointer-events: none;
+   animation: flyToCart 1s forwards;
+   --translate-x: 0; 
+   --translate-y: 0; 
+   --translate-x-final: 0; 
+   --translate-y-final: 0; 
+   object-fit: contain;
+   pointer-events: none;
+
+
+}
