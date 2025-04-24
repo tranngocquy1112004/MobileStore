@@ -29,13 +29,15 @@ const Account = () => {
   const navigate = useNavigate(); // Gán hook useNavigate vào biến navigate để sử dụng cho việc điều hướng trang.
 
   // Sử dụng hook useContext để truy cập vào AuthContext và lấy ra các giá trị được cung cấp bởi AuthProvider:
+  // - user: Đối tượng người dùng đang đăng nhập (hoặc null).
   // - isLoggedIn: Trạng thái boolean cho biết người dùng đã đăng nhập hay chưa.
   // - login: Hàm để thực hiện đăng nhập (được cung cấp bởi AuthProvider).
   // - logout: Hàm để thực hiện đăng xuất (được cung cấp bởi AuthProvider).
-  // Cung cấp giá trị mặc định `{ isLoggedIn: false, login: () => {}, logout: () => {} }`
+  // Cung cấp giá trị mặc định `{ user: null, isLoggedIn: false, login: () => {}, logout: () => {} }`
   // để đảm bảo ứng dụng không gặp lỗi nếu AuthContext chưa được cung cấp đầy đủ (ví dụ: quên bọc ứng dụng bằng AuthProvider)
   // hoặc component được render ngoài cây Provider.
-  const { isLoggedIn, login, logout } = useContext(AuthContext) || {
+  const { user, isLoggedIn, login, logout } = useContext(AuthContext) || {
+    user: null, // Thêm giá trị mặc định cho user
     isLoggedIn: false, // Giá trị mặc định cho trạng thái đăng nhập
     login: () => {}, // Hàm rỗng mặc định cho login
     logout: () => {}, // Hàm rỗng mặc định cho logout
@@ -193,7 +195,7 @@ const Account = () => {
         {/* --- Conditional Rendering: Hiển thị phần giao diện khi người dùng ĐÃ đăng nhập --- */}
         {isLoggedIn ? ( // Kiểm tra nếu đã đăng nhập
           <div className="logged-in-section">
-            <p>Bạn đã đăng nhập thành công!</p>{" "}
+            <p>Bạn đã đăng nhập thành công!</p>
             {/* Dòng thông báo đơn giản xác nhận đã đăng nhập */}
             {/* Nút Đăng xuất */}
             <button
@@ -201,7 +203,7 @@ const Account = () => {
               onClick={handleLogout} // Gắn hàm xử lý sự kiện click nút (đã memoize bằng useCallback)
               aria-label="Đăng xuất" // Thuộc tính hỗ trợ khả năng tiếp cận cho người dùng sử dụng trình đọc màn hình
             >
-              Đăng xuất{" "}
+              Đăng xuất
               {/* Nội dung hiển thị trên nút */}
             </button>
             {/* Hiển thị thông báo (ví dụ: "Đăng xuất thành công!") nếu state 'message' có giá trị */}
@@ -213,7 +215,7 @@ const Account = () => {
                   message.includes("thành công") ? "success" : "error"
                 }`}
               >
-                {message}{" "}
+                {message}
                 {/* Hiển thị nội dung thông báo từ state 'message' */}
               </p>
             )}
@@ -252,7 +254,7 @@ const Account = () => {
                   message.includes("thành công") ? "success" : "error"
                 }`}
               >
-                {message}{" "}
+                {message}
                 {/* Hiển thị nội dung thông báo từ state 'message' */}
               </p>
             )}
@@ -261,7 +263,6 @@ const Account = () => {
               {/* --- Conditional Rendering: Hiển thị các nút khi đang ở chế độ Đăng ký --- */}
               {isRegistering ? ( // Kiểm tra nếu đang ở chế độ đăng ký
                 <>
-                  {" "}
                   {/* Sử dụng Fragment để nhóm các phần tử mà không thêm extra DOM node */}
                   {/* Nút "Đăng ký" */}
                   <button
@@ -269,7 +270,7 @@ const Account = () => {
                     onClick={handleRegister} // Gắn hàm xử lý sự kiện click nút (đã memoize bằng useCallback)
                     aria-label="Đăng ký tài khoản" // Thuộc tính hỗ trợ khả năng tiếp cận
                   >
-                    Đăng ký{" "}
+                    Đăng ký
                     {/* Nội dung nút */}
                   </button>
                   {/* Nút "Quay lại đăng nhập" - chuyển về chế độ đăng nhập */}
@@ -278,14 +279,13 @@ const Account = () => {
                     onClick={() => setIsRegistering(false)} // Gắn hàm mũi tên để chuyển state isRegistering thành false khi click
                     aria-label="Quay lại đăng nhập" // Thuộc tính hỗ trợ khả năng tiếp cận
                   >
-                    Quay lại đăng nhập{" "}
+                    Quay lại đăng nhập
                     {/* Nội dung nút */}
                   </button>
                 </>
               ) : (
                 // --- Conditional Rendering: Hiển thị các nút khi đang ở chế độ Đăng nhập ---
                 <>
-                  {" "}
                   {/* Sử dụng Fragment */}
                   {/* Nút "Đăng nhập" */}
                   <button
@@ -293,7 +293,7 @@ const Account = () => {
                     onClick={handleLogin} // Gắn hàm xử lý sự kiện click nút (đã memoize bằng useCallback)
                     aria-label="Đăng nhập" // Thuộc tính hỗ trợ khả năng tiếp cận
                   >
-                    Đăng nhập{" "}
+                    Đăng nhập
                     {/* Nội dung nút */}
                   </button>
                   {/* Nút "Chưa có tài khoản? Đăng ký" - chuyển sang chế độ đăng ký */}
@@ -302,7 +302,7 @@ const Account = () => {
                     onClick={() => setIsRegistering(true)} // Gắn hàm mũi tên để chuyển state isRegistering thành true khi click
                     aria-label="Chuyển sang đăng ký" // Thuộc tính hỗ trợ khả năng tiếp cận
                   >
-                    Chưa có tài khoản? Đăng ký{" "}
+                    Chưa có tài khoản? Đăng ký
                     {/* Nội dung nút */}
                   </button>
                 </>
