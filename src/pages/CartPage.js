@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useCallback } from "react"; // Import các hook cần thiết từ thư viện React: useContext để truy cập Context API, useState để quản lý trạng thái cục bộ, useEffect để thực hiện các tác vụ phụ (side effects), và useCallback để ghi nhớ (memoize) các hàm xử lý sự kiện nhằm tối ưu hiệu suất
-import { Link, useNavigate } from "react-router-dom"; // Import các thành phần từ react-router-dom: Link để tạo các liên kết điều hướng SPA (Single Page Application), và useNavigate để thực hiện điều hướng trang bằng code JavaScript
+import { Link, useNavigate } from "react-router-dom"; // Import các thành phần từ react-router-dom: Link để tạo các liên kết điều hướng trong ứng dụng SPA, và useNavigate để thực hiện điều hướng trang bằng code JavaScript
 import { CartContext } from "./CartContext"; // Import CartContext từ cùng thư mục. Context này chứa trạng thái giỏ hàng (cart) và các hàm để quản lý giỏ hàng (addToCart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart)
-import { AuthContext } from "../account/AuthContext"; // Import AuthContext từ đường dẫn tương đối. Context này chứa trạng thái xác thực của người dùng (isLoggedIn)
+import { AuthContext } from "../account/AuthContext"; // Import AuthContext từ đường dẫn tương đối. Context này chứa trạng thái xác thực của người dùng (isLoggedIn, user)
 import CheckoutModal from "../components/CheckoutModal"; // Import component Modal tùy chỉnh để hiển thị form thanh toán và nhập thông tin giao hàng
 import "./CartPage.css"; // Import file CSS tùy chỉnh để định dạng giao diện cho component CartPage này
 
@@ -15,7 +15,7 @@ const MESSAGES = {
 };
 
 // Định nghĩa key dùng cho localStorage để lưu trữ danh sách các đơn hàng đã đặt.
-// Việc sử dụng hằng số giúp tránh gõ sai key và dễ dàng quản lý. Key này nên nhất quán với component OrderHistory.
+// Việc sử dụng hằng số giúp tránh gõ sai key và dễ dàng quản lý. Key này nên nhất quán với OrderHistory và AdminDashboard.
 const LOCAL_STORAGE_ORDERS_KEY = "orders";
 
 // --- Component con: CartItem (Hiển thị thông tin chi tiết một sản phẩm trong giỏ hàng) ---
@@ -39,7 +39,8 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
       />
       {/* Phần chi tiết thông tin sản phẩm (tên, giá, điều khiển số lượng) */}
       <div className="cart-item-details">
-        <p className="cart-name">{item.name}</p> {/* Hiển thị tên sản phẩm */}
+        <p className="cart-name">{item.name}</p>{" "}
+        {/* Hiển thị tên sản phẩm */}
         <p className="cart-price">
           💰 {item.price.toLocaleString("vi-VN")} VNĐ{" "}
           {/* Hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam */}
@@ -56,7 +57,8 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
             className={isDecreaseDisabled ? "disabled" : ""} // Thêm class CSS 'disabled' vào nút khi nó bị vô hiệu hóa để thay đổi giao diện.
             aria-label={`Giảm số lượng ${item.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận cho người dùng sử dụng trình đọc màn hình.
           >
-            - {/* Nội dung hiển thị trên nút giảm */}
+            -{" "}
+            {/* Nội dung hiển thị trên nút giảm */}
           </button>
           <span>{item.quantity}</span>{" "}
           {/* Hiển thị số lượng hiện tại của sản phẩm trong giỏ */}
@@ -65,7 +67,8 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
             onClick={() => onIncrease(item.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onIncrease' (được truyền từ component cha thông qua props) với ID của sản phẩm hiện tại.
             aria-label={`Tăng số lượng ${item.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận
           >
-            + {/* Nội dung hiển thị trên nút tăng */}
+            +{" "}
+            {/* Nội dung hiển thị trên nút tăng */}
           </button>
         </div>
       </div>
@@ -123,10 +126,11 @@ const EmptyCart = React.memo(() => (
   </div>
 )); // Kết thúc React.memo() cho component EmptyCart
 
+
 // --- Component chính: CartPage (Trang hiển thị giỏ hàng) ---
 // Đây là functional component hiển thị toàn bộ nội dung của trang giỏ hàng.
 const CartPage = () => {
-  const navigate = useNavigate(); // Sử dụng hook useNavigate để thực hiện điều hướng trang bằng code JavaScript.
+  const navigate = useNavigate(); // Sử dụng hook useNavigate để thực hiện điều hướng trang bằng code.
 
   // Sử dụng hook useContext để truy cập vào CartContext và lấy ra các giá trị và hàm cần thiết:
   // - cart: Mảng chứa danh sách các sản phẩm trong giỏ hàng hiện tại.
@@ -137,9 +141,9 @@ const CartPage = () => {
   const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } =
     useContext(CartContext);
 
-  // Sử dụng hook useContext để truy cập vào AuthContext và lấy ra trạng thái 'isLoggedIn'.
-  // Cung cấp giá trị mặc định `{ isLoggedIn: false }` để đảm bảo ứng dụng không gặp lỗi nếu AuthContext chưa được cung cấp đầy đủ hoặc thuộc tính isLoggedIn không tồn tại (ví dụ: trong các test hoặc Storybook).
-  const { isLoggedIn } = useContext(AuthContext) || { isLoggedIn: false };
+  // Sử dụng hook useContext để truy cập vào AuthContext và lấy ra trạng thái 'isLoggedIn' và thông tin 'user'.
+  // Cung cấp giá trị mặc định `{ isLoggedIn: false, user: null }` để đảm bảo ứng dụng không gặp lỗi nếu AuthContext chưa được cung cấp đầy đủ.
+  const { isLoggedIn, user } = useContext(AuthContext) || { isLoggedIn: false, user: null };
 
   // --- State quản lý trạng thái hiển thị của Component CartPage ---
   // State 'showModal': Boolean kiểm soát việc Modal thanh toán có đang hiển thị hay không. Ban đầu là false (ẩn).
@@ -156,7 +160,7 @@ const CartPage = () => {
     const timer = setTimeout(() => setIsLoading(false), 1000); // 1000ms = 1 giây
 
     // Hàm cleanup cho effect này. Hàm này sẽ chạy khi component bị hủy bỏ (unmount)
-    // hoặc khi effect chuẩn bị chạy lại (trong trường hợp dependencies thay đổi, nhưng ở đây dependency array là rỗng).
+    // hoặc trước khi effect chạy lại (nếu dependencies thay đổi, nhưng ở đây deps là mảng rỗng nên chỉ chạy khi unmount).
     // Cleanup function sẽ xóa bỏ hẹn giờ đã tạo, ngăn nó chạy và cập nhật state sau khi component đã unmount.
     return () => clearTimeout(timer);
   }, []); // Mảng dependencies rỗng []: đảm bảo effect chỉ chạy một lần duy nhất khi component được mount lần đầu.
@@ -189,18 +193,26 @@ const CartPage = () => {
       navigate("/"); // Điều hướng người dùng đến trang gốc (thường là trang đăng nhập/đăng ký hoặc trang chủ). Bạn có thể thay đổi route này nếu cần.
       return; // Dừng hàm, không tiếp tục xử lý thanh toán nếu chưa đăng nhập.
     }
-    // 2. Nếu người dùng đã đăng nhập, hiển thị modal thanh toán.
+     // 2. Kiểm tra giỏ hàng có trống không trước khi mở modal
+     if (cart.length === 0) {
+        alert(MESSAGES.EMPTY_CART); // Hoặc hiển thị thông báo toast
+        return; // Dừng hàm nếu giỏ hàng trống
+     }
+    // 3. Nếu người dùng đã đăng nhập và giỏ hàng không trống, hiển thị modal thanh toán.
     setShowModal(true); // Cập nhật state 'showModal' thành true để hiển thị component CheckoutModal.
-  }, [isLoggedIn, navigate]); // Mảng dependencies: hàm phụ thuộc vào trạng thái đăng nhập và hàm điều hướng.
+  }, [isLoggedIn, navigate, cart.length]); // Thêm cart.length vào dependencies
 
   // --- Hàm xử lý khi người dùng xác nhận thanh toán trong modal ---
   // Hàm này nhận đối tượng 'shippingInfo' (thông tin giao hàng người dùng đã nhập trong modal) làm tham số.
   // Sử dụng useCallback để ghi nhớ hàm này. Hàm sẽ được tạo lại khi các dependencies thay đổi.
-  // Dependencies bao gồm: 'cart', 'totalPrice' (để tạo đối tượng đơn hàng), 'clearCart' (để xóa giỏ sau khi đặt), và 'navigate' (để chuyển hướng).
+  // Dependencies bao gồm: 'cart', 'totalPrice' (để tạo đối tượng đơn hàng), 'clearCart' (để xóa giỏ sau khi đặt), 'navigate' (để chuyển hướng), và 'user' (để lấy thông tin người dùng).
   const handleConfirmCheckout = useCallback((shippingInfo) => {
     // 1. Tạo một đối tượng biểu diễn đơn hàng mới.
     const order = {
       id: Date.now(), // Tạo một ID đơn giản cho đơn hàng bằng cách sử dụng timestamp hiện tại (milliseconds từ Epoch). Đây là một cách đơn giản cho demo.
+      // Thêm thông tin người dùng vào đơn hàng
+      // Sử dụng optional chaining user?.username để an toàn nếu user là null
+      username: user?.username || 'Guest', // Lưu username của người đặt hàng, mặc định là 'Guest' nếu không có user
       items: cart, // Lưu danh sách các sản phẩm hiện có trong giỏ hàng vào thuộc tính 'items' của đơn hàng.
       totalPrice, // Lưu tổng giá trị của giỏ hàng vào thuộc tính 'totalPrice'.
       shippingInfo, // Lưu thông tin giao hàng nhận được từ modal vào thuộc tính 'shippingInfo'.
@@ -210,7 +222,7 @@ const CartPage = () => {
     // 2. Lưu đơn hàng mới vào localStorage. (Đây là phương pháp demo đơn giản, KHÔNG an toàn và KHÔNG bền vững cho ứng dụng thực tế cần lưu trữ lâu dài hoặc bảo mật).
     // Lấy danh sách các đơn hàng đã lưu trước đó từ localStorage. Sử dụng key đã định nghĩa.
     // Nếu chưa có dữ liệu (localStorage.getItem trả về null), mặc định là mảng rỗng [].
-    // Sử dụng try-catch để xử lý lỗi parse JSON nếu dữ liệu trong localStorage bị hỏng.
+    // Sử dụng try-catch để xử lý lỗi parse JSON nếu dữ liệu trong localStorage bị hỏng hoặc không phải JSON hợp lệ.
     let existingOrders = [];
     try {
       existingOrders = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || [];
@@ -231,13 +243,13 @@ const CartPage = () => {
     clearCart(); // Gọi hàm 'clearCart' từ CartContext để xóa toàn bộ sản phẩm khỏi giỏ hàng sau khi đã đặt.
     setShowModal(false); // Ẩn Modal thanh toán bằng cách đặt state 'showModal' về false.
     navigate("/orders"); // Điều hướng người dùng đến trang lịch sử đơn hàng để họ xem đơn hàng vừa đặt.
-  }, [cart, totalPrice, clearCart, navigate]); // Mảng dependencies: hàm phụ thuộc vào 'cart' và 'totalPrice' (để tạo đơn hàng), hàm 'clearCart' (để xóa giỏ), và hàm 'navigate' (để điều hướng).
+  }, [cart, totalPrice, clearCart, navigate, user]); // Thêm user vào dependencies
 
   // --- Hàm xử lý khi người dùng hủy bỏ modal thanh toán ---
   // Sử dụng useCallback để ghi nhớ hàm này. Dependency array rỗng vì hàm chỉ thay đổi state cục bộ 'showModal' dựa trên giá trị cố định.
   const handleCancelCheckout = useCallback(() => {
     setShowModal(false); // Đặt state 'showModal' về false để ẩn Modal thanh toán.
-  }, []); // Mảng dependency rỗng []: Hàm không phụ thuộc vào bất kỳ biến hoặc state nào từ scope ngoài cần theo dõi sự thay đổi.
+  }, []); // Mảng dependency rỗng []: Hàm không phụ thuộc vào bất kỳ biến nào từ scope ngoài cần theo dõi.
 
   // --- Hàm xử lý khi người dùng nhấn nút "Xóa tất cả" trong giỏ hàng ---
   // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi hàm 'clearCart' từ Context thay đổi.
