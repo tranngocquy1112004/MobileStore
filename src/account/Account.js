@@ -21,6 +21,10 @@ const MESSAGES = {
   LOGIN_FAILED: "Sai thông tin đăng nhập!", // Thông báo khi người dùng nhập sai tên đăng nhập hoặc mật khẩu khi đăng nhập.
   LOGOUT_SUCCESS: "Đăng xuất thành công!", // Thông báo khi người dùng đăng xuất khỏi hệ thống thành công.
 };
+const ADMIN_CREDENTIALS = {
+  USERNAME: "admin",
+  PASSWORD: "123"
+};
 
 // --- Component chính Account: Xử lý logic và giao diện cho các chức năng đăng nhập, đăng ký, và đăng xuất ---
 // Component này hiển thị form đăng nhập hoặc đăng ký, xử lý logic xác thực (tạm thời với localStorage),
@@ -126,13 +130,27 @@ const Account = () => {
   // Hàm này được gọi khi người dùng nhấn nút "Đăng nhập" (khi đang ở chế độ đăng nhập).
   // Sử dụng useCallback để ghi nhớ hàm. Hàm này sẽ được tạo lại khi state 'formData' hoặc hàm 'login' từ Context thay đổi.
   const handleLogin = useCallback(() => {
-    const { username, password } = formData; // Lấy giá trị 'username' và 'password' từ state 'formData' để xử lý.
-
-    // 1. Kiểm tra các trường nhập liệu có bị rỗng hay không.
-    if (!username.trim() || !password.trim()) {
-      setMessage(MESSAGES.EMPTY_FIELDS); // Hiển thị thông báo lỗi nếu thiếu thông tin.
-      return; // Dừng hàm.
-    }
+        const { username, password } = formData; // Lấy giá trị 'username' và 'password' từ state 'formData' để xử lý.
+    
+        // 1. Kiểm tra các trường nhập liệu có bị rỗng hay không.
+        if (!username.trim() || !password.trim()) {
+          setMessage(MESSAGES.EMPTY_FIELDS); // Hiển thị thông báo lỗi nếu thiếu thông tin.
+          return; // Dừng hàm.
+        }
+    
+        // --- 2. Kiểm tra thông tin đăng nhập Admin ---
+        if (username === ADMIN_CREDENTIALS.USERNAME && password === ADMIN_CREDENTIALS.PASSWORD) {
+            // Nếu khớp với tài khoản admin cố định
+            const adminUser = { username: ADMIN_CREDENTIALS.USERNAME, role: 'admin' }; // Tạo đối tượng user cho admin
+            login(adminUser); // Gọi hàm login từ Context với thông tin admin
+            setMessage(MESSAGES.LOGIN_SUCCESS); // Hiển thị thông báo đăng nhập thành công
+            // Điều hướng đến trang admin sau khi đăng nhập thành công
+            navigate("/admin"); // Điều hướng đến route "/admin"
+            return; // Dừng hàm, không xử lý tiếp
+        }
+    
+        // --- 3. Nếu không phải admin, kiểm tra trong localStorage cho tài khoản người dùng thường ---
+    
 
     // 2. Lấy danh sách người dùng đã lưu từ localStorage (có xử lý lỗi parse).
     let storedUsers = [];

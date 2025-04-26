@@ -9,7 +9,7 @@ import "./CartPage.css"; // Import file CSS tùy chỉnh để định dạng gi
 
 // Object chứa các chuỗi thông báo sẽ hiển thị cho người dùng, giúp dễ dàng quản lý nội dung thông báo
 const MESSAGES = {
-  EMPTY_CART: "Giỏ hàng trống", // Thông báo hiển thị khi giỏ hàng không có sản phẩm nào
+  EMPTY_CART: "Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm trước khi thanh toán.", // Thông báo hiển thị khi giỏ hàng không có sản phẩm nào (cập nhật cho rõ ràng hơn)
   CHECKOUT_SUCCESS: "Đặt hàng thành công!", // Thông báo hiển thị khi quá trình đặt hàng hoàn tất thành công
   LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Thông báo yêu cầu người dùng phải đăng nhập trước khi thực hiện thanh toán
 };
@@ -28,7 +28,6 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
 
   return (
     <li className="cart-item">
-      {" "}
       {/* Container chính cho một sản phẩm riêng lẻ trong danh sách giỏ hàng */}
       {/* Hình ảnh sản phẩm */}
       <img
@@ -39,16 +38,13 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
       />
       {/* Phần chi tiết thông tin sản phẩm (tên, giá, điều khiển số lượng) */}
       <div className="cart-item-details">
-        <p className="cart-name">{item.name}</p>{" "}
-        {/* Hiển thị tên sản phẩm */}
+        <p className="cart-name">{item.name}</p> {/* Hiển thị tên sản phẩm */}
         <p className="cart-price">
-          💰 {item.price.toLocaleString("vi-VN")} VNĐ{" "}
-          {/* Hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam */}
+          💰 {item.price.toLocaleString("vi-VN")} VNĐ {/* Hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam */}
           {/* Hàm toLocaleString("vi-VN") giúp định dạng số thành chuỗi tiền tệ theo quy ước của Việt Nam */}
         </p>
         {/* Điều khiển tăng/giảm số lượng sản phẩm */}
         <div className="quantity-controls">
-          {" "}
           {/* Container cho các nút điều khiển số lượng */}
           {/* Nút giảm số lượng */}
           <button
@@ -57,18 +53,15 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
             className={isDecreaseDisabled ? "disabled" : ""} // Thêm class CSS 'disabled' vào nút khi nó bị vô hiệu hóa để thay đổi giao diện.
             aria-label={`Giảm số lượng ${item.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận cho người dùng sử dụng trình đọc màn hình.
           >
-            -{" "}
-            {/* Nội dung hiển thị trên nút giảm */}
+            - {/* Nội dung hiển thị trên nút giảm */}
           </button>
-          <span>{item.quantity}</span>{" "}
-          {/* Hiển thị số lượng hiện tại của sản phẩm trong giỏ */}
+          <span>{item.quantity}</span> {/* Hiển thị số lượng hiện tại của sản phẩm trong giỏ */}
           {/* Nút tăng số lượng */}
           <button
             onClick={() => onIncrease(item.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onIncrease' (được truyền từ component cha thông qua props) với ID của sản phẩm hiện tại.
             aria-label={`Tăng số lượng ${item.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận
           >
-            +{" "}
-            {/* Nội dung hiển thị trên nút tăng */}
+            + {/* Nội dung hiển thị trên nút tăng */}
           </button>
         </div>
       </div>
@@ -78,8 +71,7 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
         onClick={() => onRemove(item.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onRemove' (được truyền từ component cha thông qua props) với ID của sản phẩm hiện tại.
         aria-label={`Xóa ${item.name} khỏi giỏ hàng`} // Thuộc tính hỗ trợ khả năng tiếp cận
       >
-        Xóa{" "}
-        {/* Nội dung hiển thị trên nút xóa */}
+        Xóa {/* Nội dung hiển thị trên nút xóa */}
       </button>
     </li>
   );
@@ -90,18 +82,14 @@ const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
 // Component chỉ render lại khi props của nó thay đổi (totalPrice, onCheckout).
 const CartSummary = React.memo(({ totalPrice, onCheckout }) => (
   <div className="cart-summary">
-    {" "}
     {/* Container cho phần tóm tắt giỏ hàng */}
     <h3 className="total-price">
-      Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ{" "}
-      {/* Hiển thị tổng tiền của giỏ hàng, định dạng theo tiền tệ Việt Nam */}
+      Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ {/* Hiển thị tổng tiền của giỏ hàng, định dạng theo tiền tệ Việt Nam */}
     </h3>
     {/* Nút "Mua hàng" để bắt đầu quá trình thanh toán */}
     <button className="checkout-button" onClick={onCheckout}>
-      {" "}
       {/* Gắn hàm 'onCheckout' (truyền qua props) vào sự kiện click nút */}
-      🛍 Mua hàng{" "}
-      {/* Nội dung hiển thị trên nút */}
+      🛍 Mua hàng {/* Nội dung hiển thị trên nút */}
     </button>
   </div>
 )); // Kết thúc React.memo() cho component CartSummary
@@ -111,17 +99,13 @@ const CartSummary = React.memo(({ totalPrice, onCheckout }) => (
 // Component này không nhận props ảnh hưởng đến nội dung hiển thị, nên nó chỉ render lại khi component cha render và gửi cùng props (không thay đổi).
 const EmptyCart = React.memo(() => (
   <div className="empty-cart-message-container">
-    {" "}
     {/* Container cho thông báo giỏ hàng trống */}
     {/* Có thể thêm icon hoặc hình ảnh minh họa giỏ hàng trống tại đây */}
-    <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p>{" "}
-    {/* Hiển thị thông báo "Giỏ hàng trống" từ hằng số MESSAGES */}
+    <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p> {/* Hiển thị thông báo "Giỏ hàng trống" từ hằng số MESSAGES */}
     {/* Liên kết (Link) mời người dùng quay lại trang mua sắm (danh sách sản phẩm) */}
     <Link to="/products" className="shop-now-link">
-      {" "}
       {/* 'to="/products"' chỉ định route cần điều hướng đến */}
-      🛒 Tiếp tục mua sắm{" "}
-      {/* Nội dung hiển thị trên liên kết */}
+      🛒 Tiếp tục mua sắm {/* Nội dung hiển thị trên liên kết */}
     </Link>
   </div>
 )); // Kết thúc React.memo() cho component EmptyCart
@@ -185,7 +169,7 @@ const CartPage = () => {
 
   // --- Hàm xử lý khi người dùng nhấn nút "Mua hàng" ---
   // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi các dependencies thay đổi.
-  // Dependencies ở đây là 'isLoggedIn' (từ AuthContext) và 'navigate' (từ hook useNavigate).
+  // Dependencies ở đây là 'isLoggedIn', 'navigate', và 'cart.length'.
   const handleCheckout = useCallback(() => {
     // 1. Kiểm tra trạng thái đăng nhập của người dùng.
     if (!isLoggedIn) {
@@ -193,19 +177,19 @@ const CartPage = () => {
       navigate("/"); // Điều hướng người dùng đến trang gốc (thường là trang đăng nhập/đăng ký hoặc trang chủ). Bạn có thể thay đổi route này nếu cần.
       return; // Dừng hàm, không tiếp tục xử lý thanh toán nếu chưa đăng nhập.
     }
-     // 2. Kiểm tra giỏ hàng có trống không trước khi mở modal
-     if (cart.length === 0) {
-        alert(MESSAGES.EMPTY_CART); // Hoặc hiển thị thông báo toast
-        return; // Dừng hàm nếu giỏ hàng trống
-     }
+    // 2. Kiểm tra giỏ hàng có trống không trước khi mở modal
+    if (cart.length === 0) {
+      alert(MESSAGES.EMPTY_CART); // Thông báo giỏ hàng trống
+      return; // Dừng hàm nếu giỏ hàng trống
+    }
     // 3. Nếu người dùng đã đăng nhập và giỏ hàng không trống, hiển thị modal thanh toán.
     setShowModal(true); // Cập nhật state 'showModal' thành true để hiển thị component CheckoutModal.
-  }, [isLoggedIn, navigate, cart.length]); // Thêm cart.length vào dependencies
+  }, [isLoggedIn, navigate, cart.length]); // **Đã thêm cart.length vào dependencies**
 
   // --- Hàm xử lý khi người dùng xác nhận thanh toán trong modal ---
   // Hàm này nhận đối tượng 'shippingInfo' (thông tin giao hàng người dùng đã nhập trong modal) làm tham số.
   // Sử dụng useCallback để ghi nhớ hàm này. Hàm sẽ được tạo lại khi các dependencies thay đổi.
-  // Dependencies bao gồm: 'cart', 'totalPrice' (để tạo đối tượng đơn hàng), 'clearCart' (để xóa giỏ sau khi đặt), 'navigate' (để chuyển hướng), và 'user' (để lấy thông tin người dùng).
+  // Dependencies bao gồm: 'cart', 'totalPrice', 'clearCart', 'navigate', và 'user'.
   const handleConfirmCheckout = useCallback((shippingInfo) => {
     // 1. Tạo một đối tượng biểu diễn đơn hàng mới.
     const order = {
@@ -225,9 +209,17 @@ const CartPage = () => {
     // Sử dụng try-catch để xử lý lỗi parse JSON nếu dữ liệu trong localStorage bị hỏng hoặc không phải JSON hợp lệ.
     let existingOrders = [];
     try {
-      existingOrders = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || [];
+      const storedOrders = localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY);
+      if (storedOrders) {
+        existingOrders = JSON.parse(storedOrders);
+        // Đảm bảo existingOrders luôn là mảng sau khi parse
+        if (!Array.isArray(existingOrders)) {
+            console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, đang tạo lại.");
+            existingOrders = [];
+        }
+      }
     } catch (error) {
-      console.error("Lỗi khi đọc danh sách đơn hàng từ localStorage:", error);
+      console.error("Lỗi khi đọc/parse danh sách đơn hàng từ localStorage:", error);
       // Nếu có lỗi khi đọc/parse, có thể xóa dữ liệu cũ bị hỏng và bắt đầu với mảng rỗng mới.
       localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY);
       existingOrders = [];
@@ -243,7 +235,7 @@ const CartPage = () => {
     clearCart(); // Gọi hàm 'clearCart' từ CartContext để xóa toàn bộ sản phẩm khỏi giỏ hàng sau khi đã đặt.
     setShowModal(false); // Ẩn Modal thanh toán bằng cách đặt state 'showModal' về false.
     navigate("/orders"); // Điều hướng người dùng đến trang lịch sử đơn hàng để họ xem đơn hàng vừa đặt.
-  }, [cart, totalPrice, clearCart, navigate, user]); // Thêm user vào dependencies
+  }, [cart, totalPrice, clearCart, navigate, user]); // **Đã thêm user vào dependencies**
 
   // --- Hàm xử lý khi người dùng hủy bỏ modal thanh toán ---
   // Sử dụng useCallback để ghi nhớ hàm này. Dependency array rỗng vì hàm chỉ thay đổi state cục bộ 'showModal' dựa trên giá trị cố định.
@@ -268,12 +260,9 @@ const CartPage = () => {
   if (isLoading) {
     return (
       <div className="loading-container">
-        {" "}
         {/* Container bao quanh spinner và text loading */}
-        <div className="loading-spinner"></div>{" "}
-        {/* Biểu tượng spinner quay */}
-        <p className="loading-text">Đang tải...</p>{" "}
-        {/* Hiển thị thông báo "Đang tải..." */}
+        <div className="loading-spinner"></div> {/* Biểu tượng spinner quay */}
+        <p className="loading-text">Đang tải...</p> {/* Hiển thị thông báo "Đang tải..." */}
       </div>
     );
   }
@@ -281,20 +270,18 @@ const CartPage = () => {
   // --- Render giao diện chính của trang Giỏ hàng khi không còn loading ---
   return (
     <div className="cart-container">
-      {" "}
       {/* Container chính bao bọc toàn bộ nội dung của trang Giỏ hàng */}
       {/* Tiêu đề trang hiển thị số lượng sản phẩm trong giỏ hàng hiện tại */}
       <h2>
         🛍 Giỏ Hàng ({totalItems} sản phẩm)
-      </h2>{" "}
-      {/* Hiển thị tổng số lượng item trong giỏ (totalItems) */}
+      </h2> {/* Hiển thị tổng số lượng item trong giỏ (totalItems) */}
+
       {/* --- Hiển thị nội dung dựa trên trạng thái giỏ hàng (có rỗng hay không) --- */}
       {cart.length === 0 ? ( // Conditional Rendering: Kiểm tra nếu mảng 'cart' rỗng (không có sản phẩm nào)
         <EmptyCart /> // Nếu rỗng, hiển thị component con EmptyCart.
       ) : (
         // Nếu giỏ hàng CÓ sản phẩm (cart.length > 0)
         <>
-          {" "}
           {/* Sử dụng Fragment để nhóm nhiều phần tử (danh sách sản phẩm, nút xóa tất cả, tóm tắt giỏ hàng) mà không thêm DOM node dư thừa vào cây. */}
           {/* Danh sách (unordered list) hiển thị từng sản phẩm trong giỏ hàng */}
           <ul className="cart-list">
@@ -315,8 +302,7 @@ const CartPage = () => {
             onClick={handleClearCart} // Gắn hàm xử lý sự kiện click (đã memoize)
             aria-label="Xóa toàn bộ giỏ hàng" // Thuộc tính hỗ trợ khả năng tiếp cận
           >
-            Xóa tất cả{" "}
-            {/* Nội dung nút */}
+            Xóa tất cả {/* Nội dung nút */}
           </button>
           {/* Hiển thị component tóm tắt giỏ hàng (tổng tiền và nút mua hàng) */}
           <CartSummary
@@ -325,6 +311,7 @@ const CartPage = () => {
           />
         </>
       )}
+
       {/* --- Hiển thị Modal thanh toán (nếu cần) --- */}
       {/* Conditional rendering: Nếu state 'showModal' là true, render component CheckoutModal. */}
       {showModal && (
@@ -335,23 +322,19 @@ const CartPage = () => {
           onCancel={handleCancelCheckout} // Truyền hàm xử lý sự kiện khi người dùng hủy bỏ modal (đã memoize).
         />
       )}
+
       {/* --- Các liên kết điều hướng khác --- */}
       <div className="cart-links">
-        {" "}
         {/* Container cho các liên kết điều hướng */}
         {/* Liên kết đến trang lịch sử đơn hàng */}
         <Link to="/orders" className="order-history-link">
-          {" "}
           {/* 'to="/orders"' là route đến trang lịch sử đơn hàng */}
-          📜 Xem lịch sử đơn hàng{" "}
-          {/* Nội dung liên kết */}
+          📜 Xem lịch sử đơn hàng {/* Nội dung liên kết */}
         </Link>
         {/* Liên kết quay lại trang chủ hoặc trang danh sách sản phẩm */}
-        <Link to="/home" className="back-button">
-          {" "}
-          {/* 'to="/home"' là route đến trang chủ hoặc trang danh sách sản phẩm */}
-          ⬅ Quay lại cửa hàng{" "}
-          {/* Nội dung liên kết */}
+        <Link to="/" className="back-button"> {/* Sửa thành link về trang chủ "/" */}
+          {/* 'to="/"' là route đến trang chủ */}
+          ⬅ Quay lại cửa hàng {/* Nội dung liên kết */}
         </Link>
       </div>
     </div>
