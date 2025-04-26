@@ -1,175 +1,231 @@
-// Import thư viện React và các hook cần thiết: createContext, useState, useEffect, useCallback
-import React, { createContext, useState, useEffect, useCallback } from "react";
+// Import các hook cần thiết từ thư viện React:
+// createContext: Để tạo Context (một cách để chia sẻ dữ liệu giỏ hàng giữa các component).
+// useState: Để quản lý trạng thái cục bộ của giỏ hàng (danh sách sản phẩm trong giỏ).
+// useEffect: Để thực hiện các tác vụ phụ (side effects) như đọc/ghi dữ liệu giỏ hàng vào localStorage khi component mount hoặc khi trạng thái giỏ hàng/người dùng thay đổi.
+// useCallback: Để ghi nhớ (memoize) các hàm xử lý giỏ hàng (addToCart, removeFromCart, updateQuantity, clearCart), giúp tối ưu hiệu suất.
+// useContext: Để truy cập vào các Context khác (AuthContext) nhằm lấy thông tin người dùng hiện tại.
+import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
+// Import AuthContext để lấy thông tin người dùng đang đăng nhập.
+import { AuthContext } from "../account/AuthContext"; // Giả định AuthContext nằm trong thư mục 'account'
 
-// --- Constants (Các hằng số) ---
-// Định nghĩa một key hằng số để truy cập dữ liệu giỏ hàng trong localStorage của trình duyệt
-const LOCAL_STORAGE_CART_KEY = "cart";
+// --- Định nghĩa hằng số ---
 
-// --- Default Value for Context (Giá trị mặc định cho Context) ---
-// Định nghĩa cấu trúc và giá trị mặc định cho CartContext.
-// Điều này cung cấp một giá trị dự phòng và giúp hỗ trợ tự động hoàn thành/kiểm tra kiểu
-// trong các component sử dụng Context này.
+// Tiền tố cho khóa lưu trữ giỏ hàng trong localStorage.
+// Tên đầy đủ sẽ là "cart_[username]" để phân biệt giỏ hàng của từng người dùng.
+const LOCAL_STORAGE_CART_PREFIX = "cart_";
+
+// --- Định nghĩa giá trị mặc định cho Context ---
+// Giá trị này được sử dụng bởi các component con khi chúng gọi useContext(CartContext)
+// trong trường hợp Context Provider tương ứng (CartProvider) chưa được render.
 const defaultCartContext = {
-  cart: [], // Giỏ hàng mặc định là một mảng rỗng
-  // Các hàm mặc định (không làm gì cả), chỉ để định hình cấu trúc
-  addToCart: () => {},
-  removeFromCart: () => {},
-  increaseQuantity: () => {},
-  decreaseQuantity: () => {},
-  clearCart: () => {},
+  cart: [], // Giỏ hàng mặc định là mảng rỗng
+  totalPrice: 0, // Tổng tiền mặc định là 0
+  addToCart: () => {}, // Hàm rỗng mặc định
+  removeFromCart: () => {}, // Hàm rỗng mặc định
+  updateQuantity: () => {}, // Hàm rỗng mặc định
+  clearCart: () => {}, // Hàm rỗng mặc định
 };
 
-// --- Create CartContext (Tạo CartContext) ---
-// Tạo đối tượng Context thực tế sử dụng createContext và giá trị mặc định đã định nghĩa.
-// Context này sẽ được sử dụng bởi Provider (cung cấp giá trị) và Consumers (sử dụng giá trị).
+// --- Tạo CartContext ---
+// Sử dụng hàm createContext() để tạo một Context mới chứa trạng thái giỏ hàng và các hàm quản lý.
 export const CartContext = createContext(defaultCartContext);
 
-// --- CartProvider Component (Component Cung cấp Giỏ hàng) ---
-// Component này sẽ bao bọc các phần của ứng dụng cần truy cập vào trạng thái và các hàm của giỏ hàng.
-// Nó quản lý trạng thái giỏ hàng và cung cấp trạng thái đó thông qua CartContext.Provider.
+// --- Component CartProvider ---
+// Đây là component Provider cho CartContext, quản lý state giỏ hàng và logic lưu/tải/cập nhật.
 export const CartProvider = ({ children }) => {
-  // Biến trạng thái để lưu trữ mảng các sản phẩm hiện có trong giỏ hàng
-  const [cart, setCart] = useState([]); // Khởi tạo là một mảng rỗng
+  // Sử dụng useContext để truy cập AuthContext và lấy thông tin người dùng.
+  // Chúng ta cần 'user' để xác định giỏ hàng của ai cần tải/lưu.
+  const { user } = useContext(AuthContext) || { user: null }; // Lấy user từ AuthContext, cung cấp giá trị mặc định an toàn
 
-  // --- Effect Hook: Load Cart from localStorage on Mount (Tải giỏ hàng từ localStorage khi component mount) ---
-  // useEffect này chỉ chạy một lần duy nhất khi component CartProvider được render lần đầu tiên,
-  // vì mảng dependency [] của nó là rỗng.
+  // State 'cart': Lưu trữ danh sách các sản phẩm trong giỏ hàng hiện tại.
+  // Ban đầu là mảng rỗng. Dữ liệu sẽ được tải từ localStorage trong useEffect.
+  const [cart, setCart] = useState([]);
+
+  // --- Effect hook để tải giỏ hàng từ localStorage khi component mount hoặc người dùng thay đổi ---
+  // Effect này chạy khi component mount VÀ mỗi khi đối tượng 'user' thay đổi (người dùng đăng nhập/đăng xuất).
   useEffect(() => {
-    // Cố gắng lấy dữ liệu giỏ hàng đã lưu từ localStorage sử dụng key đã định nghĩa
-    const savedCart = localStorage.getItem(LOCAL_STORAGE_CART_KEY);
+    console.log("🛒 CartContext useEffect [user] triggered. Current user:", user ? user.username : "null");
+    // Chỉ cố gắng tải giỏ hàng nếu CÓ người dùng đăng nhập.
+    if (user && user.username) { // Đảm bảo user tồn tại và có username
+      // Tạo khóa lưu trữ giỏ hàng riêng cho người dùng hiện tại.
+      const userCartKey = `${LOCAL_STORAGE_CART_PREFIX}${user.username}`;
+      console.log("🛒 Attempting to load cart from key:", userCartKey);
+      const savedCart = localStorage.getItem(userCartKey); // Lấy dữ liệu giỏ hàng từ localStorage bằng khóa riêng.
 
-    // Kiểm tra xem có dữ liệu nào được lấy về hay không
-    if (savedCart) {
-      try {
-        // Cố gắng phân tích chuỗi dữ liệu đã lấy về thành đối tượng/mảng JavaScript
-        const parsedCart = JSON.parse(savedCart);
-
-        // Xác thực xem dữ liệu đã phân tích có phải là một mảng hay không
-        // (định dạng mong đợi cho giỏ hàng)
-        if (Array.isArray(parsedCart)) {
-          // Nếu hợp lệ, cập nhật trạng thái (state) của component với dữ liệu giỏ hàng đã tải
-          setCart(parsedCart);
-        } else {
-          // Nếu dữ liệu tồn tại nhưng không phải là mảng, đó là dữ liệu không hợp lệ. Xóa nó đi.
-          localStorage.removeItem(LOCAL_STORAGE_CART_KEY);
-          console.warn("Dữ liệu giỏ hàng không hợp lệ trong localStorage, đã xóa."); // Ghi log cảnh báo
+      if (savedCart) {
+        try {
+          // Parse chuỗi JSON thành mảng sản phẩm.
+          const parsedCart = JSON.parse(savedCart);
+          // Kiểm tra nếu kết quả parse là một mảng hợp lệ, thì cập nhật state 'cart'.
+          if (Array.isArray(parsedCart)) {
+            setCart(parsedCart);
+            console.log(`🛒 Đã tải giỏ hàng (${parsedCart.length} items) cho người dùng ${user.username} từ localStorage.`);
+          } else {
+            // Nếu dữ liệu không hợp lệ, ghi log và bắt đầu với giỏ hàng rỗng.
+            console.warn(`🛒 Dữ liệu giỏ hàng cho người dùng ${user.username} trong localStorage không hợp lệ, bắt đầu với giỏ hàng rỗng.`);
+            setCart([]);
+            // Có thể xóa dữ liệu lỗi nếu muốn: localStorage.removeItem(userCartKey);
         }
-      } catch (error) {
-        // Nếu JSON.parse thất bại (ví dụ: chuỗi lưu trữ không phải là JSON hợp lệ)
-        console.error("Lỗi parse dữ liệu giỏ hàng từ localStorage:", error); // Ghi log lỗi chi tiết
-        // Xóa dữ liệu bị lỗi khỏi localStorage
-        localStorage.removeItem(LOCAL_STORAGE_CART_KEY);
-      }
-    }
-    // Nếu `savedCart` ban đầu là null, effect này đơn giản là không làm gì cả,
-    // giữ nguyên trạng thái giỏ hàng là []
-  }, []); // Mảng dependency rỗng: chỉ chạy khi mount
-
-  // --- Effect Hook: Save Cart to localStorage on Change (Lưu giỏ hàng vào localStorage khi có thay đổi) ---
-  // useEffect này chạy bất cứ khi nào biến trạng thái `cart` thay đổi.
-  useEffect(() => {
-    // Kiểm tra cơ bản để đảm bảo cart là một mảng trước khi lưu (nó luôn phải là mảng)
-    if (Array.isArray(cart)) {
-      // Chuyển đổi trạng thái giỏ hàng hiện tại (mảng JavaScript) thành một chuỗi JSON
-      // và lưu nó vào localStorage dưới key đã định nghĩa.
-      localStorage.setItem(LOCAL_STORAGE_CART_KEY, JSON.stringify(cart));
-    }
-  }, [cart]); // Mảng dependency [cart] có nghĩa là chạy bất cứ khi nào trạng thái `cart` thay đổi
-
-  // --- Cart Manipulation Functions (Các hàm thao tác với giỏ hàng, được ghi nhớ với useCallback) ---
-  // useCallback ghi nhớ các hàm này để chúng không bị tạo lại trên mỗi lần render
-  // trừ khi các dependency của chúng thay đổi (trong trường hợp này là không có,
-  // vì chúng sử dụng dạng cập nhật hàm của setCart).
-
-  // Hàm thêm một sản phẩm vào giỏ hàng hoặc tăng số lượng nếu đã có
-  const addToCart = useCallback((product) => {
-    // Sử dụng dạng cập nhật hàm của setCart để đảm bảo chúng ta làm việc với trạng thái mới nhất
-    setCart((prevCart) => {
-      // Tìm chỉ mục (index) của sản phẩm trong giỏ hàng, nếu nó tồn tại
-      const index = prevCart.findIndex((item) => item.id === product.id);
-      if (index > -1) {
-        // Nếu sản phẩm đã tồn tại (tìm thấy index):
-        // 1. Tạo một bản sao nông (shallow copy) của mảng giỏ hàng trước đó (đảm bảo tính bất biến)
-        const updatedCart = [...prevCart];
-        // 2. Tạo một bản sao nông của sản phẩm cần cập nhật và tăng số lượng của nó lên 1
-        updatedCart[index] = { ...updatedCart[index], quantity: updatedCart[index].quantity + 1 };
-        // 3. Trả về mảng giỏ hàng đã cập nhật
-        return updatedCart;
+        } catch (error) {
+          // Bắt lỗi parse JSON.
+          console.error(`🛒 Lỗi khi parse giỏ hàng cho người dùng ${user.username} từ localStorage:`, error);
+          setCart([]); // Bắt đầu với giỏ hàng rỗng khi có lỗi.
+          // Có thể xóa dữ liệu lỗi nếu muốn: localStorage.removeItem(userCartKey);
+        }
       } else {
-        // Nếu sản phẩm chưa tồn tại:
-        // 1. Tạo một mảng mới chứa tất cả các sản phẩm trước đó cộng với sản phẩm mới với số lượng là 1 (đảm bảo tính bất biến)
-        return [...prevCart, { ...product, quantity: 1 }];
+        // Nếu không có dữ liệu giỏ hàng trong localStorage cho người dùng này, bắt đầu với giỏ hàng rỗng.
+        setCart([]);
+        console.log(`🛒 Không tìm thấy giỏ hàng đã lưu cho người dùng ${user.username}, bắt đầu với giỏ hàng rỗng.`);
       }
-    });
-  }, []); // Mảng dependency rỗng cho useCallback
+    } else {
+      // Nếu KHÔNG có người dùng đăng nhập (user là null), đặt giỏ hàng về rỗng.
+      // Điều này đảm bảo giỏ hàng trống khi không có ai đăng nhập.
+      setCart([]);
+      console.log("🛒 Không có người dùng đăng nhập, đặt giỏ hàng về rỗng.");
+    }
+    // Không cần cleanup cho localStorage trong trường hợp này vì chúng ta muốn giữ dữ liệu.
+    // Cleanup sẽ được xử lý trong effect lưu giỏ hàng.
+  }, [user]); // Dependency array: effect chạy lại khi đối tượng 'user' thay đổi.
 
-  // Hàm xóa hoàn toàn một sản phẩm khỏi giỏ hàng dựa trên ID của nó
+  // --- Effect hook để lưu giỏ hàng vào localStorage khi giỏ hàng thay đổi ---
+  // Effect này chạy mỗi khi state 'cart' thay đổi.
+  useEffect(() => {
+    console.log("🛒 CartContext useEffect [cart, user] triggered. Current cart:", cart, "Current user:", user ? user.username : "null");
+    // Chỉ lưu giỏ hàng nếu CÓ người dùng đăng nhập.
+    // Điều này ngăn việc lưu giỏ hàng trống hoặc giỏ hàng của người dùng trước đó sau khi đăng xuất.
+    if (user && user.username && cart) { // Đảm bảo user tồn tại, có username và cart không null/undefined
+      const userCartKey = `${LOCAL_STORAGE_CART_PREFIX}${user.username}`; // Khóa lưu trữ riêng cho người dùng
+      console.log("🛒 Saving cart to key:", userCartKey, "Cart data:", cart);
+      localStorage.setItem(userCartKey, JSON.stringify(cart)); // Lưu state 'cart' hiện tại vào localStorage (chuyển thành JSON).
+      console.log(`🛒 Đã lưu giỏ hàng (${cart.length} items) cho người dùng ${user.username} vào localStorage.`);
+    } else if (!user && cart.length > 0) {
+        // Trường hợp hiếm gặp: Nếu người dùng đăng xuất nhưng state giỏ hàng vẫn còn dữ liệu.
+        // Logic logout trong AuthContext nên xử lý việc đặt user về null, điều này sẽ kích hoạt
+        // useEffect [user] để đặt giỏ hàng về rỗng. Tuy nhiên, thêm log ở đây để theo dõi.
+        console.warn("🛒 Attempted to save cart when no user is logged in, but cart is not empty. This shouldn't happen if logout clears the cart state correctly.");
+    }
+    // Cleanup function: Khi component unmount hoặc effect chạy lại, hàm này chạy.
+    // In this case, we don't need specific localStorage cleanup in the return function
+    // because saving a new state naturally overwrites the old one for the same key.
+  }, [cart, user]); // Dependency array: effect chạy lại khi 'cart' hoặc 'user' thay đổi.
+
+  // --- Hàm thêm sản phẩm vào giỏ hàng ---
+  // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi state 'cart' hoặc 'user' thay đổi.
+  const addToCart = useCallback((product) => {
+    console.log("🛒 addToCart called for product:", product);
+    if (!user || !user.username) {
+        console.warn("🛒 Cannot add to cart: No user or username is available.");
+        // Có thể hiển thị thông báo cho người dùng yêu cầu đăng nhập
+        return;
+    }
+    // Tìm xem sản phẩm đã tồn tại trong giỏ hàng chưa.
+    const existingItemIndex = cart.findIndex((item) => item.id === product.id);
+
+    if (existingItemIndex > -1) {
+      // Nếu sản phẩm đã có trong giỏ: Tạo mảng mới bằng cách sao chép giỏ hàng cũ.
+      // Cập nhật số lượng của sản phẩm đó lên 1 đơn vị.
+      const newCart = [...cart];
+      newCart[existingItemIndex].quantity += 1;
+      setCart(newCart); // Cập nhật state 'cart' với mảng mới.
+    } else {
+      // Nếu sản phẩm chưa có trong giỏ: Tạo một đối tượng sản phẩm mới với số lượng ban đầu là 1.
+      // Thêm sản phẩm mới này vào cuối mảng giỏ hàng hiện tại.
+      setCart([...cart, { ...product, quantity: 1 }]); // Cập nhật state 'cart' với mảng mới.
+    }
+    console.log("🛒 Đã thêm sản phẩm vào giỏ hàng.");
+  }, [cart, user]); // Added user to dependency array as we check for user inside
+
+  // --- Hàm xóa sản phẩm khỏi giỏ hàng ---
+  // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi state 'cart' hoặc 'user' thay đổi.
   const removeFromCart = useCallback((productId) => {
-    // Sử dụng dạng cập nhật hàm và filter để tạo một mảng mới
-    // loại bỏ sản phẩm có ID trùng khớp
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
-  }, []); // Mảng dependency rỗng cho useCallback
+    console.log("🛒 removeFromCart called for product ID:", productId);
+    if (!user || !user.username) {
+        console.warn("🛒 Cannot remove from cart: No user or username is available.");
+        return;
+    }
+    // Lọc ra các sản phẩm có ID KHÁC với productId cần xóa.
+    // Kết quả là một mảng mới không chứa sản phẩm có ID đó.
+    setCart(cart.filter((item) => item.id !== productId)); // Cập nhật state 'cart' với mảng đã lọc.
+    console.log(`🛒 Đã xóa sản phẩm có ID ${productId} khỏi giỏ hàng.`);
+  }, [cart, user]); // Added user to dependency array
 
-  // Hàm tăng số lượng của một sản phẩm cụ thể trong giỏ hàng
-  const increaseQuantity = useCallback((productId) => {
-    // Sử dụng dạng cập nhật hàm và map để tạo một mảng mới
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        // Nếu ID của sản phẩm trùng khớp với productId mục tiêu:
-        item.id === productId
-          // Trả về một đối tượng sản phẩm *mới* với số lượng được tăng lên 1 (đảm bảo tính bất biến)
-          ? { ...item, quantity: item.quantity + 1 }
-          // Ngược lại, trả về sản phẩm không thay đổi
-          : item
-      )
+  // --- Hàm cập nhật số lượng sản phẩm trong giỏ hàng ---
+  // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi state 'cart' hoặc 'user' thay đổi.
+  const updateQuantity = useCallback((productId, quantity) => {
+    console.log(`🛒 updateQuantity called for product ID: ${productId}, quantity: ${quantity}`);
+    if (!user || !user.username) {
+        console.warn("🛒 Cannot update quantity: No user or username is available.");
+        return;
+    }
+    // Đảm bảo số lượng mới là một số nguyên không âm.
+    const newQuantity = Math.max(0, parseInt(quantity, 10) || 0); // parseInt có thể trả về NaN, sử dụng || 0 để xử lý.
+
+    // Nếu số lượng mới là 0, gọi hàm xóa sản phẩm.
+    if (newQuantity === 0) {
+      removeFromCart(productId);
+      return; // Dừng hàm sau khi xóa.
+    }
+
+    // Tạo mảng mới bằng cách lặp (map) qua giỏ hàng hiện tại.
+    // Tìm sản phẩm có ID trùng khớp, cập nhật số lượng của nó.
+    // Giữ nguyên các sản phẩm khác.
+    const newCart = cart.map((item) =>
+      item.id === productId ? { ...item, quantity: newQuantity } : item
     );
-  }, []); // Mảng dependency rỗng cho useCallback
+    setCart(newCart); // Cập nhật state 'cart' với mảng mới.
+    console.log(`🛒 Đã cập nhật số lượng sản phẩm ID ${productId} thành ${newQuantity}.`);
+  }, [cart, removeFromCart, user]); // Added user to dependency array
 
-  // Hàm giảm số lượng của một sản phẩm cụ thể, số lượng tối thiểu là 1
-  const decreaseQuantity = useCallback((productId) => {
-    // Sử dụng dạng cập nhật hàm và map
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        // Nếu ID của sản phẩm trùng khớp:
-        item.id === productId
-          // Trả về một đối tượng sản phẩm *mới* với số lượng giảm đi 1,
-          // nhưng không nhỏ hơn 1 (sử dụng Math.max)
-          ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-          // Ngược lại, trả về sản phẩm không thay đổi
-          : item
-      )
-    );
-  }, []); // Mảng dependency rỗng cho useCallback
-
-  // Hàm xóa tất cả sản phẩm khỏi giỏ hàng
+  // --- Hàm xóa toàn bộ giỏ hàng ---
+  // Sử dụng useCallback để ghi nhớ hàm này. Hàm không phụ thuộc vào state 'cart' để hoạt động.
   const clearCart = useCallback(() => {
-    // Đặt trạng thái giỏ hàng thành một mảng rỗng
-    setCart([]);
-  }, []); // Mảng dependency rỗng cho useCallback
+    console.log("🛒 clearCart called.");
+    if (!user || !user.username) {
+        console.warn("🛒 Cannot clear cart: No user or username is available.");
+        return;
+    }
+    setCart([]); // Đặt state 'cart' về mảng rỗng.
+    console.log("🛒 Đã xóa toàn bộ giỏ hàng.");
+    // Lưu ý: Effect lưu giỏ hàng sẽ tự động chạy sau khi state 'cart' thay đổi thành mảng rỗng,
+    // cập nhật localStorage cho người dùng hiện tại.
+  }, [user]); // Added user to dependency array
 
-  // --- Context Value (Giá trị Context) ---
-  // Tạo đối tượng sẽ được truyền làm prop `value` cho Provider.
-  // Đối tượng này chứa trạng thái giỏ hàng hiện tại và tất cả các hàm thao tác.
+  // --- Tính toán tổng tiền của giỏ hàng ---
+  // Sử dụng phương thức .reduce() trên mảng 'cart' để tính tổng tiền.
+  // reduce nhận hai tham số: hàm callback và giá trị khởi tạo (ở đây là 0).
+  // Hàm callback nhận accumulator (biến tích lũy, ban đầu là 0) và item hiện tại.
+  // Nó trả về accumulator + item.price * item.quantity.
+  const totalPrice = cart.reduce(
+    (accumulator, item) => accumulator + item.price * item.quantity,
+    0 // Giá trị khởi tạo của accumulator
+  );
+
+  // --- Đối tượng giá trị Context ---
+  // Tạo một đối tượng chứa tất cả các state và hàm mà chúng ta muốn chia sẻ
+  // với các component con thông qua CartContext.
   const cartContextValue = {
-    cart, // Mảng trạng thái giỏ hàng hiện tại
-    addToCart, // Hàm thêm sản phẩm (đã được ghi nhớ)
-    removeFromCart, // Hàm xóa sản phẩm (đã được ghi nhớ)
-    increaseQuantity, // Hàm tăng số lượng (đã được ghi nhớ)
-     decreaseQuantity, // Hàm giảm số lượng (đã được ghi nhớ)
-    clearCart, // Hàm xóa giỏ hàng (đã được ghi nhớ)
+    cart, // Cung cấp state giỏ hàng hiện tại
+    totalPrice, // Cung cấp tổng tiền đã tính toán
+    addToCart, // Cung cấp hàm thêm sản phẩm (đã memoize)
+    removeFromCart, // Cung cấp hàm xóa sản phẩm (đã memoize)
+    updateQuantity, // Cung cấp hàm cập nhật số lượng (đã memoize)
+    clearCart, // Cung cấp hàm xóa toàn bộ giỏ hàng (đã memoize)
   };
 
-  // --- Render Provider (Render Component Provider) ---
-  // Render component CartContext.Provider.
-  // Nó truyền đối tượng `cartContextValue` xuống cho bất kỳ component con nào
-  // sử dụng (consume) Context này.
-  // Prop `{children}` cho phép bọc các component khác bên trong provider này.
   return (
+    // --- Cung cấp Context ---
+    // Sử dụng component Provider của CartContext để "bao bọc" các component con.
+    // Thuộc tính 'value' của Provider nhận đối tượng 'cartContextValue'.
+    // Bất kỳ component nào nằm trong Provider này và sử dụng hook useContext(CartContext)
+    // đều có thể truy cập các giá trị và hàm được định nghĩa trong 'cartContextValue'.
     <CartContext.Provider value={cartContextValue}>
-      {children}
+      {children}{" "}
+      {/* children đại diện cho các component React khác được đặt giữa thẻ mở và thẻ đóng của CartProvider. Provider sẽ cung cấp Context cho toàn bộ cây con này. */}
     </CartContext.Provider>
   );
 };
 
-// Export component CartProvider làm export mặc định của module này
+// Export component CartProvider làm default export.
+// Điều này cho phép component này có thể được import và sử dụng dễ dàng ở các file khác
+// (ví dụ: trong file App.js) để bọc toàn bộ ứng dụng hoặc một phần của ứng dụng cần truy cập giỏ hàng.
 export default CartProvider;
