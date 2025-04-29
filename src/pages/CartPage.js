@@ -1,344 +1,350 @@
-import React, { useContext, useState, useEffect, useCallback } from "react"; // Import các hook cần thiết từ thư viện React: useContext để truy cập Context API, useState để quản lý trạng thái cục bộ, useEffect để thực hiện các tác vụ phụ (side effects), và useCallback để ghi nhớ (memoize) các hàm xử lý sự kiện nhằm tối ưu hiệu suất
-import { Link, useNavigate } from "react-router-dom"; // Import các thành phần từ react-router-dom: Link để tạo các liên kết điều hướng trong ứng dụng SPA, và useNavigate để thực hiện điều hướng trang bằng code JavaScript
-import { CartContext } from "./CartContext"; // Import CartContext từ cùng thư mục. Context này chứa trạng thái giỏ hàng (cart) và các hàm để quản lý giỏ hàng (addToCart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart)
-import { AuthContext } from "../account/AuthContext"; // Import AuthContext từ đường dẫn tương đối. Context này chứa trạng thái xác thực của người dùng (isLoggedIn, user)
-import CheckoutModal from "../components/CheckoutModal"; // Import component Modal tùy chỉnh để hiển thị form thanh toán và nhập thông tin giao hàng
-import "./CartPage.css"; // Import file CSS tùy chỉnh để định dạng giao diện cho component CartPage này
+import React, { useContext, useState, useEffect, useCallback } from "react"; // Import necessary React hooks: useContext to access the Context API, useState for managing local state, useEffect for performing side effects, and useCallback for memoizing event handler functions to optimize performance.
+import { Link, useNavigate } from "react-router-dom"; // Import components from react-router-dom: Link to create navigation links in an SPA, and useNavigate to perform programmatic page navigation using JavaScript code.
+import { CartContext } from "./CartContext"; // Import CartContext from the same directory. This Context contains the cart state and functions to manage the cart (addToCart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart).
+import { AuthContext } from "../account/AuthContext"; // Import AuthContext from a relative path. This Context contains the user authentication state (isLoggedIn, user).
+import CheckoutModal from "../components/CheckoutModal"; // Import a custom Modal component to display the checkout form and shipping information input.
+import "./CartPage.css"; // Import a custom CSS file to style this CartPage component.
 
-// --- Định nghĩa hằng số ---
+// --- Constant Definitions ---
 
-// Object chứa các chuỗi thông báo sẽ hiển thị cho người dùng, giúp dễ dàng quản lý nội dung thông báo
+// Object containing message strings to display to the user, helping to easily manage message content.
 const MESSAGES = {
-  EMPTY_CART: "Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm trước khi thanh toán.", // Thông báo hiển thị khi giỏ hàng không có sản phẩm nào (cập nhật cho rõ ràng hơn)
-  CHECKOUT_SUCCESS: "Đặt hàng thành công!", // Thông báo hiển thị khi quá trình đặt hàng hoàn tất thành công
-  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Thông báo yêu cầu người dùng phải đăng nhập trước khi thực hiện thanh toán
+  EMPTY_CART: "Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm trước khi thanh toán.", // Message displayed when the cart has no items (updated for clarity).
+  CHECKOUT_SUCCESS: "Đặt hàng thành công!", // Message displayed when the checkout process is successfully completed.
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Message requiring the user to log in before proceeding to checkout.
 };
 
-// Định nghĩa key dùng cho localStorage để lưu trữ danh sách các đơn hàng đã đặt.
-// Việc sử dụng hằng số giúp tránh gõ sai key và dễ dàng quản lý. Key này nên nhất quán với OrderHistory và AdminDashboard.
+// Define the key used for localStorage to store the list of placed orders.
+// Using a constant helps avoid typos and makes management easier. This key should be consistent with the OrderHistory and AdminDashboard components.
 const LOCAL_STORAGE_ORDERS_KEY = "orders";
 
-// --- Component con: CartItem (Hiển thị thông tin chi tiết một sản phẩm trong giỏ hàng) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering của component con này.
-// Component chỉ render lại khi props của nó thay đổi (item, onIncrease, onDecrease, onRemove).
+// --- Child Component: CartItem (Displays detailed information for a product in the cart) ---
+// Uses React.memo() to optimize the rendering performance of this child component.
+// The component will only re-render when its props change (item, onIncrease, onDecrease, onRemove).
 const CartItem = React.memo(({ item, onIncrease, onDecrease, onRemove }) => {
-  // Xác định xem nút giảm số lượng có nên bị vô hiệu hóa hay không.
-  // Nút này sẽ bị vô hiệu hóa nếu số lượng sản phẩm hiện tại trong giỏ là 1.
+  // Determine if the decrease quantity button should be disabled.
+  // This button will be disabled if the current quantity of the product in the cart is 1.
   const isDecreaseDisabled = item.quantity === 1;
 
   return (
     <li className="cart-item">
-      {/* Container chính cho một sản phẩm riêng lẻ trong danh sách giỏ hàng */}
-      {/* Hình ảnh sản phẩm */}
+      {/* Main container for a single product item in the cart list */}
+      {/* Product image */}
       <img
-        src={item.image} // Đường dẫn ảnh sản phẩm
-        alt={item.name} // Alt text cho ảnh, sử dụng tên sản phẩm để hỗ trợ khả năng tiếp cận cho người dùng khi ảnh không tải được hoặc với người dùng khiếm thị
-        className="cart-image" // Class CSS để định dạng ảnh trong giỏ hàng
-        loading="lazy" // Sử dụng thuộc tính loading="lazy" để trình duyệt chỉ tải ảnh khi nó gần hiển thị trên viewport, cải thiện hiệu suất tải trang ban đầu
+        src={item.image} // Product image path
+        alt={item.name} // Alt text for the image, using the product name to aid accessibility for users when the image fails to load or for visually impaired users.
+        className="cart-image" // CSS class for styling the image in the cart.
+        loading="lazy" // Use the loading="lazy" attribute so the browser only loads the image when it's close to being visible in the viewport, improving initial page load performance.
       />
-      {/* Phần chi tiết thông tin sản phẩm (tên, giá, điều khiển số lượng) */}
+      {/* Section for product details (name, price, quantity controls) */}
       <div className="cart-item-details">
-        <p className="cart-name">{item.name}</p> {/* Hiển thị tên sản phẩm */}
+        <p className="cart-name">{item.name}</p> {/* Display the product name */}
         <p className="cart-price">
-          💰 {item.price.toLocaleString("vi-VN")} VNĐ {/* Hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam */}
-          {/* Hàm toLocaleString("vi-VN") giúp định dạng số thành chuỗi tiền tệ theo quy ước của Việt Nam */}
+          💰 {item.price.toLocaleString("vi-VN")} VNĐ {/* Display the product price, formatted according to Vietnamese currency */}
+          {/* The toLocaleString("vi-VN") function helps format the number as a currency string according to Vietnamese conventions */}
         </p>
-        {/* Điều khiển tăng/giảm số lượng sản phẩm */}
+        {/* Quantity control for increasing/decreasing the product quantity */}
         <div className="quantity-controls">
-          {/* Container cho các nút điều khiển số lượng */}
-          {/* Nút giảm số lượng */}
+          {" "}
+          {/* Container for quantity control buttons */}
+          {/* Decrease quantity button */}
           <button
-            onClick={() => onDecrease(item.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onDecrease' (được truyền từ component cha thông qua props) với ID của sản phẩm hiện tại.
-            disabled={isDecreaseDisabled} // Vô hiệu hóa nút nếu biến 'isDecreaseDisabled' là true.
-            className={isDecreaseDisabled ? "disabled" : ""} // Thêm class CSS 'disabled' vào nút khi nó bị vô hiệu hóa để thay đổi giao diện.
-            aria-label={`Giảm số lượng ${item.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận cho người dùng sử dụng trình đọc màn hình.
+            onClick={() => onDecrease(item.id)} // Attach click event handler. Call the 'onDecrease' function (passed from the parent component via props) with the ID of the current product.
+            disabled={isDecreaseDisabled} // Disable the button if the 'isDecreaseDisabled' variable is true.
+            className={isDecreaseDisabled ? "disabled" : ""} // Add the 'disabled' CSS class to the button when it's disabled to change its appearance.
+            aria-label={`Giảm số lượng ${item.name}`} // Accessibility attribute for users using screen readers.
           >
-            - {/* Nội dung hiển thị trên nút giảm */}
+            - {/* Content displayed on the decrease button */}
           </button>
-          <span>{item.quantity}</span> {/* Hiển thị số lượng hiện tại của sản phẩm trong giỏ */}
-          {/* Nút tăng số lượng */}
+          <span>{item.quantity}</span>{" "}
+          {/* Display the current quantity of the product in the cart */}
+          {/* Increase quantity button */}
           <button
-            onClick={() => onIncrease(item.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onIncrease' (được truyền từ component cha thông qua props) với ID của sản phẩm hiện tại.
-            aria-label={`Tăng số lượng ${item.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận
+            onClick={() => onIncrease(item.id)} // Attach click event handler. Call the 'onIncrease' function (passed from the parent component via props) with the ID of the current product.
+            aria-label={`Tăng số lượng ${item.name}`} // Accessibility attribute
           >
-            + {/* Nội dung hiển thị trên nút tăng */}
+            + {/* Content displayed on the increase button */}
           </button>
         </div>
       </div>
-      {/* Nút xóa sản phẩm khỏi giỏ hàng */}
+      {/* Button to remove the product from the cart */}
       <button
-        className="remove-button" // Class CSS để định dạng nút xóa
-        onClick={() => onRemove(item.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onRemove' (được truyền từ component cha thông qua props) với ID của sản phẩm hiện tại.
-        aria-label={`Xóa ${item.name} khỏi giỏ hàng`} // Thuộc tính hỗ trợ khả năng tiếp cận
+        className="remove-button" // CSS class for button styling
+        onClick={() => onRemove(item.id)} // Attach click event handler. Call the 'onRemove' function (passed from the parent component via props) with the ID of the current product.
+        aria-label={`Xóa ${item.name} khỏi giỏ hàng`} // Accessibility attribute
       >
-        Xóa {/* Nội dung hiển thị trên nút xóa */}
+        Xóa {/* Content displayed on the remove button */}
       </button>
     </li>
   );
-}); // Kết thúc React.memo() cho component CartItem
+}); // End of React.memo() for the CartItem component
 
-// --- Component con: CartSummary (Hiển thị tóm tắt giỏ hàng và nút thanh toán) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component chỉ render lại khi props của nó thay đổi (totalPrice, onCheckout).
+// --- Child Component: CartSummary (Displays cart summary and checkout button) ---
+// Uses React.memo() to optimize rendering performance.
+// The component will only re-render when its props change (totalPrice, onCheckout).
 const CartSummary = React.memo(({ totalPrice, onCheckout }) => (
   <div className="cart-summary">
-    {/* Container cho phần tóm tắt giỏ hàng */}
+    {/* Container for the cart summary section */}
     <h3 className="total-price">
-      Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ {/* Hiển thị tổng tiền của giỏ hàng, định dạng theo tiền tệ Việt Nam */}
+      Tổng tiền: {totalPrice.toLocaleString("vi-VN")} VNĐ{" "}
+      {/* Display the total price of the cart, formatted according to Vietnamese currency */}
     </h3>
-    {/* Nút "Mua hàng" để bắt đầu quá trình thanh toán */}
+    {/* "Checkout" button to initiate the checkout process */}
     <button className="checkout-button" onClick={onCheckout}>
-      {/* Gắn hàm 'onCheckout' (truyền qua props) vào sự kiện click nút */}
-      🛍 Mua hàng {/* Nội dung hiển thị trên nút */}
+      {/* Attach the 'onCheckout' function (passed via props) to the button's click event */}
+      🛍 Mua hàng {/* Content displayed on the button */}
     </button>
   </div>
-)); // Kết thúc React.memo() cho component CartSummary
+)); // End of React.memo() for the CartSummary component
 
-// --- Component con: EmptyCart (Hiển thị thông báo khi giỏ hàng rỗng) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component này không nhận props ảnh hưởng đến nội dung hiển thị, nên nó chỉ render lại khi component cha render và gửi cùng props (không thay đổi).
+// --- Child Component: EmptyCart (Displays a message when the cart is empty) ---
+// Uses React.memo() to optimize rendering performance.
+// This component does not receive props that affect its displayed content, so it only re-renders when the parent component re-renders and passes the same (unchanged) props.
 const EmptyCart = React.memo(() => (
   <div className="empty-cart-message-container">
-    {/* Container cho thông báo giỏ hàng trống */}
-    {/* Có thể thêm icon hoặc hình ảnh minh họa giỏ hàng trống tại đây */}
-    <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p> {/* Hiển thị thông báo "Giỏ hàng trống" từ hằng số MESSAGES */}
-    {/* Liên kết (Link) mời người dùng quay lại trang mua sắm (danh sách sản phẩm) */}
+    {/* Container for the empty cart message */}
+    {/* You can add an icon or illustration for an empty cart here */}
+    <p className="empty-cart-message">{MESSAGES.EMPTY_CART}</p>{" "}
+    {/* Display the "Empty cart" message from the MESSAGES constant */}
+    {/* Link inviting the user to return to the shopping page (product list) */}
     <Link to="/products" className="shop-now-link">
-      {/* 'to="/products"' chỉ định route cần điều hướng đến */}
-      🛒 Tiếp tục mua sắm {/* Nội dung hiển thị trên liên kết */}
+      {" "}
+      {/* 'to="/products"' specifies the route to navigate to */}
+      🛒 Tiếp tục mua sắm {/* Content displayed on the link */}
     </Link>
   </div>
-)); // Kết thúc React.memo() cho component EmptyCart
+)); // End of React.memo() for the EmptyCart component
 
-
-// --- Component chính: CartPage (Trang hiển thị giỏ hàng) ---
-// Đây là functional component hiển thị toàn bộ nội dung của trang giỏ hàng.
+// --- Main Component: CartPage (Shopping Cart Page) ---
+// This is the functional component that renders the entire content of the shopping cart page.
 const CartPage = () => {
-  const navigate = useNavigate(); // Sử dụng hook useNavigate để thực hiện điều hướng trang bằng code.
+  const navigate = useNavigate(); // Use the useNavigate hook to perform programmatic page navigation.
 
-  // Sử dụng hook useContext để truy cập vào CartContext và lấy ra các giá trị và hàm cần thiết:
-  // - cart: Mảng chứa danh sách các sản phẩm trong giỏ hàng hiện tại.
-  // - removeFromCart: Hàm xóa một sản phẩm khỏi giỏ.
-  // - increaseQuantity: Hàm tăng số lượng sản phẩm.
-  // - decreaseQuantity: Hàm giảm số lượng sản phẩm.
-  // - clearCart: Hàm xóa toàn bộ giỏ hàng.
+  // Use the useContext hook to access CartContext and retrieve the necessary values and functions:
+  // - cart: Array containing the list of products in the current cart.
+  // - removeFromCart: Function to remove a product from the cart.
+  // - increaseQuantity: Function to increase the quantity of a product.
+  // - decreaseQuantity: Function to decrease the quantity of a product.
+  // - clearCart: Function to clear the entire cart.
   const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } =
     useContext(CartContext);
 
-  // Sử dụng hook useContext để truy cập vào AuthContext và lấy ra trạng thái 'isLoggedIn' và thông tin 'user'.
-  // Cung cấp giá trị mặc định `{ isLoggedIn: false, user: null }` để đảm bảo ứng dụng không gặp lỗi nếu AuthContext chưa được cung cấp đầy đủ.
+  // Use the useContext hook to access AuthContext and retrieve the 'isLoggedIn' status and 'user' information.
+  // Provide a default value `{ isLoggedIn: false, user: null }` to ensure the application doesn't crash if AuthContext is not fully provided.
   const { isLoggedIn, user } = useContext(AuthContext) || { isLoggedIn: false, user: null };
 
-  // --- State quản lý trạng thái hiển thị của Component CartPage ---
-  // State 'showModal': Boolean kiểm soát việc Modal thanh toán có đang hiển thị hay không. Ban đầu là false (ẩn).
+  // --- State management for CartPage Component rendering status ---
+  // 'showModal' state: Boolean controlling whether the checkout Modal is currently displayed. Initially false (hidden).
   const [showModal, setShowModal] = useState(false);
-  // State 'isLoading': Boolean quản lý trạng thái loading. Được sử dụng ở đây để giả lập thời gian tải trang giỏ hàng ban đầu. Ban đầu là true.
+  // 'isLoading' state: Boolean managing the loading status. Used here to simulate the initial page loading time for the cart page. Initially true.
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- Effect hook để giả lập thời gian tải dữ liệu khi component mount ---
-  // Effect này sẽ chạy MỘT LẦN duy nhất sau lần render đầu tiên của component (tương tự componentDidMount).
+  // --- Effect hook to simulate data loading time when the component mounts ---
+  // This effect will run only ONCE after the component's first render (similar to componentDidMount).
   useEffect(() => {
-    // Tạo một hẹn giờ (setTimeout) để sau 1000ms (1 giây), hàm callback bên trong sẽ được thực thi.
-    // Hàm callback này chỉ đơn giản là cập nhật state 'isLoading' thành false.
-    // Trong một ứng dụng thực tế, effect này sẽ là nơi bạn fetch dữ liệu giỏ hàng từ một API nếu dữ liệu đó không được quản lý bởi Context hoặc cần được tải lại khi vào trang.
-    const timer = setTimeout(() => setIsLoading(false), 1000); // 1000ms = 1 giây
+    // Create a timeout (setTimeout) so that after 1000ms (1 second), the callback function inside will be executed.
+    // This callback function simply updates the 'isLoading' state to false.
+    // In a real application, this effect would be where you fetch cart data from an API if that data is not managed by Context or needs to be reloaded upon entering the page.
+    const timer = setTimeout(() => setIsLoading(false), 1000); // 1000ms = 1 second
 
-    // Hàm cleanup cho effect này. Hàm này sẽ chạy khi component bị hủy bỏ (unmount)
-    // hoặc trước khi effect chạy lại (nếu dependencies thay đổi, nhưng ở đây deps là mảng rỗng nên chỉ chạy khi unmount).
-    // Cleanup function sẽ xóa bỏ hẹn giờ đã tạo, ngăn nó chạy và cập nhật state sau khi component đã unmount.
+    // Cleanup function for this effect. This function will run when the component is unmounted
+    // or before the effect re-runs (if dependencies change, but here the deps array is empty, so it only runs on unmount).
+    // The cleanup function will clear the created timeout, preventing it from running and updating state after the component has unmounted.
     return () => clearTimeout(timer);
-  }, []); // Mảng dependencies rỗng []: đảm bảo effect chỉ chạy một lần duy nhất khi component được mount lần đầu.
+  }, []); // Empty dependency array []: ensures the effect runs only once when the component is first mounted.
 
-  // --- Tính toán các giá trị dẫn xuất từ state 'cart' ---
-  // Các giá trị này sẽ được tính toán lại mỗi khi state 'cart' thay đổi, đảm bảo UI luôn hiển thị đúng tổng tiền và số lượng.
+  // --- Calculate derived values from the 'cart' state ---
+  // These values will be recalculated whenever the 'cart' state changes, ensuring the UI always displays the correct total price and item count.
 
-  // Tính tổng giá trị của tất cả sản phẩm trong giỏ hàng.
-  // Sử dụng phương thức .reduce() để lặp qua mảng 'cart', cộng dồn (sum) giá trị của mỗi item (item.price * item.quantity).
-  // Giá trị khởi tạo ban đầu cho 'sum' là 0.
+  // Calculate the total value of all products in the cart.
+  // Use the .reduce() method to iterate over the 'cart' array, accumulating (sum) the value of each item (item.price * item.quantity).
+  // The initial starting value for 'sum' is 0.
   const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity, // Hàm callback thực hiện tính tổng cho mỗi item
-    0 // Giá trị khởi tạo ban đầu cho 'sum'
+    (sum, item) => sum + item.price * item.quantity, // Callback function to calculate the sum for each item
+    0 // Initial starting value for 'sum'
   );
-  // Tính tổng số lượng của tất cả sản phẩm trong giỏ hàng.
-  // Sử dụng phương thức .reduce() để lặp qua mảng 'cart', cộng dồn (sum) số lượng của mỗi item (item.quantity).
-  // Giá trị khởi tạo ban đầu cho 'sum' là 0.
+  // Calculate the total quantity of all products in the cart.
+  // Use the .reduce() method to iterate over the 'cart' array, accumulating (sum) the quantity of each item (item.quantity).
+  // The initial starting value for 'sum' is 0.
   const totalItems = cart.reduce(
-    (sum, item) => sum + item.quantity, // Hàm callback
-    0 // Giá trị khởi tạo ban đầu
+    (sum, item) => sum + item.quantity, // Callback function
+    0 // Initial starting value
   );
 
-  // --- Hàm xử lý khi người dùng nhấn nút "Mua hàng" ---
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi các dependencies thay đổi.
-  // Dependencies ở đây là 'isLoggedIn', 'navigate', và 'cart.length'.
+  // --- Function to handle the "Checkout" button click ---
+  // Uses useCallback to memoize this function. The function is only re-created when its dependencies change.
+  // Dependencies here are 'isLoggedIn', 'navigate', and 'cart.length'.
   const handleCheckout = useCallback(() => {
-    // 1. Kiểm tra trạng thái đăng nhập của người dùng.
+    // 1. Check user login status.
     if (!isLoggedIn) {
-      alert(MESSAGES.LOGIN_REQUIRED); // Nếu chưa đăng nhập, hiển thị một hộp thoại thông báo yêu cầu đăng nhập.
-      navigate("/"); // Điều hướng người dùng đến trang gốc (thường là trang đăng nhập/đăng ký hoặc trang chủ). Bạn có thể thay đổi route này nếu cần.
-      return; // Dừng hàm, không tiếp tục xử lý thanh toán nếu chưa đăng nhập.
+      alert(MESSAGES.LOGIN_REQUIRED); // If not logged in, display an alert box requesting login.
+      navigate("/"); // Navigate the user to the root page (usually login/register or home page). You can change this route if needed.
+      return; // Stop the function, do not proceed with checkout if not logged in.
     }
-    // 2. Kiểm tra giỏ hàng có trống không trước khi mở modal
+    // 2. Check if the cart is empty before opening the modal.
     if (cart.length === 0) {
-      alert(MESSAGES.EMPTY_CART); // Thông báo giỏ hàng trống
-      return; // Dừng hàm nếu giỏ hàng trống
+      alert(MESSAGES.EMPTY_CART); // Alert for empty cart.
+      return; // Stop the function if the cart is empty.
     }
-    // 3. Nếu người dùng đã đăng nhập và giỏ hàng không trống, hiển thị modal thanh toán.
-    setShowModal(true); // Cập nhật state 'showModal' thành true để hiển thị component CheckoutModal.
-  }, [isLoggedIn, navigate, cart.length]); // **Đã thêm cart.length vào dependencies**
+    // 3. If the user is logged in and the cart is not empty, display the checkout modal.
+    setShowModal(true); // Update the 'showModal' state to true to display the CheckoutModal component.
+  }, [isLoggedIn, navigate, cart.length]); // **Added cart.length to dependencies**
 
-  // --- Hàm xử lý khi người dùng xác nhận thanh toán trong modal ---
-  // Hàm này nhận đối tượng 'shippingInfo' (thông tin giao hàng người dùng đã nhập trong modal) làm tham số.
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm sẽ được tạo lại khi các dependencies thay đổi.
-  // Dependencies bao gồm: 'cart', 'totalPrice', 'clearCart', 'navigate', và 'user'.
+  // --- Function to handle user confirming checkout in the modal ---
+  // This function receives the 'shippingInfo' object (shipping details entered by the user in the modal) as a parameter.
+  // Uses useCallback to memoize this function. The function will be re-created when its dependencies change.
+  // Dependencies include: 'cart', 'totalPrice', 'clearCart', 'navigate', and 'user'.
   const handleConfirmCheckout = useCallback((shippingInfo) => {
-    // 1. Tạo một đối tượng biểu diễn đơn hàng mới.
+    // 1. Create an object representing the new order.
     const order = {
-      id: Date.now(), // Tạo một ID đơn giản cho đơn hàng bằng cách sử dụng timestamp hiện tại (milliseconds từ Epoch). Đây là một cách đơn giản cho demo.
-      // Thêm thông tin người dùng vào đơn hàng
-      // Sử dụng optional chaining user?.username để an toàn nếu user là null
-      username: user?.username || 'Guest', // Lưu username của người đặt hàng, mặc định là 'Guest' nếu không có user
-      items: cart, // Lưu danh sách các sản phẩm hiện có trong giỏ hàng vào thuộc tính 'items' của đơn hàng.
-      totalPrice, // Lưu tổng giá trị của giỏ hàng vào thuộc tính 'totalPrice'.
-      shippingInfo, // Lưu thông tin giao hàng nhận được từ modal vào thuộc tính 'shippingInfo'.
-      date: new Date().toISOString(), // Lưu lại thời điểm đặt hàng dưới dạng chuỗi định dạng ISO 8601, giúp dễ dàng sắp xếp và parse sau này.
+      id: Date.now(), // Create a simple ID for the order using the current timestamp (milliseconds from Epoch). This is a simple approach for a demo.
+      // Add user information to the order.
+      // Use optional chaining user?.username for safety if user is null.
+      username: user?.username || 'Guest', // Save the username of the person placing the order, default to 'Guest' if no user.
+      items: cart, // Save the list of products currently in the cart into the 'items' property of the order.
+      totalPrice, // Save the total value of the cart into the 'totalPrice' property.
+      shippingInfo, // Save the shipping information received from the modal into the 'shippingInfo' property.
+      date: new Date().toISOString(), // Save the timestamp of the order in ISO 8601 format string, making it easy to sort and parse later.
     };
 
-    // 2. Lưu đơn hàng mới vào localStorage. (Đây là phương pháp demo đơn giản, KHÔNG an toàn và KHÔNG bền vững cho ứng dụng thực tế cần lưu trữ lâu dài hoặc bảo mật).
-    // Lấy danh sách các đơn hàng đã lưu trước đó từ localStorage. Sử dụng key đã định nghĩa.
-    // Nếu chưa có dữ liệu (localStorage.getItem trả về null), mặc định là mảng rỗng [].
-    // Sử dụng try-catch để xử lý lỗi parse JSON nếu dữ liệu trong localStorage bị hỏng hoặc không phải JSON hợp lệ.
+    // 2. Save the new order to localStorage. (This is a simple demo method, NOT secure and NOT persistent for real applications requiring long-term storage or security).
+    // Retrieve the previously saved list of orders from localStorage. Use the defined key.
+    // If no data exists (localStorage.getItem returns null), default to an empty array [].
+    // Use try-catch to handle JSON parsing errors if the data in localStorage is corrupted or invalid JSON.
     let existingOrders = [];
     try {
       const storedOrders = localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY);
       if (storedOrders) {
         existingOrders = JSON.parse(storedOrders);
-        // Đảm bảo existingOrders luôn là mảng sau khi parse
+        // Ensure existingOrders is always an array after parsing
         if (!Array.isArray(existingOrders)) {
-            console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, đang tạo lại.");
+            console.warn("Order data in localStorage is not an array, resetting.");
             existingOrders = [];
         }
       }
     } catch (error) {
-      console.error("Lỗi khi đọc/parse danh sách đơn hàng từ localStorage:", error);
-      // Nếu có lỗi khi đọc/parse, có thể xóa dữ liệu cũ bị hỏng và bắt đầu với mảng rỗng mới.
+      console.error("Error reading/parsing order list from localStorage:", error);
+      // If there's an error reading/parsing, you might want to remove the corrupted old data and start with a new empty array.
       localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY);
       existingOrders = [];
     }
 
-    // Tạo một mảng mới bằng cách sao chép các đơn hàng hiện có (...existingOrders) và thêm đơn hàng mới vào cuối.
+    // Create a new array by spreading the existing orders (...existingOrders) and adding the new order at the end.
     const updatedOrders = [...existingOrders, order];
-    // Lưu mảng đơn hàng đã cập nhật trở lại vào localStorage (chuyển thành chuỗi JSON trước khi lưu).
+    // Save the updated orders array back to localStorage (convert to a JSON string before saving).
     localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updatedOrders));
 
-    // 3. Cập nhật UI và điều hướng sau khi đặt hàng thành công.
-    alert(MESSAGES.CHECKOUT_SUCCESS); // Hiển thị một hộp thoại thông báo thành công.
-    clearCart(); // Gọi hàm 'clearCart' từ CartContext để xóa toàn bộ sản phẩm khỏi giỏ hàng sau khi đã đặt.
-    setShowModal(false); // Ẩn Modal thanh toán bằng cách đặt state 'showModal' về false.
-    navigate("/orders"); // Điều hướng người dùng đến trang lịch sử đơn hàng để họ xem đơn hàng vừa đặt.
-  }, [cart, totalPrice, clearCart, navigate, user]); // **Đã thêm user vào dependencies**
+    // 3. Update UI and navigate after successful checkout.
+    alert(MESSAGES.CHECKOUT_SUCCESS); // Display a success alert box.
+    clearCart(); // Call the 'clearCart' function from CartContext to remove all products from the cart after placing the order.
+    setShowModal(false); // Hide the checkout Modal by setting the 'showModal' state to false.
+    navigate("/orders"); // Navigate the user to the order history page so they can view the order they just placed.
+  }, [cart, totalPrice, clearCart, navigate, user]); // **Added user to dependencies**
 
-  // --- Hàm xử lý khi người dùng hủy bỏ modal thanh toán ---
-  // Sử dụng useCallback để ghi nhớ hàm này. Dependency array rỗng vì hàm chỉ thay đổi state cục bộ 'showModal' dựa trên giá trị cố định.
+  // --- Function to handle user cancelling the checkout modal ---
+  // Uses useCallback to memoize this function. The dependency array is empty because the function only changes the local 'showModal' state based on a fixed value.
   const handleCancelCheckout = useCallback(() => {
-    setShowModal(false); // Đặt state 'showModal' về false để ẩn Modal thanh toán.
-  }, []); // Mảng dependency rỗng []: Hàm không phụ thuộc vào bất kỳ biến nào từ scope ngoài cần theo dõi.
+    setShowModal(false); // Set the 'showModal' state to false to hide the checkout Modal.
+  }, []); // Empty dependency array []: The function does not depend on any outer scope variables that need to be tracked.
 
-  // --- Hàm xử lý khi người dùng nhấn nút "Xóa tất cả" trong giỏ hàng ---
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm chỉ được tạo lại khi hàm 'clearCart' từ Context thay đổi.
+  // --- Function to handle user clicking the "Clear All" button in the cart ---
+  // Uses useCallback to memoize this function. The function is only re-created when the 'clearCart' function from Context changes.
   const handleClearCart = useCallback(() => {
-    // Hiển thị một hộp thoại xác nhận của trình duyệt trước khi thực hiện xóa toàn bộ giỏ hàng.
-    // window.confirm() trả về true nếu người dùng nhấn 'OK', false nếu nhấn 'Cancel'.
+    // Display a browser confirmation dialog before proceeding with clearing the entire cart.
+    // window.confirm() returns true if the user clicks 'OK', false if they click 'Cancel'.
     if (!window.confirm("Bạn có chắc muốn xóa toàn bộ giỏ hàng?")) {
-      return; // Nếu người dùng chọn 'Cancel' (kết quả là false), dừng hàm tại đây và không làm gì cả.
+      return; // If the user selects 'Cancel' (result is false), stop the function here and do nothing.
     }
-    clearCart(); // Nếu người dùng chọn 'OK', gọi hàm 'clearCart' từ CartContext để xóa hết sản phẩm trong giỏ.
-  }, [clearCart]); // Mảng dependency: hàm phụ thuộc vào hàm 'clearCart' từ CartContext.
+    clearCart(); // If the user selects 'OK', call the 'clearCart' function from CartContext to remove all products from the cart.
+  }, [clearCart]); // Dependency array: the function depends on the 'clearCart' function from CartContext.
 
-  // --- Render giao diện dựa trên trạng thái loading ban đầu ---
+  // --- Render UI based on the initial loading state ---
 
-  // Nếu state 'isLoading' là true (đang trong giai đoạn giả lập tải trang ban đầu), hiển thị giao diện loading.
+  // If the 'isLoading' state is true (during the initial simulated page loading phase), display the loading UI.
   if (isLoading) {
     return (
       <div className="loading-container">
-        {/* Container bao quanh spinner và text loading */}
-        <div className="loading-spinner"></div> {/* Biểu tượng spinner quay */}
-        <p className="loading-text">Đang tải...</p> {/* Hiển thị thông báo "Đang tải..." */}
+        {/* Container wrapping the spinner and loading text */}
+        <div className="loading-spinner"></div> {/* Spinning spinner icon */}
+        <p className="loading-text">Đang tải...</p> {/* Display "Loading..." message */}
       </div>
     );
   }
 
-  // --- Render giao diện chính của trang Giỏ hàng khi không còn loading ---
+  // --- Render the main UI of the Cart Page when not loading ---
   return (
     <div className="cart-container">
-      {/* Container chính bao bọc toàn bộ nội dung của trang Giỏ hàng */}
-      {/* Tiêu đề trang hiển thị số lượng sản phẩm trong giỏ hàng hiện tại */}
+      {/* Main container wrapping the entire content of the Cart Page */}
+      {/* Page title displaying the current number of items in the cart */}
       <h2>
         🛍 Giỏ Hàng ({totalItems} sản phẩm)
-      </h2> {/* Hiển thị tổng số lượng item trong giỏ (totalItems) */}
+      </h2> {/* Display the total number of items in the cart (totalItems) */}
 
-      {/* --- Hiển thị nội dung dựa trên trạng thái giỏ hàng (có rỗng hay không) --- */}
-      {cart.length === 0 ? ( // Conditional Rendering: Kiểm tra nếu mảng 'cart' rỗng (không có sản phẩm nào)
-        <EmptyCart /> // Nếu rỗng, hiển thị component con EmptyCart.
+      {/* --- Display content based on the cart status (empty or not) --- */}
+      {cart.length === 0 ? ( // Conditional Rendering: Check if the 'cart' array is empty (no products)
+        <EmptyCart /> // If empty, display the child EmptyCart component.
       ) : (
-        // Nếu giỏ hàng CÓ sản phẩm (cart.length > 0)
+        // If the cart HAS products (cart.length > 0)
         <>
-          {/* Sử dụng Fragment để nhóm nhiều phần tử (danh sách sản phẩm, nút xóa tất cả, tóm tắt giỏ hàng) mà không thêm DOM node dư thừa vào cây. */}
-          {/* Danh sách (unordered list) hiển thị từng sản phẩm trong giỏ hàng */}
+          {/* Use a Fragment to group multiple elements (product list, clear all button, cart summary) without adding extra DOM nodes to the tree. */}
+          {/* Unordered list displaying each product in the cart */}
           <ul className="cart-list">
             {cart.map((item) => (
-              // Lặp (map) qua mảng 'cart' để tạo một component CartItem cho mỗi sản phẩm.
+              // Map over the 'cart' array to create a CartItem component for each product.
               <CartItem
-                key={item.id} // Key duy nhất cho mỗi item trong danh sách, giúp React nhận diện hiệu quả khi có thay đổi. Sử dụng ID sản phẩm làm key.
-                item={item} // Truyền đối tượng sản phẩm hiện tại ('item') làm prop cho CartItem.
-                onIncrease={increaseQuantity} // Truyền hàm 'increaseQuantity' (từ CartContext) làm prop 'onIncrease' cho CartItem.
-                onDecrease={decreaseQuantity} // Truyền hàm 'decreaseQuantity' (từ CartContext) làm prop 'onDecrease' cho CartItem.
-                onRemove={removeFromCart} // Truyền hàm 'removeFromCart' (từ CartContext) làm prop 'onRemove' cho CartItem.
+                key={item.id} // Unique key for each item in the list, helps React identify changes efficiently. Use product ID as the key.
+                item={item} // Pass the current product object ('item') as a prop to CartItem.
+                onIncrease={increaseQuantity} // Pass the 'increaseQuantity' function (from CartContext) as the 'onIncrease' prop to CartItem.
+                onDecrease={decreaseQuantity} // Pass the 'decreaseQuantity' function (from CartContext) as the 'onDecrease' prop to CartItem.
+                onRemove={removeFromCart} // Pass the 'removeFromCart' function (from CartContext) as the 'onRemove' prop to CartItem.
               />
             ))}
           </ul>
-          {/* Nút xóa toàn bộ giỏ hàng */}
+          {/* Button to clear the entire cart */}
           <button
-            className="clear-cart-button" // Class CSS để định dạng nút
-            onClick={handleClearCart} // Gắn hàm xử lý sự kiện click (đã memoize)
-            aria-label="Xóa toàn bộ giỏ hàng" // Thuộc tính hỗ trợ khả năng tiếp cận
+            className="clear-cart-button" // CSS class for button styling
+            onClick={handleClearCart} // Attach the memoized click event handler function
+            aria-label="Xóa toàn bộ giỏ hàng" // Accessibility attribute
           >
-            Xóa tất cả {/* Nội dung nút */}
+            Xóa tất cả {/* Button text */}
           </button>
-          {/* Hiển thị component tóm tắt giỏ hàng (tổng tiền và nút mua hàng) */}
+          {/* Display the cart summary component (total price and checkout button) */}
           <CartSummary
-            totalPrice={totalPrice} // Truyền biến 'totalPrice' đã tính toán làm prop 'totalPrice' cho CartSummary.
-            onCheckout={handleCheckout} // Truyền hàm xử lý sự kiện click nút "Mua hàng" ('handleCheckout', đã memoize) làm prop 'onCheckout' cho CartSummary.
+            totalPrice={totalPrice} // Pass the calculated 'totalPrice' variable as the 'totalPrice' prop to CartSummary.
+            onCheckout={handleCheckout} // Pass the memoized "Checkout" button click handler function ('handleCheckout') as the 'onCheckout' prop to CartSummary.
           />
         </>
       )}
 
-      {/* --- Hiển thị Modal thanh toán (nếu cần) --- */}
-      {/* Conditional rendering: Nếu state 'showModal' là true, render component CheckoutModal. */}
+      {/* --- Display Checkout Modal (if needed) --- */}
+      {/* Conditional rendering: If the 'showModal' state is true, render the CheckoutModal component. */}
       {showModal && (
         <CheckoutModal
-          cart={cart} // Truyền dữ liệu giỏ hàng hiện tại vào modal. Có thể modal cần hiển thị lại danh sách sản phẩm hoặc tính lại tổng.
-          totalPrice={totalPrice} // Truyền tổng tiền vào modal.
-          onConfirm={handleConfirmCheckout} // Truyền hàm xử lý sự kiện khi người dùng xác nhận thanh toán trong modal (đã memoize).
-          onCancel={handleCancelCheckout} // Truyền hàm xử lý sự kiện khi người dùng hủy bỏ modal (đã memoize).
+          cart={cart} // Pass the current cart data into the modal. The modal might need to display the list of items again or recalculate the total.
+          totalPrice={totalPrice} // Pass the total price into the modal.
+          onConfirm={handleConfirmCheckout} // Pass the memoized handler function for when the user confirms checkout in the modal.
+          onCancel={handleCancelCheckout} // Pass the memoized handler function for when the user cancels the modal.
         />
       )}
 
-      {/* --- Các liên kết điều hướng khác --- */}
+      {/* --- Other navigation links --- */}
       <div className="cart-links">
-        {/* Container cho các liên kết điều hướng */}
-        {/* Liên kết đến trang lịch sử đơn hàng */}
+        {/* Container for navigation links */}
+        {/* Link to the order history page */}
         <Link to="/orders" className="order-history-link">
-          {/* 'to="/orders"' là route đến trang lịch sử đơn hàng */}
-          📜 Xem lịch sử đơn hàng {/* Nội dung liên kết */}
+          {/* 'to="/orders"' is the route to the order history page */}
+          📜 Xem lịch sử đơn hàng {/* Link text */}
         </Link>
-        {/* Liên kết quay lại trang chủ hoặc trang danh sách sản phẩm */}
-        <Link to="/" className="back-button"> {/* Sửa thành link về trang chủ "/" */}
-          {/* 'to="/"' là route đến trang chủ */}
-          ⬅ Quay lại cửa hàng {/* Nội dung liên kết */}
+        {/* Link back to the homepage or products page */}
+        <Link to="/" className="back-button">
+          {" "}
+          {/* Corrected link to the homepage "/" */}
+          {/* 'to="/"' is the route to the homepage */}
+          ⬅ Quay lại cửa hàng {/* Link text */}
         </Link>
       </div>
     </div>
   );
 };
 
-export default CartPage; // Export component CartPage làm default export để có thể sử dụng ở các file khác (thường là trong cấu hình định tuyến)
+export default CartPage; // Export the CartPage component as the default export so it can be used in other files (usually in routing configuration)

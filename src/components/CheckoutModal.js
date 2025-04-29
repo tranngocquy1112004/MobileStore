@@ -1,186 +1,188 @@
-import React, { useState, useCallback } from "react"; // Import các hook cần thiết từ thư viện React: useState để quản lý trạng thái cục bộ của form (thông tin giao hàng, lỗi xác thực), và useCallback để ghi nhớ (memoize) các hàm xử lý sự kiện (handleChange, validateForm, handleSubmit), giúp tối ưu hiệu suất và tránh re-render không cần thiết của component con (nếu có) hoặc chính modal
-import "./CheckoutModal.css"; // Import file CSS để định dạng giao diện cho component modal thanh toán này
+// Import necessary React hooks: useState to manage the local state of the form (shipping information, validation errors), and useCallback to memoize event handler functions (handleChange, validateForm, handleSubmit), helping to optimize performance and avoid unnecessary re-renders of child components (if any) or the modal itself.
+import React, { useState, useCallback } from "react";
+// Import the CSS file for styling this checkout modal component
+import "./CheckoutModal.css";
 
-// --- Component CheckoutModal ---
-// Component này hiển thị một hộp thoại (modal) cho phép người dùng xem lại các mặt hàng trong giỏ hàng
-// và nhập thông tin giao hàng (tên, địa chỉ, số điện thoại) trước khi xác nhận đặt hàng cuối cùng.
-// Nhận các props từ component cha (thường là CartPage):
-// - cart: Mảng chứa danh sách các sản phẩm hiện có trong giỏ hàng của người dùng.
-// - totalPrice: Tổng giá trị tiền của tất cả sản phẩm trong giỏ hàng.
-// - onConfirm: Hàm callback sẽ được gọi từ component cha khi người dùng nhấn nút "Xác nhận đặt hàng" và form hợp lệ. Hàm này thường nhận đối tượng thông tin giao hàng đã nhập làm tham số.
-// - onCancel: Hàm callback sẽ được gọi từ component cha khi người dùng nhấn nút "Hủy" hoặc click ra ngoài modal để đóng nó.
+// --- CheckoutModal Component ---
+// This component displays a dialog box (modal) allowing the user to review the items in the cart
+// and enter shipping information (name, address, phone number) before confirming the final order.
+// Receives props from the parent component (usually CartPage):
+// - cart: Array containing the list of products currently in the user's cart.
+// - totalPrice: The total monetary value of all products in the cart.
+// - onConfirm: A callback function that will be called from the parent component when the user clicks the "Confirm Order" button and the form is valid. This function usually receives the entered shipping information object as a parameter.
+// - onCancel: A callback function that will be called from the parent component when the user clicks the "Cancel" button or clicks outside the modal to close it.
 const CheckoutModal = ({ cart, totalPrice, onConfirm, onCancel }) => {
-  // --- Hằng số cục bộ ---
-  // Chuỗi thông báo hiển thị bên trong modal nếu danh sách sản phẩm trong giỏ hàng trống.
-  // Tình huống này hiếm gặp nếu nút "Mua hàng" trên trang giỏ hàng bị disabled đúng khi giỏ trống,
-  // nhưng vẫn cần xử lý để đảm bảo giao diện nhất quán.
-  const EMPTY_CART_MODAL_MESSAGE = "Không có sản phẩm trong giỏ hàng để thanh toán."; // Làm rõ hơn thông báo
+  // --- Local Constant ---
+  // Message string displayed inside the modal if the cart item list is empty.
+  // This situation is rare if the "Checkout" button on the Cart page is correctly disabled when the cart is empty,
+  // but it's still necessary to handle it to ensure consistent UI.
+  const EMPTY_CART_MODAL_MESSAGE = "Không có sản phẩm trong giỏ hàng để thanh toán."; // Clarified message
 
-  // --- State quản lý thông tin giao hàng người dùng nhập vào form ---
-  // State 'shippingInfo' là một đối tượng lưu trữ dữ liệu từ các trường nhập liệu trong form thông tin giao hàng.
-  // Giá trị khởi tạo là một object với các thuộc tính 'name', 'address', 'phone' đều là chuỗi rỗng, phản ánh trạng thái ban đầu của form.
+  // --- State managing shipping information entered by the user in the form ---
+  // The 'shippingInfo' state is an object storing data from the input fields in the shipping information form.
+  // Initial value is an object with 'name', 'address', 'phone' properties, all as empty strings, reflecting the initial state of the form.
   const [shippingInfo, setShippingInfo] = useState({
-    name: "", // Lưu trữ Họ và tên người nhận
-    address: "", // Lưu trữ Địa chỉ giao hàng chi tiết
-    phone: "", // Lưu trữ Số điện thoại liên hệ
+    name: "", // Stores the recipient's Full Name
+    address: "", // Stores the detailed Shipping Address
+    phone: "", // Stores the Contact Phone Number
   });
 
-  // --- State quản lý các thông báo lỗi xác thực cho từng trường của form ---
-  // State 'validationErrors' là một đối tượng, nơi các khóa là tên của các trường form ('name', 'address', 'phone')
-  // và giá trị là chuỗi thông báo lỗi tương ứng nếu có lỗi cho trường đó. Nếu không có lỗi cho một trường, giá trị là chuỗi rỗng hoặc thuộc tính đó không tồn tại trong object.
-  // State này giúp kiểm soát việc hiển thị thông báo lỗi xác thực bên cạnh các trường input.
+  // --- State managing validation error messages for each form field ---
+  // The 'validationErrors' state is an object where keys are the names of the form fields ('name', 'address', 'phone')
+  // and values are the corresponding error message strings if there is an error for that field. If there is no error for a field, the value is an empty string or the property does not exist in the object.
+  // This state controls the display of validation error messages next to the input fields.
   const [validationErrors, setValidationErrors] = useState({});
 
-  // --- Hàm xử lý sự kiện khi giá trị của các trường nhập liệu trong form thay đổi ---
-  // Hàm này được gắn vào sự kiện 'onChange' của mỗi input trong form.
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm này chỉ được tạo lại một lần
-  // vì không phụ thuộc vào bất kỳ biến hoặc state nào từ scope ngoài cần theo dõi sự thay đổi để hàm hoạt động đúng.
+  // --- Function to handle the event when the value of input fields in the form changes ---
+  // This function is attached to the 'onChange' event of each input in the form.
+  // Uses useCallback to memoize this function. This function is only re-created once
+  // because it does not depend on any variables or states from the outer scope that need tracking for the function to work correctly.
   const handleChange = useCallback((e) => {
-    const { name, value } = e.target; // Lấy thuộc tính 'name' (tên của input: "name", "address", "phone") và 'value' (giá trị hiện tại của input) từ phần tử input đã kích hoạt sự kiện change
-    // Cập nhật state 'shippingInfo'. Sử dụng functional update (prev => ...) để đảm bảo state được cập nhật dựa trên giá trị state trước đó.
-    // Tạo một bản sao của đối tượng 'shippingInfo' hiện tại (...prev) và cập nhật giá trị cho thuộc tính có tên [name] thành 'value' mới nhập.
+    const { name, value } = e.target; // Get the 'name' attribute (name of the input: "name", "address", "phone") and 'value' (current value of the input) from the input element that triggered the change event
+    // Update the 'shippingInfo' state. Use functional update (prev => ...) to ensure the state is updated based on the previous state value.
+    // Create a copy of the current 'shippingInfo' object (...prev) and update the value for the property named [name] to the new entered 'value'.
     setShippingInfo((prev) => ({ ...prev, [name]: value }));
-    // Xóa thông báo lỗi cho trường input hiện tại ngay khi người dùng bắt đầu gõ vào (giá trị của trường đó thay đổi), để thông báo lỗi biến mất ngay lập tức và không gây khó chịu.
-    setValidationErrors((prev) => ({ ...prev, [name]: "" })); // Đặt thông báo lỗi của trường [name] về chuỗi rỗng.
-  }, []); // Mảng dependency rỗng []: Hàm này không phụ thuộc vào bất kỳ biến nào từ scope ngoài cần theo dõi sự thay đổi để hàm hoạt động.
+    // Clear the error message for the current input field immediately when the user starts typing (the value of that field changes), so the error message disappears instantly and is not distracting.
+    setValidationErrors((prev) => ({ ...prev, [name]: "" })); // Set the error message for the field [name] to an empty string.
+  }, []); // Empty dependency array []: This function does not depend on any variables from the outer scope that need tracking for the function to work.
 
-  // --- Hàm kiểm tra tính hợp lệ của toàn bộ form trước khi submit ---
-  // Hàm này thực hiện validation dữ liệu người dùng đã nhập vào form.
-  // Sử dụng useCallback để ghi nhớ hàm. Hàm này sẽ được tạo lại khi state 'shippingInfo' thay đổi
-  // vì logic kiểm tra dựa trên dữ liệu hiện tại trong 'shippingInfo'.
+  // --- Function to validate the entire form before submitting ---
+  // This function performs validation on the data entered by the user in the form.
+  // Uses useCallback to memoize the function. This function will be re-created when the 'shippingInfo' state changes
+  // because the validation logic is based on the current data in 'shippingInfo'.
   const validateForm = useCallback(() => {
-    const errors = {}; // Tạo một đối tượng rỗng để thu thập tất cả các lỗi xác thực tìm thấy. Khóa sẽ là tên trường, giá trị là thông báo lỗi.
-    const { name, address, phone } = shippingInfo; // Lấy các giá trị hiện tại của các trường từ state 'shippingInfo' để kiểm tra.
+    const errors = {}; // Create an empty object to collect all found validation errors. Keys will be field names, values will be error messages.
+    const { name, address, phone } = shippingInfo; // Get the current values of the fields from the 'shippingInfo' state to validate.
 
-    // --- Kiểm tra các trường bắt buộc không được để trống (sau khi loại bỏ khoảng trắng ở đầu/cuối) ---
+    // --- Check required fields that must not be empty (after trimming leading/trailing whitespace) ---
     if (!name.trim()) {
-      errors.name = "Vui lòng nhập họ và tên"; // Thêm thông báo lỗi vào object 'errors' nếu trường 'name' trống sau khi trim().
+      errors.name = "Vui lòng nhập họ và tên"; // Add an error message to the 'errors' object if the 'name' field is empty after trim().
     }
     if (!address.trim()) {
-      errors.address = "Vui lòng nhập địa chỉ giao hàng"; // Thêm thông báo lỗi nếu trường 'address' trống sau khi trim().
+      errors.address = "Vui lòng nhập địa chỉ giao hàng"; // Add an error message if the 'address' field is empty after trim().
     }
-    // Kiểm tra trường số điện thoại:
-    // 1. Kiểm tra xem có trống không
+    // Validate the phone number field:
+    // 1. Check if it's empty
     if (!phone.trim()) {
-      errors.phone = "Vui lòng nhập số điện thoại"; // Thêm thông báo lỗi nếu trường 'phone' trống sau khi trim().
+      errors.phone = "Vui lòng nhập số điện thoại"; // Add an error message if the 'phone' field is empty after trim().
     } else if (!/^(0|\+84)?[3|5|7|8|9][0-9]{8}$/.test(phone)) {
-      // 2. Nếu không trống, kiểm tra định dạng số điện thoại.
-      // Sử dụng Regular Expression (Regex) để kiểm tra định dạng số điện thoại di động Việt Nam.
-      // Regex này chấp nhận số bắt đầu bằng '0' hoặc '+84' (có thể có hoặc không), theo sau là một chữ số từ 3, 5, 7, 8, 9, và kết thúc bằng 8 chữ số bất kỳ.
-      // .test(phone) sẽ trả về true nếu chuỗi 'phone' khớp với regex, ngược lại là false.
-      errors.phone = "Số điện thoại không hợp lệ. Vui lòng nhập định dạng 0xxxxxxxxx hoặc +84xxxxxxxxx"; // Thêm thông báo lỗi và gợi ý định dạng nếu không khớp regex.
+      // 2. If not empty, check the phone number format.
+      // Use a Regular Expression (Regex) to validate the format of Vietnamese mobile phone numbers.
+      // This Regex accepts numbers starting with '0' or '+84' (optional), followed by a digit from 3, 5, 7, 8, 9, and ending with 8 any digits.
+      // .test(phone) will return true if the 'phone' string matches the regex, otherwise false.
+      errors.phone = "Số điện thoại không hợp lệ. Vui lòng nhập định dạng 0xxxxxxxxx hoặc +84xxxxxxxxx"; // Add an error message and format suggestion if it doesn't match the regex.
     }
 
-    // Cập nhật state 'validationErrors' với đối tượng 'errors' vừa tạo (chứa tất cả lỗi tìm thấy).
-    // Việc cập nhật state này sẽ khiến component re-render và hiển thị các thông báo lỗi tương ứng trên UI.
+    // Update the 'validationErrors' state with the 'errors' object just created (containing all found errors).
+    // Updating this state will cause the component to re-render and display the corresponding error messages on the UI.
     setValidationErrors(errors);
-    // Trả về true nếu đối tượng 'errors' không có thuộc tính nào (nghĩa là không có lỗi), ngược lại trả về false.
-    // Sử dụng Object.keys(errors).length để kiểm tra số lượng thuộc tính trong object errors.
+    // Return true if the 'errors' object has no properties (meaning no errors), otherwise return false.
+    // Use Object.keys(errors).length to check the number of properties in the errors object.
     return Object.keys(errors).length === 0;
-  }, [shippingInfo]); // Mảng dependency: Hàm phụ thuộc vào state 'shippingInfo'. Khi shippingInfo thay đổi, hàm validateForm sẽ được tạo lại để sử dụng giá trị mới nhất.
+  }, [shippingInfo]); // Dependency array: The function depends on the 'shippingInfo' state. When shippingInfo changes, the validateForm function will be re-created to use the latest value.
 
-  // --- Hàm xử lý sự kiện khi form được submit ---
-  // Hàm này được gắn vào sự kiện 'onSubmit' của thẻ <form>.
-  // Sử dụng useCallback để ghi nhớ hàm. Hàm này sẽ được tạo lại khi hàm 'validateForm'
-  // hoặc hàm 'onConfirm' (được truyền từ props) thay đổi.
+  // --- Function to handle the form submission event ---
+  // This function is attached to the 'onSubmit' event of the <form> tag.
+  // Uses useCallback to memoize the function. This function will be re-created when the 'validateForm' function
+  // or the 'onConfirm' function (passed from props) change.
   const handleSubmit = useCallback((e) => {
-    e.preventDefault(); // Ngăn chặn hành vi submit mặc định của trình duyệt (ngăn trang bị tải lại).
-    // Gọi hàm 'validateForm' để kiểm tra tính hợp lệ của dữ liệu trong form trước khi xử lý.
+    e.preventDefault(); // Prevent the browser's default form submission behavior (prevents page reload).
+    // Call the 'validateForm' function to check the validity of the data in the form before processing.
     if (validateForm()) {
-      // Nếu hàm 'validateForm' trả về true (nghĩa là toàn bộ form hợp lệ):
-      // Gọi hàm 'onConfirm' được truyền từ component cha, truyền kèm đối tượng 'shippingInfo'
-      // (chứa dữ liệu người dùng đã nhập và đã được xác thực hợp lệ).
-      // shippingInfo được truy cập thông qua closure từ scope của component CheckoutModal.
+      // If the 'validateForm' function returns true (meaning the entire form is valid):
+      // Call the 'onConfirm' function passed from the parent component, passing along the 'shippingInfo' object
+      // (containing the data entered by the user and successfully validated).
+      // shippingInfo is accessed via closure from the scope of the CheckoutModal component.
       onConfirm(shippingInfo);
     }
-    // Nếu form không hợp lệ (validateForm() trả về false), hàm validateForm() đã tự động cập nhật state validationErrors
-    // và các thông báo lỗi sẽ hiển thị bên cạnh các trường input tương ứng trên UI. Hàm handleSubmit sẽ dừng tại đây.
-  }, [validateForm, onConfirm, shippingInfo]); // Mảng dependency: Hàm phụ thuộc vào hàm 'validateForm' (để gọi validation), hàm 'onConfirm' (để gọi callback khi thành công), và state 'shippingInfo' (để truyền dữ liệu form đi).
+    // If the form is not valid (validateForm() returns false), the validateForm() function has already automatically updated the validationErrors state
+    // and the corresponding error messages will be displayed next to the input fields on the UI. The handleSubmit function will stop here.
+  }, [validateForm, onConfirm, shippingInfo]); // Dependency array: The function depends on the 'validateForm' function (to call validation), the 'onConfirm' function (to call callback on success), and the 'shippingInfo' state (to pass form data).
 
   return (
-    // --- Overlay cho Modal ---
-    // Lớp div này tạo một lớp phủ (overlay) mờ trên toàn màn hình, làm nổi bật modal và ngăn tương tác với nội dung bên dưới.
-    // Khi click vào lớp phủ này (bên ngoài nội dung modal), sự kiện click sẽ kích hoạt hàm 'onCancel' từ props để đóng modal.
+    // --- Modal Overlay ---
+    // This div layer creates a semi-transparent overlay covering the entire screen, highlighting the modal and preventing interaction with the content below.
+    // Clicking on this overlay (outside the modal content) will trigger the 'onCancel' function from props to close the modal.
     <div className="modal-overlay" onClick={onCancel}>
-      {/* --- Nội dung chính của Modal --- */}
-      {/* Đây là container chứa nội dung thực tế của modal (tóm tắt đơn hàng, form, nút). */}
-      {/* onClick={(e) => e.stopPropagation()}: Gắn sự kiện này vào nội dung modal.
-          Phương thức stopPropagation() trên đối tượng sự kiện (e) ngăn chặn sự kiện click bên trong modal này
-          lan tỏa (propagate) lên các phần tử cha, đặc biệt là lớp 'modal-overlay'.
-          Điều này đảm bảo rằng khi click vào bất kỳ đâu bên trong modal, sự kiện click sẽ không
-          đến được lớp overlay và kích hoạt hàm onCancel để đóng modal. */}
+      {/* --- Main Modal Content --- */}
+      {/* This is the container holding the actual content of the modal (order summary, form, buttons). */}
+      {/* onClick={(e) => e.stopPropagation()}: Attach this event to the modal content.
+            The stopPropagation() method on the event object (e) prevents the click event inside this modal
+            from bubbling up (propagating) to parent elements, specifically the 'modal-overlay' layer.
+            This ensures that clicking anywhere inside the modal does not reach the overlay
+            and trigger the onCancel function to close the modal. */}
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2 className="modal-title">🛒 Xác nhận thanh toán</h2>{" "}
-        {/* Tiêu đề của modal */}
-        {/* --- Phần tóm tắt thông tin đơn hàng --- */}
-        {/* Container hiển thị danh sách sản phẩm trong giỏ và tổng tiền trong modal. */}
+        {/* Title of the modal */}
+        {/* --- Order Summary Section --- */}
+        {/* Container displaying the list of items in the cart and the total price within the modal. */}
         <div className="order-summary">
           <h3>📋 Thông tin đơn hàng</h3>{" "}
-          {/* Tiêu đề cho phần tóm tắt đơn hàng */}
-          {/* Conditional Rendering: Kiểm tra nếu mảng 'cart' có sản phẩm (cart.length > 0) để hiển thị chi tiết đơn hàng */}
-          {cart && cart.length > 0 ? ( // Kiểm tra cart tồn tại và có phần tử
+          {/* Title for the order summary section */}
+          {/* Conditional Rendering: Check if the 'cart' array has products (cart.length > 0) to display order details */}
+          {cart && cart.length > 0 ? ( // Check if cart exists and has elements
             <>
               {" "}
-              {/* Sử dụng Fragment để nhóm các phần tử con (ul, p) mà không tạo thêm thẻ HTML cha không cần thiết trong DOM */}
-              {/* Danh sách (unordered list) hiển thị từng sản phẩm trong giỏ hàng */}
+              {/* Use a Fragment to group child elements (ul, p) without creating unnecessary extra parent HTML tags in the DOM */}
+              {/* Unordered list displaying each product in the cart */}
               <ul className="cart-items-list">
                 {cart.map((item) => (
-                  // Lặp qua từng 'item' trong mảng 'cart' để tạo một list item cho mỗi sản phẩm
+                  // Map over each 'item' in the 'cart' array to create a list item for each product
                   <li key={item.id} className="cart-item">
                     {" "}
-                    {/* Mỗi item trong giỏ hàng là một list item. key={item.id} là quan trọng cho hiệu suất của React khi render danh sách */}
+                    {/* Each item in the cart is a list item. key={item.id} is important for React performance when rendering lists */}
                     <span className="item-name">{item.name}</span>{" "}
-                    {/* Tên sản phẩm */}
+                    {/* Product name */}
                     <span className="item-quantity">x {item.quantity}</span>{" "}
-                    {/* Số lượng sản phẩm */}
+                    {/* Product quantity */}
                     <span className="item-price">
-                      {/* Tính và hiển thị tổng giá của sản phẩm đó (giá * số lượng), định dạng theo tiền tệ Việt Nam */}
+                      {/* Calculate and display the total price of that item (price * quantity), formatted according to Vietnamese currency */}
                       {(item.price * item.quantity).toLocaleString("vi-VN")} VNĐ
                     </span>
                   </li>
                 ))}
               </ul>
-              {/* Hiển thị tổng tiền của toàn bộ đơn hàng */}
+              {/* Display the total price of the entire order */}
               <p className="total-price">
                 <strong>Tổng tiền:</strong> {totalPrice.toLocaleString("vi-VN")}{" "}
-                {/* Hiển thị chữ "Tổng tiền" đậm và tổng tiền đã định dạng theo tiền tệ Việt Nam */}
+                {/* Display "Total Price" bold and the total price formatted according to Vietnamese currency */}
                 VNĐ{" "}
-                {/* Đơn vị tiền tệ */}
+                {/* Currency unit */}
               </p>
             </>
           ) : (
-            // Conditional Rendering: Nếu giỏ hàng trống (cart.length === 0 hoặc cart là null/undefined), hiển thị thông báo
+            // Conditional Rendering: If the cart is empty (cart.length === 0 or cart is null/undefined), display a message
             <p className="empty-cart-message">{EMPTY_CART_MODAL_MESSAGE}</p>
           )}
         </div>
-        {/* --- Form nhập thông tin giao hàng --- */}
-        {/* Thẻ form để người dùng điền thông tin giao hàng. Khi form được submit (ví dụ: nhấn nút type="submit"), hàm handleSubmit (đã memoize) sẽ được gọi. */}
+        {/* --- Shipping Information Form --- */}
+        {/* Form tag for the user to fill in shipping details. When the form is submitted (e.g., by clicking a button type="submit"), the handleSubmit function (memoized) will be called. */}
         <form onSubmit={handleSubmit} className="shipping-form">
           <h3>🚚 Thông tin giao hàng</h3>{" "}
-          {/* Tiêu đề cho phần form thông tin giao hàng */}
-          {/* Group input cho Họ và tên */}
+          {/* Title for the shipping information form section */}
+          {/* Input group for Full Name */}
           <div className="form-group">
             {" "}
-            {/* Container cho label, input và thông báo lỗi */}
+            {/* Container for label, input, and error message */}
             <label htmlFor="name">Họ và tên:</label>{" "}
-            {/* Thẻ label liên kết với input có id="name". htmlFor="name" giúp cải thiện khả năng tiếp cận (khi click label, input tương ứng sẽ focus) */}
+            {/* Label tag linked to the input with id="name". htmlFor="name" improves accessibility (clicking the label focuses the corresponding input) */}
             <input
-              type="text" // Kiểu input là text cho tên
-              id="name" // ID của input (phải khớp với htmlFor của label)
-              name="name" // Tên của input, được sử dụng trong hàm handleChange để xác định trường nào đang thay đổi và cập nhật state 'shippingInfo'
-              placeholder="Nhập họ và tên người nhận" // Placeholder hiển thị hướng dẫn nhập liệu khi input trống
-              value={shippingInfo.name} // Gán giá trị hiện tại từ state shippingInfo.name vào input (Đây là Controlled Component trong React)
-              onChange={handleChange} // Gắn hàm xử lý khi giá trị input thay đổi (đã memoize)
-              className={validationErrors.name ? "error" : ""} // Thêm class 'error' vào input nếu có thông báo lỗi xác thực cho trường 'name' trong state validationErrors.name
-              aria-label="Nhập họ và tên người nhận" // Thuộc tính hỗ trợ khả năng tiếp cận cho người dùng sử dụng trình đọc màn hình
-              required // Thuộc tính HTML5 yêu cầu trường này không được để trống khi submit form. Browser cũng có thể hiển thị validation message mặc định.
+              type="text" // Input type is text for name
+              id="name" // ID of the input (must match the htmlFor of the label)
+              name="name" // Name of the input, used in the handleChange function to identify which field is changing and update the 'shippingInfo' state
+              placeholder="Nhập họ và tên người nhận" // Placeholder displaying input instructions when the input is empty
+              value={shippingInfo.name} // Bind the current value from shippingInfo.name state to the input (This is a Controlled Component in React)
+              onChange={handleChange} // Attach the change event handler function (memoized)
+              className={validationErrors.name ? "error" : ""} // Add the 'error' class to the input if there is a validation error message for the 'name' field in the validationErrors.name state.
+              aria-label="Nhập họ và tên người nhận" // Accessibility attribute for users using screen readers
+              required // HTML5 attribute requiring this field not to be empty on form submission. Browsers might also display default validation messages.
             />
-            {/* Conditional Rendering: Hiển thị thông báo lỗi nếu có lỗi xác thực cho trường 'name' (validationErrors.name có giá trị) */}
+            {/* Conditional Rendering: Display the error message if there is a validation error for the 'name' field (validationErrors.name has a value) */}
             {validationErrors.name && (
-              <span className="error-message">{validationErrors.name}</span> // Hiển thị nội dung lỗi từ state validationErrors.name
+              <span className="error-message">{validationErrors.name}</span> // Display the error content from validationErrors.name
             )}
           </div>
-          {/* Group input cho Địa chỉ */}
+          {/* Input group for Address */}
           <div className="form-group">
             <label htmlFor="address">Địa chỉ:</label>
             <input
@@ -198,11 +200,11 @@ const CheckoutModal = ({ cart, totalPrice, onConfirm, onCancel }) => {
               <span className="error-message">{validationErrors.address}</span>
             )}
           </div>
-          {/* Group input cho Số điện thoại */}
+          {/* Input group for Phone Number */}
           <div className="form-group">
             <label htmlFor="phone">Số điện thoại:</label>
             <input
-              type="tel" // Loại input 'tel' gợi ý bàn phím số trên thiết bị di động và có thể có validation tích hợp của browser (tuy nhiên, validation bằng Regex chi tiết hơn)
+              type="tel" // 'tel' input type suggests a numeric keyboard on mobile devices and may have built-in browser validation (though Regex validation is more detailed)
               id="phone"
               name="phone"
               placeholder="Nhập số điện thoại liên hệ"
@@ -216,28 +218,28 @@ const CheckoutModal = ({ cart, totalPrice, onConfirm, onCancel }) => {
               <span className="error-message">{validationErrors.phone}</span>
             )}
           </div>
-          {/* --- Nhóm các nút hành động trong modal --- */}
-          {/* Container chứa các nút Xác nhận và Hủy */}
+          {/* --- Group of action buttons in the modal --- */}
+          {/* Container holding Confirm and Cancel buttons */}
           <div className="modal-buttons">
-            {/* Nút Xác nhận đặt hàng */}
+            {/* Confirm Order button */}
             <button
-              type="submit" // Loại nút là "submit", khi click sẽ kích hoạt sự kiện submit form (và gọi hàm handleSubmit đã gắn vào form)
-              className="confirm-button" // Class CSS để định dạng nút xác nhận
-              // disabled={cart.length === 0} // Có thể thêm disabled nếu giỏ hàng trống, mặc dù logic trên CartPage đã disable nút mở modal
-              aria-label="Xác nhận đặt hàng" // Thuộc tính hỗ trợ khả năng tiếp cận
+              type="submit" // Button type is "submit", clicking it will trigger the form's submit event (and call the handleSubmit function attached to the form)
+              className="confirm-button" // CSS class for styling the confirm button
+              // disabled={cart.length === 0} // Could add disabled if cart is empty, although logic on CartPage already disables the button that opens the modal
+              aria-label="Xác nhận đặt hàng" // Accessibility attribute
             >
               ✅ Xác nhận đặt hàng{" "}
-              {/* Nội dung hiển thị trên nút */}
+              {/* Content displayed on the button */}
             </button>
-            {/* Nút Hủy bỏ */}
+            {/* Cancel button */}
             <button
-              type="button" // Quan trọng: Loại nút là "button" để ngăn nút này tự kích hoạt sự kiện submit form khi click. Nếu không có type="button", browser sẽ coi nó là submit button mặc định.
-              className="cancel-button" // Class CSS để định dạng nút hủy
-              onClick={onCancel} // Gắn hàm 'onCancel' từ props để đóng modal khi click.
-              aria-label="Hủy đặt hàng" // Thuộc tính hỗ trợ khả năng tiếp cận
+              type="button" // Important: Button type is "button" to prevent this button from automatically triggering the form submit event when clicked. Without type="button", the browser treats it as the default submit button.
+              className="cancel-button" // CSS class for styling the cancel button
+              onClick={onCancel} // Attach the 'onCancel' function from props to close the modal when clicked.
+              aria-label="Hủy đặt hàng" // Accessibility attribute
             >
               ❌ Hủy{" "}
-              {/* Nội dung hiển thị trên nút */}
+              {/* Content displayed on the button */}
             </button>
           </div>
         </form>
@@ -246,4 +248,4 @@ const CheckoutModal = ({ cart, totalPrice, onConfirm, onCancel }) => {
   );
 };
 
-export default CheckoutModal; // Export component CheckoutModal làm default export để có thể sử dụng ở các file khác (ví dụ: CartPage cần hiển thị modal này khi người dùng thanh toán)
+export default CheckoutModal; // Export the CheckoutModal component as the default export so it can be used in other files (e.g., CartPage needs to display this modal when the user checks out)

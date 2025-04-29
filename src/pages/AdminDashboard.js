@@ -1,218 +1,218 @@
-// Import thư viện React và các hook cần thiết: useState, useEffect, useCallback
+// Import necessary React library and hooks: useState, useEffect, useCallback
 import React, { useState, useEffect, useCallback } from "react";
-// Import tệp CSS để định kiểu cho component này
+// Import the CSS file for styling this component
 import "./AdminDashboard.css";
 
-// Định nghĩa các key hằng số để truy cập dữ liệu trong localStorage
-const LOCAL_STORAGE_USERS_KEY = "users"; // Key cho dữ liệu người dùng
-const LOCAL_STORAGE_ORDERS_KEY = "orders"; // Key cho dữ liệu đơn hàng
+// Define constant keys to access data in localStorage
+const LOCAL_STORAGE_USERS_KEY = "users"; // Key for user data
+const LOCAL_STORAGE_ORDERS_KEY = "orders"; // Key for order data
 
-// Định nghĩa component hàm AdminDashboard
+// Define the AdminDashboard functional component
 const AdminDashboard = () => {
-  // --- State Variables (Các biến trạng thái) ---
-  // State để lưu danh sách người dùng, khởi tạo là mảng rỗng
-  const [users, setUsers] = useState([]);
-  // State để lưu danh sách đơn hàng, khởi tạo là mảng rỗng
-  const [orders, setOrders] = useState([]);
-  // State để theo dõi trạng thái tải dữ liệu, khởi tạo là true (đang tải)
-  const [isLoading, setIsLoading] = useState(true);
-  // State để lưu thông báo lỗi nếu có, khởi tạo là null (không có lỗi)
-  const [error, setError] = useState(null);
+  // --- State Variables ---
+  // State to store the list of users, initialized as an empty array
+  const [users, setUsers] = useState([]);
+  // State to store the list of orders, initialized as an empty array
+  const [orders, setOrders] = useState([]);
+  // State to track the loading status, initialized as true (loading)
+  const [isLoading, setIsLoading] = useState(true);
+  // State to store an error message if any, initialized as null (no error)
+  const [error, setError] = useState(null);
 
-  // --- Effect Hook (Hook Hiệu ứng) để Tải Dữ liệu ---
-  // Effect này chạy một lần duy nhất khi component được mount (gắn vào DOM)
-  // do mảng dependency [] là rỗng.
-  useEffect(() => {
-    // Hàm bất đồng bộ để tải dữ liệu từ localStorage
-    const loadData = async () => { // Sử dụng async để có thể mở rộng sau này (ví dụ gọi API)
-      try {
-        // Đặt lại thông báo lỗi trước đó (nếu có)
-        setError(null);
+  // --- Effect Hook to Load Data ---
+  // This effect runs only once when the component is mounted (attached to the DOM)
+  // because the dependency array [] is empty.
+  useEffect(() => {
+    // Asynchronous function to load data from localStorage
+    const loadData = async () => { // Using async allows for potential future expansion (e.g., fetching from an API)
+      try {
+        // Reset any previous error message (if any)
+        setError(null);
 
-        // Lấy dữ liệu người dùng từ localStorage
-        // JSON.parse để chuyển chuỗi JSON thành đối tượng JavaScript
-        // || [] để mặc định là mảng rỗng nếu không tìm thấy dữ liệu trong localStorage
-        const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_USERS_KEY)) || [];
-        // Lấy dữ liệu đơn hàng từ localStorage tương tự
-        const storedOrders = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || [];
+        // Retrieve user data from localStorage
+        // JSON.parse to convert the JSON string into a JavaScript object
+        // || [] to default to an empty array if no data is found in localStorage
+        const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_USERS_KEY)) || [];
+        // Retrieve order data from localStorage similarly
+        const storedOrders = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || [];
 
-        // Cập nhật state 'users' với dữ liệu đã tải
-        setUsers(storedUsers);
-        // Cập nhật state 'orders' với dữ liệu đã tải,
-        // đồng thời sắp xếp các đơn hàng theo ngày giảm dần (mới nhất lên trước)
-        setOrders(storedOrders.sort((a, b) => new Date(b.date) - new Date(a.date)));
+        // Update the 'users' state with the loaded data
+        setUsers(storedUsers);
+        // Update the 'orders' state with the loaded data,
+        // also sort the orders by date in descending order (newest first)
+        setOrders(storedOrders.sort((a, b) => new Date(b.date) - new Date(a.date)));
 
-        // Ghi log dữ liệu đã tải ra console để kiểm tra
-        console.log("Đã tải dữ liệu admin:", { users: storedUsers, orders: storedOrders });
+        // Log the loaded data to the console for inspection
+        console.log("Đã tải dữ liệu admin:", { users: storedUsers, orders: storedOrders });
 
-      } catch (err) {
-        // Xử lý nếu có lỗi xảy ra trong quá trình tải (ví dụ: dữ liệu localStorage bị hỏng)
-        console.error("Lỗi khi tải dữ liệu admin:", err); // Ghi log lỗi chi tiết
-        setError("Không thể tải dữ liệu quản trị. Vui lòng thử lại sau."); // Đặt thông báo lỗi cho người dùng
-        setUsers([]); // Đặt lại state users thành mảng rỗng
-        setOrders([]); // Đặt lại state orders thành mảng rỗng
-      } finally {
-        // Khối này luôn chạy sau khi try hoặc catch hoàn thành
-        // Đặt state loading thành false, cho biết quá trình tải đã kết thúc (dù thành công hay thất bại)
-        setIsLoading(false);
-      }
-    };
+      } catch (err) {
+        // Handle any errors that occur during loading (e.g., corrupted localStorage data)
+        console.error("Lỗi khi tải dữ liệu admin:", err); // Log the detailed error
+        setError("Không thể tải dữ liệu quản trị. Vui lòng thử lại sau."); // Set the error message for the user
+        setUsers([]); // Reset users state to an empty array
+        setOrders([]); // Reset orders state to an empty array
+      } finally {
+        // This block always runs after try or catch completes
+        // Set the loading state to false, indicating that the loading process has finished (whether successful or failed)
+        setIsLoading(false);
+      }
+    };
 
-    // Đặt hẹn giờ để gọi hàm loadData sau 500ms
-    // Điều này có thể dùng để mô phỏng độ trễ mạng hoặc cho phép component khác kịp render
-    const timer = setTimeout(loadData, 500);
+    // Set a timeout to call the loadData function after 500ms
+    // This can be used to simulate network delay or allow other components to render first
+    const timer = setTimeout(loadData, 500);
 
-    // Hàm cleanup (dọn dẹp): Chạy khi component unmount hoặc trước khi effect chạy lại
-    // Clear hẹn giờ để tránh loadData chạy nếu component đã bị gỡ bỏ trước 500ms
-    return () => clearTimeout(timer);
+    // Cleanup function: Runs when the component unmounts or before the effect re-runs
+    // Clear the timeout to prevent loadData from running if the component is unmounted before 500ms
+    return () => clearTimeout(timer);
 
-  }, []); // Mảng dependency rỗng: effect chỉ chạy một lần khi mount
+  }, []); // Empty dependency array: effect runs only once on mount
 
-  // --- Callback Hook (Hook Callback) để Xóa Người dùng ---
-  // Sử dụng useCallback để memoize (ghi nhớ) hàm handleDeleteUser.
-  // Hàm này chỉ được tạo lại khi state 'users' hoặc 'orders' thay đổi.
-  const handleDeleteUser = useCallback((usernameToDelete) => {
-    // Hiển thị hộp thoại xác nhận trước khi xóa
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${usernameToDelete}" và tất cả đơn hàng của họ không?`)) {
-      return; // Dừng hàm nếu người dùng hủy bỏ
-    }
+  // --- Callback Hook to Delete a User ---
+  // Use useCallback to memoize the handleDeleteUser function.
+  // This function is only re-created when the 'users' or 'orders' state changes.
+  const handleDeleteUser = useCallback((usernameToDelete) => {
+    // Display a confirmation dialog before deleting
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${usernameToDelete}" và tất cả đơn hàng của họ không?`)) {
+      return; // Stop the function if the user cancels
+    }
 
-    // Tạo mảng người dùng mới bằng cách lọc bỏ người dùng cần xóa
-    const updatedUsers = users.filter(user => user.username !== usernameToDelete);
-    // Tạo mảng đơn hàng mới bằng cách lọc bỏ tất cả đơn hàng của người dùng đó
-    const updatedOrders = orders.filter(order => order.username !== usernameToDelete);
+    // Create a new users array by filtering out the user to be deleted
+    const updatedUsers = users.filter(user => user.username !== usernameToDelete);
+    // Create a new orders array by filtering out all orders belonging to that user
+    const updatedOrders = orders.filter(order => order.username !== usernameToDelete);
 
-    // Cập nhật state 'users' với danh sách đã lọc
-    setUsers(updatedUsers);
-    // Cập nhật state 'orders' với danh sách đã lọc
-    setOrders(updatedOrders);
+    // Update the 'users' state with the filtered list
+    setUsers(updatedUsers);
+    // Update the 'orders' state with the filtered list
+    setOrders(updatedOrders);
 
-    // Lưu danh sách người dùng đã cập nhật vào localStorage (sau khi chuyển thành chuỗi JSON)
-    localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(updatedUsers));
-    // Lưu danh sách đơn hàng đã cập nhật vào localStorage (sau khi chuyển thành chuỗi JSON)
-    localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updatedOrders));
+    // Save the updated users list to localStorage (after converting to JSON string)
+    localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(updatedUsers));
+    // Save the updated orders list to localStorage (after converting to JSON string)
+    localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updatedOrders));
 
-    // Ghi log thông báo xóa thành công ra console
-    console.log(`Đã xóa người dùng "${usernameToDelete}" và các đơn hàng liên quan.`);
+    // Log a success message to the console
+    console.log(`Đã xóa người dùng "${usernameToDelete}" và các đơn hàng liên quan.`);
 
-  }, [users, orders]); // Dependencies: hàm này phụ thuộc vào 'users' và 'orders'
+  }, [users, orders]); // Dependencies: this function depends on 'users' and 'orders'
 
-  // --- Conditional Rendering (Render có điều kiện): Trạng thái Đang tải ---
-  // Nếu dữ liệu vẫn đang tải, hiển thị thông báo đang tải
-  if (isLoading) {
-    return (
-      <div className="admin-container loading-state">
-        <div className="loading-spinner"></div> {/* Element spinner đơn giản */}
-        <p>Đang tải dữ liệu quản trị...</p> {/* Thông báo đang tải */}
-      </div>
-    );
-  }
+  // --- Conditional Rendering: Loading State ---
+  // If data is still loading, display a loading message
+  if (isLoading) {
+    return (
+      <div className="admin-container loading-state">
+        <div className="loading-spinner"></div> {/* Simple spinner element */}
+        <p>Đang tải dữ liệu quản trị...</p> {/* Loading message */}
+      </div>
+    );
+  }
 
-  // --- Conditional Rendering: Trạng thái Lỗi ---
-  // Nếu có lỗi xảy ra trong quá trình tải, hiển thị thông báo lỗi
-  if (error) {
-    return (
-      <div className="admin-container error-state">
-        <p className="error-message">❌ {error}</p> {/* Hiển thị thông báo lỗi kèm icon */}
-        {/* Có thể thêm nút "Thử lại" ở đây nếu cần */}
-      </div>
-    );
-  }
+  // --- Conditional Rendering: Error State ---
+  // If an error occurred during loading, display the error message
+  if (error) {
+    return (
+      <div className="admin-container error-state">
+        <p className="error-message">❌ {error}</p> {/* Display the error message with an icon */}
+        {/* A "Retry" button could be added here if needed */}
+      </div>
+    );
+  }
 
-  // --- Main Component Render (Render chính của component) ---
-  // Nếu tải xong và không có lỗi, hiển thị nội dung bảng điều khiển chính
-  return (
-    <div className="admin-container"> {/* Container chính cho bảng điều khiển */}
-      <h1 className="admin-title">📊 Bảng điều khiển Admin</h1> {/* Tiêu đề bảng điều khiển */}
+  // --- Main Component Render ---
+  // If loading is complete and there are no errors, display the main dashboard content
+  return (
+    <div className="admin-container"> {/* Main container for the dashboard */}
+      <h1 className="admin-title">📊 Bảng điều khiển Admin</h1> {/* Dashboard title */}
 
-      {/* Phần hiển thị danh sách người dùng */}
-      <section className="admin-section">
-        {/* Tiêu đề phần hiển thị số lượng người dùng */}
-        <h2 className="section-title">👥 Danh sách người dùng ({users.length})</h2>
+      {/* Section displaying the list of users */}
+      <section className="admin-section">
+        {/* Title for the user list section, displaying the user count */}
+        <h2 className="section-title">👥 Danh sách người dùng ({users.length})</h2>
 
-        {/* Render có điều kiện dựa trên số lượng người dùng */}
-        {users.length === 0 ? (
-          // Nếu không có người dùng, hiển thị thông báo trạng thái rỗng
-          <p className="empty-state">Chưa có người dùng nào đăng ký.</p>
-        ) : (
-          // Nếu có người dùng, render danh sách người dùng (ul)
-          <ul className="user-list">
-            {/* Duyệt qua mảng 'users' để render từng người dùng */}
-            {/* Sử dụng user.username làm key (đảm bảo duy nhất) */}
-            {users.map((user) => {
-              // Lọc danh sách đơn hàng chính để tìm các đơn hàng của người dùng hiện tại
-              const userOrders = orders.filter(order => order.username === user.username);
+        {/* Conditional rendering based on the number of users */}
+        {users.length === 0 ? (
+          // If there are no users, display an empty state message
+          <p className="empty-state">Chưa có người dùng nào đăng ký.</p>
+        ) : (
+          // If there are users, render the user list (ul)
+          <ul className="user-list">
+            {/* Iterate over the 'users' array to render each user */}
+            {/* Use user.username as the key (assuming it's unique) */}
+            {users.map((user) => {
+              // Filter the main orders list to find orders belonging to the current user
+              const userOrders = orders.filter(order => order.username === user.username);
 
-              // Trả về một mục danh sách (li) cho mỗi người dùng
-              return (
-                <li key={user.username} className="user-item"> {/* Mục danh sách cho một người dùng */}
-                  {/* Phần tiêu đề của người dùng, chứa username và nút xóa */}
-                  <div className="user-header-admin">
-                    <h3 className="user-username">👤 {user.username}</h3> {/* Hiển thị username */}
-                    {/* Nút để xóa người dùng */}
-                    <button
-                      className="delete-user-button"
-                      // Gọi hàm handleDeleteUser khi nút được click, truyền username của người dùng hiện tại
-                      onClick={() => handleDeleteUser(user.username)}
-                      // Thêm label cho trợ năng (accessibility)
-                      aria-label={`Xóa người dùng ${user.username}`}
-                    >
-                      🗑️ Xóa người dùng {/* Text và icon của nút */}
-                    </button>
-                  </div>
+              // Return a list item (li) for each user
+              return (
+                <li key={user.username} className="user-item"> {/* List item for a user */}
+                  {/* Header section for the user, contains username and delete button */}
+                  <div className="user-header-admin">
+                    <h3 className="user-username">👤 {user.username}</h3> {/* Display the username */}
+                    {/* Button to delete the user */}
+                    <button
+                      className="delete-user-button"
+                      // Call handleDeleteUser function when the button is clicked, passing the current user's username
+                      onClick={() => handleDeleteUser(user.username)}
+                      // Add an accessibility label
+                      aria-label={`Xóa người dùng ${user.username}`}
+                    >
+                      🗑️ Xóa người dùng {/* Button text and icon */}
+                    </button>
+                  </div>
 
-                  {/* Phần hiển thị các đơn hàng liên quan đến người dùng này */}
-                  <div className="user-orders">
-                    {/* Tiêu đề phụ hiển thị username và số lượng đơn hàng của họ */}
-                    <h4>📦 Đơn hàng của {user.username} ({userOrders.length}):</h4>
+                  {/* Section displaying orders related to this user */}
+                  <div className="user-orders">
+                    {/* Sub-title displaying the username and their order count */}
+                    <h4>📦 Đơn hàng của {user.username} ({userOrders.length}):</h4>
 
-                    {/* Render có điều kiện dựa trên số lượng đơn hàng của người dùng này */}
-                    {userOrders.length === 0 ? (
-                      // Nếu người dùng này không có đơn hàng nào, hiển thị thông báo rỗng nhỏ
-                      <p className="empty-state-small">Chưa có đơn hàng nào từ người dùng này.</p>
-                    ) : (
-                      // Nếu người dùng có đơn hàng, render danh sách đơn hàng của họ (ul)
-                      <ul className="order-list-admin">
-                        {/* Duyệt qua mảng 'userOrders' để render từng đơn hàng */}
-                        {userOrders.map(order => (
-                          // Mục danh sách cho một đơn hàng, sử dụng order.id làm key
-                          <li key={order.id} className="order-item-admin">
-                            {/* Hiển thị các chi tiết khác nhau của đơn hàng */}
-                            <p><strong>ID Đơn hàng:</strong> #{order.id}</p>
-                            {/* Định dạng ngày/giờ sử dụng locale Tiếng Việt */}
-                            <p><strong>Ngày đặt:</strong> {new Date(order.date).toLocaleString('vi-VN')}</p>
-                            {/* Định dạng tổng tiền sử dụng locale Tiếng Việt và thêm đơn vị tiền tệ */}
-                            <p><strong>Tổng tiền:</strong> {order.totalPrice.toLocaleString('vi-VN')} VNĐ</p>
-                            <p><strong>Người nhận:</strong> {order.shippingInfo.name}</p>
-                            <p><strong>Địa chỉ:</strong> {order.shippingInfo.address}</p>
-                            <p><strong>Điện thoại:</strong> {order.shippingInfo.phone}</p>
-                            {/* Tiêu đề phụ cho danh sách sản phẩm trong đơn hàng */}
-                            <h5>Chi tiết sản phẩm:</h5>
-                            {/* Danh sách (ul) để hiển thị các sản phẩm trong đơn hàng */}
-                            <ul className="order-items-detail">
-                              {/* Duyệt qua mảng 'items' của đơn hàng */}
-                              {order.items.map(item => (
-                                // Mục danh sách cho từng sản phẩm, sử dụng item.id làm key
-                                <li key={item.id}>
-                                  {/* Hiển thị tên sản phẩm, số lượng và tổng tiền của sản phẩm đó */}
-                                  {item.name} (x{item.quantity}) - {(item.price * item.quantity).toLocaleString('vi-VN')} VNĐ
-                                </li>
-                              ))}
-                            </ul>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-    </div>
-  );
+                    {/* Conditional rendering based on the number of orders for this specific user */}
+                    {userOrders.length === 0 ? (
+                      // If this user has no orders, display a small empty state message
+                      <p className="empty-state-small">Chưa có đơn hàng nào từ người dùng này.</p>
+                    ) : (
+                      // If the user has orders, render their order list (ul)
+                      <ul className="order-list-admin">
+                        {/* Iterate over the 'userOrders' array to render each order */}
+                        {userOrders.map(order => (
+                          // List item for an order, using order.id as the key
+                          <li key={order.id} className="order-item-admin">
+                            {/* Display various details of the order */}
+                            <p><strong>ID Đơn hàng:</strong> #{order.id}</p>
+                            {/* Format date/time using Vietnamese locale */}
+                            <p><strong>Ngày đặt:</strong> {new Date(order.date).toLocaleString('vi-VN')}</p>
+                            {/* Format total price using Vietnamese locale and add currency unit */}
+                            <p><strong>Tổng tiền:</strong> {order.totalPrice.toLocaleString('vi-VN')} VNĐ</p>
+                            <p><strong>Người nhận:</strong> {order.shippingInfo.name}</p>
+                            <p><strong>Địa chỉ:</strong> {order.shippingInfo.address}</p>
+                            <p><strong>Điện thoại:</strong> {order.shippingInfo.phone}</p>
+                            {/* Sub-title for the list of items within the order */}
+                            <h5>Chi tiết sản phẩm:</h5>
+                            {/* List (ul) to display items within the order */}
+                            <ul className="order-items-detail">
+                              {/* Iterate over the 'items' array of the order */}
+                              {order.items.map(item => (
+                                // List item for each product item, using item.id as the key
+                                <li key={item.id}>
+                                  {/* Display product name, quantity, and total price for that item */}
+                                  {item.name} (x{item.quantity}) - {(item.price * item.quantity).toLocaleString('vi-VN')} VNĐ
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
 };
 
-// Export component AdminDashboard để có thể sử dụng ở nơi khác
+// Export the AdminDashboard component so it can be used elsewhere
 export default AdminDashboard;

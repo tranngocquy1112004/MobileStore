@@ -1,320 +1,325 @@
-import React, { useEffect, useState, useContext, useCallback } from "react"; // Import các hook cần thiết từ thư viện React: useEffect để thực hiện các tác vụ phụ (side effects), useState để quản lý trạng thái cục bộ, useContext để truy cập vào Context API, và useCallback để ghi nhớ (memoize) các hàm xử lý sự kiện, giúp tối ưu hiệu suất
-import { Link, useParams, useNavigate } from "react-router-dom"; // Import các thành phần từ react-router-dom: Link để tạo các liên kết điều hướng SPA (Single Page Application), useParams để trích xuất các tham số từ URL động (ví dụ: ID sản phẩm từ '/products/:id'), và useNavigate để thực hiện điều hướng trang bằng code
-import { CartContext } from "../pages/CartContext"; // Import CartContext từ đường dẫn tương đối. Context này chứa trạng thái giỏ hàng và các hàm để quản lý giỏ hàng (ví dụ: addToCart)
-import { AuthContext } from "../account/AuthContext"; // Import AuthContext từ đường dẫn tương đối. Context này chứa trạng thái xác thực của người dùng (đã đăng nhập hay chưa)
-import "./ProductDetail.css"; // Import file CSS để định dạng giao diện cho component chi tiết sản phẩm này
+// Import necessary React hooks: useEffect for performing side effects, useState for managing local state, useContext for accessing the Context API, and useCallback for memoizing event handler functions, helping to optimize performance.
+import React, { useEffect, useState, useContext, useCallback } from "react";
+// Import components from react-router-dom: Link to create SPA (Single Page Application) navigation links, useParams to extract parameters from dynamic URLs (e.g., product ID from '/products/:id'), and useNavigate to perform programmatic page navigation using code.
+import { Link, useParams, useNavigate } from "react-router-dom";
+// Import CartContext from a relative path. This Context contains the cart state and functions to manage the cart (e.g., addToCart).
+import { CartContext } from "../pages/CartContext";
+// Import AuthContext from a relative path. This Context contains the user authentication state (whether logged in or not).
+import { AuthContext } from "../account/AuthContext";
+// Import the CSS file for styling this product detail component.
+import "./ProductDetail.css";
 
-// --- Định nghĩa các hằng số ---
+// --- Define Constants ---
 
-// URL hoặc đường dẫn tới nguồn dữ liệu sản phẩm. Sử dụng process.env.PUBLIC_URL để đảm bảo đường dẫn đúng trong môi trường phát triển và production.
+// URL or path to the product data source. Using process.env.PUBLIC_URL ensures the correct path in development and production environments.
 const API_URL = `${process.env.PUBLIC_URL}/db.json`;
-// Object chứa các chuỗi thông báo khác nhau sẽ hiển thị cho người dùng trên giao diện, giúp dễ dàng quản lý nội dung thông báo
+// Object containing various message strings to display to the user on the interface, helping to easily manage message content.
 const MESSAGES = {
-  LOADING: "⏳ Đang tải...", // Thông báo hiển thị khi dữ liệu đang được tải
-  ERROR_FETCH: "Không thể tải dữ liệu sản phẩm!", // Thông báo lỗi khi quá trình lấy dữ liệu từ API/file thất bại
-  ERROR_NOT_FOUND: "Sản phẩm không tồn tại!", // Thông báo hiển thị khi không tìm thấy sản phẩm với ID tương ứng trong dữ liệu
-  SUCCESS_ADD_TO_CART: "✅ Thêm vào giỏ hàng thành công!", // Thông báo khi người dùng thêm sản phẩm vào giỏ hàng thành công
-  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Thông báo yêu cầu người dùng đăng nhập trước khi thực hiện hành động (ví dụ: thêm vào giỏ)
+  LOADING: "⏳ Đang tải...", // Message displayed when data is being loaded
+  ERROR_FETCH: "Không thể tải dữ liệu sản phẩm!", // Error message when fetching data from API/file fails
+  ERROR_NOT_FOUND: "Sản phẩm không tồn tại!", // Message displayed when no product with the corresponding ID is found in the data
+  SUCCESS_ADD_TO_CART: "✅ Thêm vào giỏ hàng thành công!", // Message when the user successfully adds a product to the cart
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục!", // Message requiring the user to log in before performing an action (e.g., adding to cart)
 };
-// Khóa sử dụng để lưu trữ danh sách sản phẩm trong localStorage để tăng tốc độ tải trang lần sau (caching)
+// Key used to store the list of products in localStorage to speed up subsequent page loads (caching).
 const LOCAL_STORAGE_PRODUCTS_KEY = "products";
 
 
-// --- Component chính: ProductDetail (Hiển thị chi tiết một sản phẩm cụ thể) ---
-// Đây là functional component hiển thị thông tin chi tiết của một sản phẩm dựa trên ID trên URL.
+// --- Main Component: ProductDetail (Displays details of a specific product) ---
+// This is the functional component that displays the detailed information of a product based on the ID in the URL.
 const ProductDetail = () => {
-  // Lấy giá trị của tham số 'id' từ URL hiện tại (ví dụ: nếu URL là '/products/5', id sẽ là chuỗi "5").
+  // Get the value of the 'id' parameter from the current URL (e.g., if the URL is '/products/5', id will be the string "5").
   const { id } = useParams();
-  // Sử dụng hook useNavigate để có khả năng điều hướng người dùng đến các trang khác trong ứng dụng bằng code JavaScript.
+  // Use the useNavigate hook to be able to navigate the user to other pages in the application programmatically using JavaScript code.
   const navigate = useNavigate();
-  // Sử dụng hook useContext để truy cập vào CartContext và lấy hàm 'addToCart' để thêm sản phẩm vào giỏ hàng.
+  // Use the useContext hook to access the CartContext and get the 'addToCart' function to add the product to the cart.
   const { addToCart } = useContext(CartContext);
-  // Sử dụng hook useContext để truy cập vào AuthContext và lấy trạng thái 'isLoggedIn' để kiểm tra xem người dùng đã đăng nhập chưa.
-  // Cung cấp giá trị mặc định `{}` cho useContext và giá trị mặc định `false` cho `isLoggedIn`
-  // để tránh lỗi nếu AuthContext chưa được cung cấp hoặc thuộc tính isLoggedIn không tồn tại (đảm bảo ứng dụng không crash).
+  // Use the useContext hook to access the AuthContext and get the 'isLoggedIn' state to check if the user is logged in.
+  // Provide a default value `{}` for useContext and a default value `false` for `isLoggedIn`
+  // to prevent errors if AuthContext is not provided or the isLoggedIn property doesn't exist (ensures the application doesn't crash).
   const { isLoggedIn = false } = useContext(AuthContext) || {};
 
-  // --- State quản lý dữ liệu và trạng thái của component ---
-  // State 'product': Lưu trữ thông tin chi tiết của sản phẩm tìm được dưới dạng một object. Ban đầu là null.
+  // --- State managing component data and status ---
+  // 'product' state: Stores the detailed information of the found product as an object. Initially null.
   const [product, setProduct] = useState(null);
-  // State 'isLoading': Một boolean theo dõi liệu dữ liệu sản phẩm có đang được tải hay không. Ban đầu là true (đang tải).
+  // 'isLoading' state: A boolean tracking whether the product data is currently being loaded. Initially true (loading).
   const [isLoading, setIsLoading] = useState(true);
-  // State 'error': Lưu trữ thông báo lỗi dưới dạng một chuỗi nếu có lỗi trong quá trình tải hoặc tìm sản phẩm. Ban đầu là null.
+  // 'error' state: Stores the error message as a string if there is an error during loading or finding the product. Initially null.
   const [error, setError] = useState(null);
-  // State 'successMessage': Lưu trữ thông báo thành công (ví dụ: "Thêm vào giỏ hàng thành công!") hoặc thông báo khác (ví dụ: yêu cầu đăng nhập). Ban đầu là chuỗi rỗng.
+  // 'successMessage' state: Stores the success message (e.g., "Added to cart successfully!") or other messages (e.g., login required). Initially an empty string.
   const [successMessage, setSuccessMessage] = useState("");
 
-  // --- Effect hook để fetch dữ liệu sản phẩm khi component mount hoặc id trên URL thay đổi ---
-  // Effect này là nơi thực hiện việc lấy dữ liệu sản phẩm từ nguồn (localStorage hoặc API).
+  // --- Effect hook to fetch product data when the component mounts or the id in the URL changes ---
+  // This effect is where fetching product data from the source (localStorage or API) occurs.
   useEffect(() => {
-    // Tạo một instance của AbortController. Đối tượng này cho phép chúng ta hủy một yêu cầu Fetch API.
+    // Create an instance of AbortController. This object allows us to cancel a Fetch API request.
     const controller = new AbortController();
-    const signal = controller.signal; // Lấy signal từ controller để truyền vào tùy chọn của fetch().
+    const signal = controller.signal; // Get the signal from the controller to pass into the fetch() options.
 
-    // Định nghĩa một hàm bất đồng bộ (async function) để thực hiện việc lấy và xử lý dữ liệu sản phẩm.
+    // Define an asynchronous function to perform fetching and processing of product data.
     const fetchProduct = async () => {
       try {
-        // Đặt lại các state liên quan đến trạng thái trước khi bắt đầu tải dữ liệu mới.
-        setIsLoading(true); // Bắt đầu quá trình tải, cập nhật state 'isLoading' thành true.
-        setError(null); // Xóa bất kỳ thông báo lỗi nào có thể còn lại từ lần chạy trước.
-        setProduct(null); // Đặt lại product về null để đảm bảo giao diện hiển thị loading hoặc lỗi thay vì dữ liệu cũ.
-        setSuccessMessage(""); // Xóa bất kỳ thông báo thành công/yêu cầu đăng nhập nào có thể còn lại.
+        // Reset state related to status before starting to load new data.
+        setIsLoading(true); // Start the loading process, update the 'isLoading' state to true.
+        setError(null); // Clear any error message that might remain from the previous run.
+        setProduct(null); // Reset product to null to ensure the UI displays loading or error instead of old data.
+        setSuccessMessage(""); // Clear any success/login required message that might remain.
 
 
-        let productList; // Khai báo biến để lưu trữ danh sách tất cả sản phẩm.
+        let productList; // Declare a variable to store the list of all products.
 
-        // --- Cải thiện hiệu suất: Kiểm tra dữ liệu trong localStorage trước khi gửi yêu cầu Fetch API ---
-        // Cố gắng lấy chuỗi JSON chứa danh sách tất cả sản phẩm từ localStorage bằng key đã định nghĩa.
+        // --- Performance Improvement: Check data in localStorage before sending Fetch API request ---
+        // Attempt to retrieve the JSON string containing the list of all products from localStorage using the defined key.
         const cachedProducts = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
 
-        // Kiểm tra xem có dữ liệu sản phẩm được lưu trong localStorage hay không
+        // Check if product data is saved in localStorage
         if (cachedProducts) {
-          // Nếu tìm thấy dữ liệu trong localStorage
+          // If data is found in localStorage
           try {
-             // Thử phân tích cú pháp chuỗi JSON thành một mảng/đối tượng JavaScript.
+             // Attempt to parse the JSON string into a JavaScript array/object.
              productList = JSON.parse(cachedProducts);
-             console.log("Sử dụng dữ liệu sản phẩm từ localStorage"); // Ghi log ra console để theo dõi nguồn dữ liệu đang dùng.
+             console.log("Sử dụng dữ liệu sản phẩm từ localStorage"); // Log to console to track the data source being used.
           } catch (parseError) {
-             // Nếu quá trình parse JSON thất bại (dữ liệu trong localStorage bị hỏng/không hợp lệ)
-             console.error("Lỗi khi parse dữ liệu sản phẩm từ localStorage:", parseError); // Ghi log lỗi parse
-             localStorage.removeItem(LOCAL_STORAGE_PRODUCTS_KEY); // Xóa dữ liệu bị hỏng khỏi localStorage
-             productList = []; // Đặt productList thành mảng rỗng để buộc fetch lại từ nguồn gốc.
-             console.log("Xóa dữ liệu lỗi trong localStorage, sẽ fetch lại."); // Thông báo sẽ fetch lại
+             // If JSON parsing fails (data in localStorage is corrupted/invalid)
+             console.error("Lỗi khi parse dữ liệu sản phẩm từ localStorage:", parseError); // Log parse error
+             localStorage.removeItem(LOCAL_STORAGE_PRODUCTS_KEY); // Remove the corrupted data from localStorage
+             productList = []; // Set productList to an empty array to force fetching from the original source.
+             console.log("Xóa dữ liệu lỗi trong localStorage, sẽ fetch lại."); // Indicate fetching again
           }
         }
 
-        // Nếu productList rỗng (do cache trống, bị lỗi và xóa) HOẶC không phải là một mảng, thì mới thực hiện fetch từ API.
-        // Điều này đảm bảo dữ liệu luôn được fetch lại nếu cache không khả dụng hoặc không hợp lệ.
+        // If productList is empty (due to empty cache, error and removal) OR is not an array, then perform the fetch from the API.
+        // This ensures data is always fetched again if cache is unavailable or invalid.
         if (!Array.isArray(productList) || productList.length === 0) {
-            console.log("Fetch dữ liệu sản phẩm từ API (cache trống hoặc lỗi)"); // Ghi log để theo dõi
-            // Gửi yêu cầu Fetch API đến API_URL. Truyền signal để có thể hủy yêu cầu nếu cần.
+            console.log("Fetch dữ liệu sản phẩm từ API (cache trống hoặc lỗi)"); // Log to track
+            // Send the Fetch API request to API_URL. Pass the signal to be able to cancel the request if needed.
             const response = await fetch(API_URL, { signal });
 
-            // Kiểm tra thuộc tính 'ok' của response để biết yêu cầu có thành công (status 200-299) hay không.
+            // Check the 'ok' property of the response to see if the request was successful (status 200-299).
             if (!response.ok) {
-              // Nếu response không OK, ném ra một Error với thông báo lỗi lấy từ hằng số MESSAGES.
+              // If the response is not OK, throw an Error with the error message taken from the MESSAGES constant.
               throw new Error(MESSAGES.ERROR_FETCH);
             }
 
-            const data = await response.json(); // Chuyển đổi body của response thành đối tượng/mảng JavaScript từ JSON.
-            // Lấy danh sách sản phẩm từ dữ liệu nhận được. Kiểm tra nếu data là mảng trực tiếp hoặc nằm trong thuộc tính 'products'.
+            const data = await response.json(); // Convert the response body to a JavaScript object/array from JSON.
+            // Get the list of products from the received data. Check if data is a direct array or within a 'products' property.
             productList = Array.isArray(data) ? data : data.products || [];
-            // Lưu danh sách sản phẩm vừa fetch được vào localStorage để sử dụng cho các lần tải trang tiếp theo.
-            // Chỉ lưu nếu productList không rỗng để tránh lưu trữ mảng rỗng khi fetch thất bại hoặc không có sản phẩm.
+            // Save the product list just fetched into localStorage for use on subsequent page loads.
+            // Only save if productList is not empty to avoid storing an empty array if fetching fails or there are no products.
             if (productList.length > 0) {
                 localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(productList));
             }
         }
 
 
-        // --- Tìm sản phẩm cụ thể trong danh sách theo ID ---
-        // ID lấy từ useParams là một chuỗi (string). ID trong dữ liệu sản phẩm JSON là một số (number).
-        // Sử dụng Number(id) để chuyển đổi chuỗi ID từ URL sang kiểu số để so sánh chính xác bằng toán tử so sánh chặt chẽ (===).
+        // --- Find the specific product in the list by ID ---
+        // The ID obtained from useParams is a string. The ID in the product JSON data is a number.
+        // Use Number(id) to convert the string ID from the URL to a number type for exact comparison using the strict equality operator (===).
         const foundProduct = productList.find((p) => p.id === Number(id));
-        console.log(`Tìm sản phẩm với ID: ${id}`, foundProduct); // Log kết quả tìm kiếm
+        console.log(`Tìm sản phẩm với ID: ${id}`, foundProduct); // Log the search result
 
-        // Kiểm tra xem có tìm thấy sản phẩm nào khớp với ID hay không.
+        // Check if any product matching the ID was found.
         if (!foundProduct) {
-          // Nếu không tìm thấy sản phẩm (foundProduct là undefined hoặc null), đặt thông báo lỗi "Sản phẩm không tồn tại!".
+          // If no product is found (foundProduct is undefined or null), set the error message "Product does not exist!".
           setError(MESSAGES.ERROR_NOT_FOUND);
-          setProduct(null); // Đảm bảo state 'product' được đặt về null.
-          return; // Dừng hàm fetchProduct để không xử lý tiếp.
+          setProduct(null); // Ensure the 'product' state is set to null.
+          return; // Stop the fetchProduct function from proceeding further.
         }
 
-        // Nếu tìm thấy sản phẩm, cập nhật state 'product' với thông tin chi tiết của sản phẩm đó.
+        // If the product is found, update the 'product' state with the details of that product.
         setProduct(foundProduct);
-        // Không cần xóa successMessage ở đây, vì nó liên quan đến hành động thêm vào giỏ hàng, không phải tải dữ liệu.
+        // No need to clear successMessage here, as it relates to the add-to-cart action, not data loading.
       } catch (err) {
-        // Bắt các lỗi có thể xảy ra trong khối try (ví dụ: lỗi mạng khi fetch, lỗi parse JSON, lỗi ném ra thủ công).
-        // Kiểm tra nếu lỗi KHÔNG phải là AbortError. AbortError xảy ra khi yêu cầu fetch bị hủy bởi AbortController, đây là hành vi mong muốn khi component unmount hoặc dependencies thay đổi nhanh.
+        // Catch errors that might occur in the try block (e.g., network error during fetch, JSON parsing error, manually thrown error).
+        // Check if the error is NOT an AbortError. AbortError happens when the fetch request is cancelled by AbortController, which is the desired behavior when the component unmounts or dependencies change quickly.
         if (err.name !== "AbortError") {
-          console.error("Error in fetchProduct:", err); // Ghi log lỗi thật ra console.
-          setError(err.message || MESSAGES.ERROR_FETCH); // Cập nhật state 'error' với thông báo lỗi từ đối tượng lỗi, hoặc thông báo lỗi fetch mặc định nếu err.message rỗng.
-          setProduct(null); // Đảm bảo state 'product' là null khi có lỗi.
+          console.error("Error in fetchProduct:", err); // Log the real error to the console.
+          setError(err.message || MESSAGES.ERROR_FETCH); // Update the 'error' state with the error message from the error object, or the default fetch error message if err.message is empty.
+          setProduct(null); // Ensure the 'product' state is null when there is an error.
         }
-        // Nếu là AbortError, bỏ qua vì đó là lỗi do cleanup xử lý.
+        // If it's an AbortError, ignore it as it's handled by cleanup.
       } finally {
-        // Khối finally luôn chạy sau try/catch, bất kể có lỗi xảy ra hay không.
-        setIsLoading(false); // Kết thúc quá trình tải, đặt state isLoading về false.
+        // The finally block always runs after try/catch, regardless of whether an error occurred.
+        setIsLoading(false); // End the loading process, set isLoading state back to false.
       }
     };
 
-    fetchProduct(); // Gọi hàm fetchProduct để bắt đầu quá trình lấy dữ liệu khi effect chạy.
+    fetchProduct(); // Call the fetchProduct function to start the data fetching process when the effect runs.
 
-    // Cleanup function cho effect này. Hàm này chạy khi component bị hủy bỏ (unmount)
-    // hoặc khi các dependencies của effect ([id]) thay đổi và effect sắp chạy lại.
-    return () => controller.abort(); // Hủy yêu cầu fetch API đang chờ xử lý nếu nó vẫn chưa hoàn thành.
-  }, [id]); // Mảng dependencies: Effect này sẽ chạy lại mỗi khi giá trị của biến 'id' (lấy từ URL) thay đổi. Điều này đảm bảo rằng khi người dùng xem sản phẩm khác, dữ liệu mới sẽ được tải.
+    // Cleanup function for this effect. This function runs when the component is unmounted
+    // or when the effect's dependencies ([id]) change and the effect is about to re-run.
+    return () => controller.abort(); // Cancel any pending Fetch API request if it hasn't completed yet.
+  }, [id]); // Dependency array: This effect will re-run whenever the value of the 'id' variable (obtained from the URL) changes. This ensures that when the user views a different product, the new data will be loaded.
 
-  // --- Hàm xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng" ---
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm này chỉ được tạo lại khi các biến trong dependency array thay đổi.
-  const handleAddToCart = useCallback((event) => { // Thêm tham số event
-    // 1. Kiểm tra trạng thái đăng nhập của người dùng
+  // --- Function to handle the "Add to Cart" button click ---
+  // Uses useCallback to memoize this function. This function is only re-created when variables in the dependency array change.
+  const handleAddToCart = useCallback((event) => { // Added event parameter
+    // 1. Check user login status
     if (!isLoggedIn) {
-      setSuccessMessage(MESSAGES.LOGIN_REQUIRED); // Nếu chưa đăng nhập, hiển thị thông báo yêu cầu đăng nhập.
-      // Sử dụng setTimeout để chờ một chút (1 giây) trước khi thực hiện điều hướng,
-      // giúp người dùng có thời gian đọc thông báo.
+      setSuccessMessage(MESSAGES.LOGIN_REQUIRED); // If not logged in, display a message requiring login.
+      // Use setTimeout to wait a bit (1 second) before navigating,
+      // allowing the user time to read the message.
       const timer = setTimeout(() => {
-        setSuccessMessage(""); // Xóa thông báo trước khi chuyển hướng.
-        navigate("/login"); // Chuyển hướng người dùng đến trang đăng nhập.
-      }, 1000); // Thời gian chờ là 1000ms (1 giây).
-      // Cleanup function cho setTimeout để tránh memory leak nếu component unmount trước khi timer kết thúc.
+        setSuccessMessage(""); // Clear the message before redirecting.
+        navigate("/login"); // Redirect the user to the login page.
+      }, 1000); // Wait time is 1000ms (1 second).
+      // Cleanup function for setTimeout to prevent memory leak if the component unmounts before the timer finishes.
       return () => clearTimeout(timer);
-      // Dừng hàm, không thực hiện các bước tiếp theo nếu chưa đăng nhập.
+      // Stop the function, do not proceed with the next steps if not logged in.
     }
 
-    // 2. Kiểm tra xem dữ liệu sản phẩm đã được tải và tìm thấy thành công chưa
+    // 2. Check if product data has been loaded and found successfully
     if (!product) {
-      console.warn("Không có dữ liệu sản phẩm để thêm vào giỏ."); // Ghi cảnh báo ra console nếu không có dữ liệu sản phẩm (có thể do đang loading hoặc có lỗi)
-      return; // Dừng hàm nếu không có dữ liệu sản phẩm hợp lệ để thêm vào giỏ.
+      console.warn("Không có dữ liệu sản phẩm để thêm vào giỏ."); // Log a warning to the console if there is no product data (might be loading or an error occurred)
+      return; // Stop the function if there is no valid product data to add to the cart.
     }
 
-    // 3. Nếu đã đăng nhập và có dữ liệu sản phẩm, gọi hàm 'addToCart' từ CartContext
-    addToCart(product); // Truyền đối tượng 'product' hiện tại vào hàm addToCart để thêm vào giỏ.
+    // 3. If logged in and product data is available, call the 'addToCart' function from CartContext
+    addToCart(product); // Pass the current 'product' object to the addToCart function to add it to the cart.
 
-    // 4. Cập nhật UI: Hiển thị thông báo thêm vào giỏ thành công VÀ kích hoạt animation
-    setSuccessMessage(MESSAGES.SUCCESS_ADD_TO_CART); // Đặt thông báo thành công "Thêm vào giỏ hàng thành công!".
+    // 4. Update UI: Display success message "Added to cart successfully!" AND trigger animation
+    setSuccessMessage(MESSAGES.SUCCESS_ADD_TO_CART); // Set the success message to "Added to cart successfully!".
 
-    // --- Kích hoạt Animation "Bay vào giỏ hàng" ---
-    const productImage = event.target.closest('.product-detail').querySelector('.product-image'); // Lấy thẻ hình ảnh sản phẩm
-    const cartButton = document.querySelector('.header .cart-button'); // Lấy thẻ nút giỏ hàng trên header (cần đảm bảo selector này đúng)
+    // --- Trigger "Fly to Cart" Animation ---
+    const productImage = event.target.closest('.product-detail').querySelector('.product-image'); // Get the product image element
+    const cartButton = document.querySelector('.header .cart-button'); // Get the cart button element in the header (need to ensure this selector is correct)
 
     if (productImage && cartButton) {
-        const productImageRect = productImage.getBoundingClientRect(); // Lấy vị trí và kích thước của hình ảnh sản phẩm
-        const cartButtonRect = cartButton.getBoundingClientRect(); // Lấy vị trí và kích thước của nút giỏ hàng
+        const productImageRect = productImage.getBoundingClientRect(); // Get the position and size of the product image
+        const cartButtonRect = cartButton.getBoundingClientRect(); // Get the position and size of the cart button
 
-        // Tạo một bản sao của hình ảnh sản phẩm
+        // Create a clone of the product image
         const flyingImg = productImage.cloneNode();
-        flyingImg.classList.add('flying-to-cart'); // Thêm class để áp dụng CSS animation
-        flyingImg.style.position = 'fixed'; // Đặt vị trí cố định để nó không ảnh hưởng đến layout
-        flyingImg.style.top = `${productImageRect.top}px`; // Đặt vị trí ban đầu theo top của ảnh gốc
-        flyingImg.style.left = `${productImageRect.left}px`; // Đặt vị trí ban đầu theo left của ảnh gốc
-        flyingImg.style.width = `${productImageRect.width}px`; // Đặt kích thước ban đầu theo ảnh gốc
-        flyingImg.style.height = `${productImageRect.height}px`; // Đặt kích thước ban đầu theo ảnh gốc
-        flyingImg.style.zIndex = 1000; // Đảm bảo ảnh bay nằm trên các phần tử khác
-        flyingImg.style.transition = 'top 1s ease-in-out, left 1s ease-in-out, width 1s ease-in-out, height 1s ease-in-out, opacity 0.8s ease-in'; // Định nghĩa transition cho animation
+        flyingImg.classList.add('flying-to-cart'); // Add a class to apply CSS animation
+        flyingImg.style.position = 'fixed'; // Set fixed position so it doesn't affect the layout
+        flyingImg.style.top = `${productImageRect.top}px`; // Set initial top position based on the original image
+        flyingImg.style.left = `${productImageRect.left}px`; // Set initial left position based on the original image
+        flyingImg.style.width = `${productImageRect.width}px`; // Set initial width based on the original image
+        flyingImg.style.height = `${productImageRect.height}px`; // Set initial height based on the original image
+        flyingImg.style.zIndex = 1000; // Ensure the flying image is above other elements
+        flyingImg.style.transition = 'top 1s ease-in-out, left 1s ease-in-out, width 1s ease-in-out, height 1s ease-in-out, opacity 0.8s ease-in'; // Define the transition for the animation
 
-        document.body.appendChild(flyingImg); // Thêm ảnh tạm thời vào body của trang
+        document.body.appendChild(flyingImg); // Append the temporary image to the body of the page
 
-        // Sử dụng setTimeout để đảm bảo các thuộc tính position ban đầu đã được áp dụng trước khi bắt đầu transition
+        // Use requestAnimationFrame to ensure initial position styles are applied before starting the transition
         requestAnimationFrame(() => {
-             // Đặt vị trí đích và kích thước đích cho ảnh bay
-            flyingImg.style.top = `${cartButtonRect.top + cartButtonRect.height / 2 - flyingImg.height / 2}px`; // Vị trí Y trung tâm của icon giỏ hàng
-            flyingImg.style.left = `${cartButtonRect.left + cartButtonRect.width / 2 - flyingImg.width / 2}px`; // Vị trí X trung tâm của icon giỏ hàng
-            flyingImg.style.width = '30px'; // Kích thước nhỏ hơn khi bay đến giỏ hàng
-            flyingImg.style.height = '30px';
-            flyingImg.style.opacity = '0.5'; // Làm mờ dần khi bay
+             // Set the target position and size for the flying image
+             flyingImg.style.top = `${cartButtonRect.top + cartButtonRect.height / 2 - flyingImg.height / 2}px`; // Center Y position of the cart icon
+             flyingImg.style.left = `${cartButtonRect.left + cartButtonRect.width / 2 - flyingImg.width / 2}px`; // Center X position of the cart icon
+             flyingImg.style.width = '30px'; // Smaller size when flying to cart
+             flyingImg.style.height = '30px';
+             flyingImg.style.opacity = '0.5'; // Fade out while flying
         });
 
 
-        // Xóa ảnh tạm thời sau khi animation kết thúc
+        // Remove the temporary image after the animation ends
         flyingImg.addEventListener('transitionend', () => {
-            flyingImg.remove();
-            // Tùy chọn: Điều hướng đến trang giỏ hàng sau khi animation kết thúc
-             const navigateTimer = setTimeout(() => {
-                setSuccessMessage(""); // Xóa thông báo sau khi hết thời gian.
-                navigate("/cart"); // Chuyển hướng người dùng đến route "/cart" (trang giỏ hàng).
-             }, 200); // Chờ thêm 200ms sau animation
+             flyingImg.remove();
+             // Optional: Navigate to the cart page after the animation finishes
+              const navigateTimer = setTimeout(() => {
+                  setSuccessMessage(""); // Clear message after timeout.
+                  navigate("/cart"); // Navigate the user to the "/cart" route (cart page).
+              }, 200); // Wait for an additional 200ms after animation
 
-             // Cleanup function cho setTimeout
-             return () => clearTimeout(navigateTimer);
+              // Cleanup function for setTimeout
+              return () => clearTimeout(navigateTimer);
 
         });
 
     } else {
-        // Nếu không tìm thấy icon giỏ hàng, chỉ hiển thị thông báo và điều hướng
-        const navigateTimer = setTimeout(() => {
-            setSuccessMessage(""); // Xóa thông báo sau khi hết thời gian.
-            navigate("/cart"); // Chuyển hướng người dùng đến route "/cart" (trang giỏ hàng).
-        }, 1000); // Thời gian chờ là 1000ms (1 giây).
+        // If the cart icon is not found, just display the message and navigate
+         const navigateTimer = setTimeout(() => {
+             setSuccessMessage(""); // Clear message after timeout.
+             navigate("/cart"); // Navigate the user to the "/cart" route (cart page).
+         }, 1000); // Wait time is 1000ms (1 second).
 
-        // Cleanup function cho setTimeout
-        return () => clearTimeout(navigateTimer);
+         // Cleanup function for setTimeout
+         return () => clearTimeout(navigateTimer);
     }
 
-  }, [product, addToCart, isLoggedIn, navigate]); // Mảng dependencies: Hàm này phụ thuộc vào state 'product', hàm 'addToCart' (từ Context), state 'isLoggedIn' (từ Context), và hàm 'navigate' (từ hook useNavigate).
+  }, [product, addToCart, isLoggedIn, navigate]); // Dependency array: This function depends on the 'product' state, the 'addToCart' function (from Context), the 'isLoggedIn' state (from Context), and the 'navigate' function (from useNavigate hook).
 
-  // --- Render giao diện dựa trên trạng thái component (loading, error, hiển thị chi tiết) ---
+  // --- Render UI based on component status (loading, error, detail display) ---
 
-  // Conditional Rendering: Nếu state 'isLoading' là true, hiển thị giao diện loading spinner.
+  // Conditional Rendering: If the 'isLoading' state is true, display the loading spinner UI.
   if (isLoading) {
     return (
       <div className="loading-container">
         {" "}
-        {/* Container bao quanh spinner và text loading */}
+        {/* Container wrapping spinner and loading text */}
         <div className="loading-spinner"></div>{" "}
-        {/* Biểu tượng spinner quay */}
+        {/* Spinning spinner icon */}
         <p className="loading-text">{MESSAGES.LOADING}</p>{" "}
-        {/* Hiển thị thông báo "Đang tải..." lấy từ hằng số */}
+        {/* Display "Loading..." message from constant */}
       </div>
     );
   }
 
-  // Conditional Rendering: Nếu state 'error' có giá trị (khác null hoặc chuỗi rỗng), hiển thị thông báo lỗi.
+  // Conditional Rendering: If the 'error' state has a value (not null or empty string), display the error message.
   if (error) {
     return (
       <div className="product-detail error-state">
         {" "}
-        {/* Container hiển thị trạng thái lỗi */}
+        {/* Container displaying error status */}
         <p className="error-message">❌ {error}</p>{" "}
-        {/* Hiển thị nội dung thông báo lỗi */}
-        {/* Nhóm các nút hành động ở trạng thái lỗi */}
+        {/* Display the content of the error message */}
+        {/* Group of action buttons in error state */}
         <div className="button-group">
-          {/* Nút "Quay lại trang chủ" sử dụng component Link để điều hướng SPA */}
+          {/* "Back to Home" button using Link component for SPA navigation */}
           <Link to="/home" className="back-button" aria-label="Quay lại trang chủ">
             ⬅ Quay lại{" "}
-            {/* Nội dung nút */}
+            {/* Button text */}
           </Link>
         </div>
       </div>
     );
   }
 
-  // Kiểm tra cuối cùng: Nếu không loading, không có lỗi, nhưng state 'product' vẫn là null.
-  // Tình huống này hiếm xảy ra nếu logic xử lý lỗi và tìm sản phẩm ở trên đã đúng,
-  // nhưng kiểm tra này vẫn an toàn để tránh lỗi render khi product là null.
-  // Nếu product là null tại điểm này, có nghĩa là sản phẩm không tìm thấy
-  // và thông báo lỗi "Sản phẩm không tồn tại!" đã được đặt và hiển thị ở khối if (error) bên trên.
+  // Final check: If not loading, no error, but 'product' state is still null.
+  // This situation is rare if the error handling and product finding logic above are correct,
+  // but this check is still safe to prevent rendering errors when product is null.
+  // If product is null at this point, it means the product was not found
+  // and the "Product not found!" error message has been set and displayed in the if (error) block above.
   if (!product) {
-       return null; // Không render gì thêm nếu không có dữ liệu sản phẩm hợp lệ để hiển thị chi tiết.
+       return null; // Render nothing further if there is no valid product data to display details for.
   }
 
 
-  // --- Render giao diện chi tiết sản phẩm khi dữ liệu đã tải xong và sản phẩm được tìm thấy ---
-  // Nếu component không ở trạng thái loading, không có lỗi, và có dữ liệu product hợp lệ, hiển thị chi tiết sản phẩm.
+  // --- Render product detail UI when data is loaded and product is found ---
+  // If the component is not in loading state, has no errors, and has valid product data, display product details.
   return (
     <div className="product-detail">
       {" "}
-      {/* Container chính bao bọc toàn bộ nội dung của trang chi tiết sản phẩm */}
-      {/* Phần nội dung chính của sản phẩm: hình ảnh, tên, giá, mô tả, thông số kỹ thuật */}
+      {/* Main container wrapping all content of the product detail page */}
+      {/* Main content section of the product: image, name, price, description, specifications */}
       <section className="product-content">
         <h2>{product.name}</h2>{" "}
-        {/* Hiển thị tên sản phẩm (lấy từ state 'product') */}
-        {/* Hình ảnh sản phẩm */}
+        {/* Display product name (from 'product' state) */}
+        {/* Product image */}
         <img
-          src={product.image} // Đường dẫn ảnh sản phẩm
-          alt={product.name} // Alt text cho ảnh, sử dụng tên sản phẩm (quan trọng cho SEO và khả năng tiếp cận)
-          className="product-image" // Class CSS để định dạng ảnh
-          loading="lazy" // Thuộc tính giúp trình duyệt chỉ tải ảnh khi nó hiển thị trên màn hình, cải thiện hiệu suất tải trang ban đầu
+          src={product.image} // Product image path
+          alt={product.name} // Alt text for the image, using the product name (important for SEO and accessibility)
+          className="product-image" // CSS class for styling the image
+          loading="lazy" // Attribute allowing the browser to load the image only when it's visible on screen, improving initial page load performance
         />
-        {/* Phần hiển thị giá sản phẩm */}
+        {/* Section displaying product price */}
         <div className="price-section">
           <p className="price">
             💰 {product.price.toLocaleString("vi-VN")} VNĐ{" "}
-            {/* Hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam */}
+            {/* Display product price, formatted according to Vietnamese currency */}
           </p>
         </div>
         <p className="description">{product.description}</p>{" "}
-        {/* Hiển thị mô tả sản phẩm */}
-        {/* Phần hiển thị thông số kỹ thuật */}
+        {/* Display product description */}
+        {/* Section displaying technical specifications */}
         <div className="specs">
           <h3>⚙️ Thông số kỹ thuật</h3>{" "}
-          {/* Tiêu đề cho phần thông số kỹ thuật */}
+          {/* Title for the specifications section */}
           <ul>
             {" "}
-            {/* Danh sách không có thứ tự để hiển thị các thông số */}
-            {/* Hiển thị từng thông số kỹ thuật. Sử dụng toán tử OR (||) để cung cấp một chuỗi mặc định
-                ("Không có thông tin") nếu thuộc tính tương ứng trong đối tượng 'product' không tồn tại, là null, undefined, hoặc rỗng. */}
+            {/* Unordered list to display specifications */}
+            {/* Display each technical specification. Use the OR operator (||) to provide a default string
+                ("Không có thông tin") if the corresponding property in the 'product' object doesn't exist, is null, undefined, or empty. */}
             <li>📱 Màn hình: {product.screen || "Không có thông tin"}</li>
             <li>⚡ Chip: {product.chip || "Không có thông tin"}</li>
             <li>💾 RAM: {product.ram || "Không có thông tin"}</li>
@@ -323,33 +328,33 @@ const ProductDetail = () => {
             <li>🔋 Pin: {product.battery || "Không có thông tin"}</li>
           </ul>
         </div>
-        {/* Hiển thị thông báo thành công (ví dụ: "Thêm vào giỏ thành công!") hoặc
-            thông báo yêu cầu đăng nhập nếu state 'successMessage' có giá trị */}
+        {/* Display success message (e.g., "Added to cart successfully!") or
+            login required message if 'successMessage' state has a value */}
         {successMessage && (
           <p className="success-message">{successMessage}</p>
         )}
       </section>
-      {/* --- Nhóm các nút hành động --- */}
-      {/* Container chứa các nút "Thêm vào giỏ hàng" và "Quay lại" */}
+      {/* --- Action Buttons Group --- */}
+      {/* Container holding "Add to Cart" and "Back" buttons */}
       <div className="button-group">
-        {/* Nút "Thêm vào giỏ hàng" */}
+        {/* "Add to Cart" button */}
         <button
-          className="add-to-cart" // Class CSS để định dạng nút
-          onClick={handleAddToCart} // Gắn hàm xử lý sự kiện click nút (đã memoize bằng useCallback)
-          disabled={!product} // Vô hiệu hóa nút nếu state 'product' là null (ví dụ: đang loading hoặc có lỗi)
-          aria-label={`Thêm ${product?.name || 'sản phẩm này'} vào giỏ hàng`} // Thuộc tính hỗ trợ khả năng tiếp cận. Sử dụng optional chaining (?.) để tránh lỗi nếu product là null.
+          className="add-to-cart" // CSS class for button styling
+          onClick={handleAddToCart} // Attach the button click event handler function (memoized using useCallback)
+          disabled={!product} // Disable the button if the 'product' state is null (e.g., loading or error)
+          aria-label={`Thêm ${product?.name || 'sản phẩm này'} vào giỏ hàng`} // Accessibility attribute. Use optional chaining (?.) to avoid errors if product is null.
         >
           🛒 Thêm vào giỏ{" "}
-          {/* Nội dung hiển thị trên nút */}
+          {/* Button text */}
         </button>
-        {/* Nút "Quay lại" để điều hướng người dùng về trang chủ hoặc trang danh sách sản phẩm */}
+        {/* "Back" button to navigate the user back to the homepage or product list page */}
         <Link to="/home" className="back-button" aria-label="Quay lại trang chủ">
           ⬅ Quay lại{" "}
-          {/* Nội dung nút/liên kết */}
+          {/* Button/link text */}
         </Link>
       </div>
     </div>
   );
 };
 
-export default ProductDetail; // Export component ProductDetail làm default export để có thể sử dụng ở các file khác (thường là trong cấu hình định tuyến của React Router)
+export default ProductDetail; // Export the ProductDetail component as the default export so it can be used in other files (usually in React Router configuration)

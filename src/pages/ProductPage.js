@@ -1,36 +1,36 @@
-import React, { useEffect, useState, useCallback } from "react"; // Import các hook cần thiết từ thư viện React: useEffect để thực hiện các tác vụ phụ (side effects), useState để quản lý trạng thái cục bộ, và useCallback để ghi nhớ (memoize) các hàm xử lý sự kiện nhằm tối ưu hiệu suất
-import { Link } from "react-router-dom"; // Import component Link từ react-router-dom để tạo các liên kết điều hướng trong ứng dụng SPA (Single Page Application) mà không tải lại toàn bộ trang
-import Slider from "react-slick"; // Import thư viện slider phổ biến (react-slick) để tạo banner quảng cáo dạng carousel
-import "slick-carousel/slick/slick.css"; // Import file CSS mặc định của thư viện react-slick (bắt buộc)
-import "slick-carousel/slick/slick-theme.css"; // Import file CSS theme mặc định của thư viện react-slick (bạn có thể thay thế bằng CSS tùy chỉnh của mình)
-import "./ProductPage.css"; // Import file CSS tùy chỉnh để định dạng giao diện cho component ProductPage này
+import React, { useEffect, useState, useCallback } from "react"; // Import necessary React hooks: useEffect for side effects, useState for local state management, and useCallback for memoizing event handler functions to optimize performance.
+import { Link } from "react-router-dom"; // Import the Link component from react-router-dom to create navigation links in a Single Page Application (SPA) without full page reloads.
+import Slider from "react-slick"; // Import the popular react-slick slider library to create a carousel-style promotional banner.
+import "slick-carousel/slick/slick.css"; // Import the default CSS file for react-slick (required).
+import "slick-carousel/slick/slick-theme.css"; // Import the default theme CSS file for react-slick (can be replaced with custom CSS).
+import "./ProductPage.css"; // Import a custom CSS file to style this ProductPage component.
 
-// --- Hằng số ---
+// --- Constants ---
 
-// URL hoặc đường dẫn tới nguồn dữ liệu sản phẩm.
-// Sử dụng `${process.env.PUBLIC_URL}/db.json` để tham chiếu đến file db.json trong thư mục 'public'.
-// Điều này đảm bảo đường dẫn hoạt động đúng trong cả môi trường phát triển và production khi deploy.
+// URL or path to the product data source.
+// Using `${process.env.PUBLIC_URL}/db.json` references the db.json file in the 'public' directory.
+// This ensures the path works correctly in both development and production environments after deployment.
 const API_URL = `${process.env.PUBLIC_URL}/db.json`;
-// Số lượng sản phẩm tối đa sẽ hiển thị trên mỗi trang khi thực hiện phân trang.
+// The maximum number of products to display per page during pagination.
 const PRODUCTS_PER_PAGE = 6;
-// Mảng chứa danh sách các tên thương hiệu có sẵn để người dùng lựa chọn lọc sản phẩm.
-// "Tất cả" là một tùy chọn đặc biệt để hiển thị tất cả sản phẩm.
+// Array containing the list of available brand names for user filtering.
+// "Tất cả" (All) is a special option to display all products.
 const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"];
 
-// Mảng chứa dữ liệu (text, hình ảnh, link) cho các slide (banner) hiển thị ở đầu trang bằng Slider.
+// Array containing data (text, images, links) for the slides (banners) displayed at the top of the page using the Slider.
 const SLIDES = [
   {
     image:
-      "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg", // Đường dẫn ảnh cho slide 1
-    title: "iPhone 16 Pro Max", // Tiêu đề chính của slide 1
-    subtitle: "Thiết kế Titan tuyệt đẹp.", // Phụ đề/mô tả ngắn cho slide 1
+      "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg", // Image path for slide 1
+    title: "iPhone 16 Pro Max", // Main title for slide 1
+    subtitle: "Thiết kế Titan tuyệt đẹp.", // Subtitle/short description for slide 1
     features: [
-      "Trả góp lên đến 3 TRIỆU", // Danh sách các đặc điểm nổi bật hoặc ưu đãi dạng bullet points
+      "Trả góp lên đến 3 TRIỆU", // List of key features or offers as bullet points
       "Khách hàng mới GIẢM 300K",
       "Góp 12 Tháng từ 76K/Ngày",
     ],
-    link: "/products/4", // Đường dẫn điều hướng khi người dùng click vào slide hoặc nút "Mua ngay"
-    buttonText: "Mua ngay", // Nội dung hiển thị trên nút hành động
+    link: "/products/4", // Navigation path when the user clicks the slide or the "Buy Now" button.
+    buttonText: "Mua ngay", // Text displayed on the action button.
   },
   {
     image:
@@ -60,493 +60,493 @@ const SLIDES = [
   },
 ];
 
-// --- Hàm gọi API để lấy dữ liệu sản phẩm ---
-// Hàm async thực hiện việc gửi yêu cầu fetch dữ liệu từ API_URL.
-// Nhận 'signal' từ AbortController để có thể hủy yêu cầu fetch nếu component unmount trước khi hoàn thành.
+// --- API Call Function to Fetch Product Data ---
+// An async function to perform the data fetch request from API_URL.
+// Accepts 'signal' from AbortController to allow cancelling the fetch request if the component unmounts before it completes.
 const fetchProducts = async (signal) => {
-  const response = await fetch(API_URL, { signal }); // Thực hiện yêu cầu fetch tới API_URL với signal
-  // Kiểm tra thuộc tính 'ok' của response để xác định yêu cầu có thành công hay không (status code 200-299).
+  const response = await fetch(API_URL, { signal }); // Execute the fetch request to API_URL with the signal.
+  // Check the 'ok' property of the response to determine if the request was successful (status code 200-299).
   if (!response.ok) {
-    // Nếu response không OK, ném ra một đối tượng Error mới với thông báo lỗi.
-    throw new Error("Không thể tải sản phẩm!"); // Sử dụng một chuỗi thông báo cố định.
+    // If the response is not OK, throw a new Error object with an error message.
+    throw new Error("Không thể tải sản phẩm!"); // Use a fixed error message string.
   }
-  const data = await response.json(); // Parse body của response thành đối tượng/mảng JavaScript từ JSON.
-  // Trả về mảng sản phẩm. Kiểm tra cấu trúc dữ liệu nhận được:
-  // Nếu 'data' bản thân nó là một mảng (Array.isArray(data) là true), trả về 'data'.
-  // Nếu 'data' là một đối tượng VÀ có thuộc tính 'products' là mảng, trả về 'data.products'.
-  // Nếu không khớp với hai trường hợp trên, trả về một mảng rỗng [].
+  const data = await response.json(); // Parse the response body from JSON into a JavaScript object/array.
+  // Return the array of products. Check the structure of the received data:
+  // If 'data' itself is an array (Array.isArray(data) is true), return 'data'.
+  // If 'data' is an object AND has a 'products' property which is an array, return 'data.products'.
+  // If neither of the above cases match, return an empty array [].
   return Array.isArray(data) ? data : data.products || [];
 };
 
-// --- Component con: ProductCard (Hiển thị thông tin chi tiết một sản phẩm dưới dạng thẻ) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
+// --- Child Component: ProductCard (Displays detailed information for a single product as a card) ---
+// Uses React.memo() to optimize rendering performance. The component only re-renders when its props change.
 const ProductCard = React.memo(({ product }) => {
-  // Thực hiện kiểm tra cơ bản để đảm bảo dữ liệu sản phẩm hợp lệ trước khi cố gắng render.
+  // Perform basic validation to ensure product data is valid before attempting to render.
   if (
-    !product?.id || // ID phải tồn tại và không null/undefined
-    !product.name || // Tên sản phẩm phải tồn tại
-    !product.image || // Đường dẫn ảnh phải tồn tại
-    typeof product.price !== "number" // Giá phải là một số
+    !product?.id || // ID must exist and not be null/undefined
+    !product.name || // Product name must exist
+    !product.image || // Image path must exist
+    typeof product.price !== "number" // Price must be a number
   ) {
-    console.error("Invalid product data:", product); // Ghi log lỗi ra console nếu dữ liệu không hợp lệ
-    return null; // Trả về null để không render bất cứ thứ gì cho dữ liệu sản phẩm không hợp lệ.
+    console.error("Invalid product data:", product); // Log an error to the console if data is invalid.
+    return null; // Return null to render nothing for invalid product data.
   }
 
   return (
     <div className="product-card">
       {" "}
-      {/* Container chính cho một thẻ sản phẩm riêng lẻ */}
-      {/* Liên kết (Link) bao quanh hình ảnh sản phẩm. Khi click vào ảnh, sẽ điều hướng đến trang chi tiết sản phẩm. */}
-      {/* 'to={`/products/${product.id}`}' tạo đường dẫn động dựa trên ID của sản phẩm. */}
+      {/* Main container for a single product card */}
+      {/* Link component wrapping the product image. Clicking the image navigates to the product details page. */}
+      {/* 'to={`/products/${product.id}`}' creates a dynamic path based on the product's ID. */}
       <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
         {" "}
-        {/* 'aria-label' cung cấp mô tả cho người dùng trình đọc màn hình */}
-        {/* Hình ảnh sản phẩm */}
+        {/* 'aria-label' provides a description for screen reader users */}
+        {/* Product image */}
         <img
-          src={product.image} // Đường dẫn ảnh
-          alt={product.name} // Alt text cho ảnh, sử dụng tên sản phẩm
-          className="product-image" // Class CSS để định dạng ảnh
-          loading="lazy" // Thuộc tính HTML5 yêu cầu trình duyệt tải ảnh theo chế độ lazy loading (tải khi ảnh gần hiển thị), cải thiện hiệu suất ban đầu.
+          src={product.image} // Image path
+          alt={product.name} // Alt text for the image, using the product name
+          className="product-image" // CSS class for image styling
+          loading="lazy" // HTML5 attribute requesting the browser to load the image lazily (load when near the viewport), improving initial performance.
         />
       </Link>
-      <h3>{product.name}</h3> {/* Tiêu đề (thẻ h3) hiển thị tên sản phẩm */}
-      {/* Đoạn văn bản hiển thị giá sản phẩm, định dạng theo tiền tệ Việt Nam. */}
+      <h3>{product.name}</h3> {/* Heading (h3 tag) displaying the product name */}
+      {/* Paragraph displaying the product price, formatted according to Vietnamese currency. */}
       <p className="price">💰 {product.price.toLocaleString("vi-VN")} VNĐ</p>{" "}
-      {/* toLocaleString("vi-VN") định dạng số thành chuỗi tiền tệ VNĐ */}
-      {/* Nút (Link) "Xem chi tiết" dẫn đến trang chi tiết sản phẩm */}
+      {/* toLocaleString("vi-VN") formats the number as a Vietnamese currency string */}
+      {/* "View Details" button (Link component) navigating to the product details page */}
       <Link
-        to={`/products/${product.id}`} // Đường dẫn đến trang chi tiết sản phẩm
-        className="view-details-button" // Class CSS để định dạng nút
-        aria-label={`Xem chi tiết ${product.name}`} // Thuộc tính hỗ trợ khả năng tiếp cận
+        to={`/products/${product.id}`} // Path to the product details page
+        className="view-details-button" // CSS class for button styling
+        aria-label={`Xem chi tiết ${product.name}`} // Accessibility attribute
       >
         Xem chi tiết{" "}
-        {/* Nội dung hiển thị trên nút */}
+        {/* Button text */}
       </Link>
     </div>
   );
 });
 
-// --- Component con: Pagination (Hiển thị các nút điều hướng phân trang) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
+// --- Child Component: Pagination (Displays pagination navigation buttons) ---
+// Uses React.memo() to optimize rendering performance. The component only re-renders when its props change.
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
-  // Nếu tổng số trang nhỏ hơn hoặc bằng 1, không hiển thị bộ phân trang.
+  // If the total number of pages is less than or equal to 1, do not display the pagination component.
   if (totalPages <= 1) return null;
 
   return (
     <div className="pagination">
       {" "}
-      {/* Container cho bộ phận phân trang */}
-      {/* Nút "Trang trước". Bị vô hiệu hóa nếu đang ở trang đầu tiên (currentPage là 1). */}
+      {/* Container for the pagination component */}
+      {/* "Previous Page" button. Disabled if currently on the first page (currentPage is 1). */}
       <button
-        onClick={() => onPageChange(currentPage - 1)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onPageChange' (truyền qua props) với số trang mới là trang hiện tại trừ đi 1.
-        disabled={currentPage === 1} // Thuộc tính 'disabled' dựa vào điều kiện.
-        className="pagination-button" // Class CSS
+        onClick={() => onPageChange(currentPage - 1)} // Attach click event handler. Call the 'onPageChange' function (passed via props) with the new page number (current page minus 1).
+        disabled={currentPage === 1} // 'disabled' attribute based on the condition.
+        className="pagination-button" // CSS class
       >
         Trang trước{" "}
-        {/* Nội dung nút */}
+        {/* Button text */}
       </button>
-      {/* Hiển thị thông tin trang hiện tại. */}
+      {/* Display current page information. */}
       <span className="pagination-current">Trang {currentPage}</span>{" "}
-      {/* Hiển thị số trang hiện tại */}
-      {/* Nút "Trang sau". Bị vô hiệu hóa nếu đang ở trang cuối cùng (currentPage bằng totalPages). */}
+      {/* Display the current page number */}
+      {/* "Next Page" button. Disabled if currently on the last page (currentPage equals totalPages). */}
       <button
-        onClick={() => onPageChange(currentPage + 1)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onPageChange' với số trang mới là trang hiện tại cộng thêm 1.
-        disabled={currentPage === totalPages} // Thuộc tính 'disabled' dựa vào điều kiện.
-        className="pagination-button" // Class CSS
+        onClick={() => onPageChange(currentPage + 1)} // Attach click event handler. Call the 'onPageChange' function with the new page number (current page plus 1).
+        disabled={currentPage === totalPages} // 'disabled' attribute based on the condition.
+        className="pagination-button" // CSS class
       >
         Trang sau{" "}
-        {/* Nội dung nút */}
+        {/* Button text */}
       </button>
     </div>
   );
 });
 
-// --- Component con: BrandFilter (Hiển thị các nút lọc theo thương hiệu) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
+// --- Child Component: BrandFilter (Displays brand filtering buttons) ---
+// Uses React.memo() to optimize rendering performance. The component only re-renders when its props change.
 const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
     {" "}
-    {/* Container cho nhóm nút lọc theo thương hiệu */}
-    {/* Lặp (map) qua mảng 'brands' để tạo một nút button cho mỗi thương hiệu */}
+    {/* Container for the group of brand filter buttons */}
+    {/* Map over the 'brands' array to create a button for each brand */}
     {brands.map((brand) => (
       <button
-        key={brand} // Key duy nhất cho mỗi nút trong danh sách (tên thương hiệu là duy nhất)
-        className={`brand-button ${selectedBrand === brand ? "active" : ""}`} // Thêm class CSS 'active' vào nút nếu tên thương hiệu của nút đó trùng với 'selectedBrand' hiện tại
-        onClick={() => onBrandSelect(brand)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onBrandSelect' (truyền qua props) với tên thương hiệu của nút đó.
+        key={brand} // Unique key for each button in the list (brand name is unique)
+        className={`brand-button ${selectedBrand === brand ? "active" : ""}`} // Add the 'active' CSS class to the button if its brand name matches the current 'selectedBrand' state.
+        onClick={() => onBrandSelect(brand)} // Attach click event handler. Call the 'onBrandSelect' function (passed via props) with the brand name of that button.
       >
         {brand}{" "}
-        {/* Nội dung hiển thị trên nút (tên thương hiệu) */}
+        {/* Text displayed on the button (brand name) */}
       </button>
     ))}
   </div>
 ));
 
-// --- Component con: Slide (Hiển thị nội dung một slide trong carousel) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering. Component chỉ render lại khi props của nó thay đổi.
+// --- Child Component: Slide (Displays the content of a single slide in the carousel) ---
+// Uses React.memo() to optimize rendering performance. The component only re-renders when its props change.
 const Slide = React.memo(({ slide }) => (
   <div className="slide">
     {" "}
-    {/* Container chính cho một slide */}
+    {/* Main container for a single slide */}
     <div className="slide-content">
       {" "}
-      {/* Container chứa nội dung bên trong slide. Sử dụng flexbox để căn chỉnh ảnh và text. */}
+      {/* Container for the content inside the slide. Uses flexbox for aligning image and text. */}
       <div className="slide-text">
         {" "}
-        {/* Phần bên trái chứa văn bản (tiêu đề, phụ đề, đặc điểm) */}
-        <h2>{slide.title}</h2> {/* Tiêu đề chính của slide */}
-        <h3>{slide.subtitle}</h3> {/* Phụ đề của slide */}
+        {/* Left section containing text (title, subtitle, features) */}
+        <h2>{slide.title}</h2> {/* Main title of the slide */}
+        <h3>{slide.subtitle}</h3> {/* Subtitle of the slide */}
         <ul>
           {" "}
-          {/* Danh sách các đặc điểm hoặc ưu đãi */}
-          {/* Lặp (map) qua mảng 'features' của slide để tạo các list item */}
+          {/* List of features or offers */}
+          {/* Map over the 'features' array of the slide to create list items */}
           {slide.features.map((feature, i) => (
-            <li key={i}>{feature}</li> // Hiển thị từng đặc điểm. Sử dụng index làm key (an toàn nếu mảng features không thay đổi thứ tự).
+            <li key={i}>{feature}</li> // Display each feature. Use index as key (safe if the features array order doesn't change).
           ))}
         </ul>
       </div>
       <div className="slide-image">
         {" "}
-        {/* Phần bên phải chứa hình ảnh của slide */}
+        {/* Right section containing the slide image */}
         <img src={slide.image} alt={slide.title} loading="lazy" />{" "}
-        {/* Hình ảnh slide, sử dụng tiêu đề làm alt text, lazy loading */}
+        {/* Slide image, using title as alt text, lazy loading */}
       </div>
-      {/* Nút hành động (ví dụ: "Mua ngay"), sử dụng component Link để điều hướng đến trang chi tiết sản phẩm hoặc trang khác. */}
+      {/* Action button (e.g., "Buy Now"), using the Link component to navigate to the product details page or another page. */}
       <Link to={slide.link} className="slide-button">
         {" "}
-        {/* 'to={slide.link}' là đường dẫn đích */}
+        {/* 'to={slide.link}' is the destination path */}
         {slide.buttonText}{" "}
-        {/* Nội dung hiển thị trên nút */}
+        {/* Text displayed on the button */}
       </Link>
     </div>
   </div>
 ));
 
-// --- Component chính: ProductPage (Trang hiển thị danh sách sản phẩm) ---
-// Đây là functional component hiển thị toàn bộ nội dung của trang danh sách sản phẩm.
+// --- Main Component: ProductPage (Page displaying the list of products) ---
+// This is the functional component that renders the entire product list page content.
 const ProductPage = () => {
-  // --- State quản lý dữ liệu và trạng thái của component ---
-  // State 'products': Lưu trữ TOÀN BỘ danh sách sản phẩm gốc được fetch từ API. Mảng này không thay đổi khi áp dụng lọc/tìm kiếm/sắp xếp. Ban đầu là mảng rỗng [].
+  // --- State management for data and component status ---
+  // 'products' state: Stores the ENTIRE original list of products fetched from the API. This array does not change when filters/search/sort are applied. Initially an empty array [].
   const [products, setProducts] = useState([]);
-  // State 'filteredProducts': Lưu trữ danh sách sản phẩm SAU KHI đã áp dụng các bộ lọc (thương hiệu, tìm kiếm) và sắp xếp. Đây là mảng được dùng để hiển thị. Ban đầu là mảng rỗng [].
+  // 'filteredProducts' state: Stores the list of products AFTER applying filters (brand, search) and sorting. This is the array used for display. Initially an empty array [].
   const [filteredProducts, setFilteredProducts] = useState([]);
-  // State 'isLoading': Boolean theo dõi trạng thái đang tải dữ liệu ban đầu từ API. Ban đầu là true.
+  // 'isLoading' state: Boolean tracking the initial data loading status from the API. Initially true.
   const [isLoading, setIsLoading] = useState(true);
-  // State 'error': Lưu trữ thông báo lỗi (chuỗi) nếu quá trình fetch dữ liệu gặp vấn đề. Ban đầu là null.
+  // 'error' state: Stores the error message (string) if data fetching encounters an issue. Initially null.
   const [error, setError] = useState(null);
-  // State 'currentPage': Lưu trữ số trang hiện tại đang hiển thị trong bộ phân trang. Ban đầu là 1.
+  // 'currentPage' state: Stores the current page number being displayed in pagination. Initially 1.
   const [currentPage, setCurrentPage] = useState(1);
-  // State 'filters': Đối tượng lưu trữ trạng thái hiện tại của các bộ lọc. Bao gồm 'brand' (thương hiệu được chọn) và 'search' (từ khóa tìm kiếm).
+  // 'filters' state: Object storing the current state of filters. Includes 'brand' (selected brand) and 'search' (search keyword).
   const [filters, setFilters] = useState({ brand: "Tất cả", search: "" });
-  // State 'isSearching': Boolean theo dõi liệu bộ lọc/tìm kiếm có đang được áp dụng và xử lý hay không (để hiển thị spinner hoặc hiệu ứng). Ban đầu là false.
+  // 'isSearching' state: Boolean tracking if filtering/searching is currently being applied and processed (to show a spinner or effect). Initially false.
   const [isSearching, setIsSearching] = useState(false);
-  // State 'showNoResults': Boolean theo dõi liệu có nên hiển thị thông báo "Không có sản phẩm nào phù hợp" hay không. Ban đầu là false.
+  // 'showNoResults' state: Boolean tracking whether to display the "No matching products found" message. Initially false.
   const [showNoResults, setShowNoResults] = useState(false);
 
-  // --- Cài đặt cho Slider carousel (component của react-slick) ---
-  // Đối tượng chứa các tùy chọn cấu hình cho Slider.
+  // --- Settings for the Slider carousel (react-slick component) ---
+  // Object containing configuration options for the Slider.
   const sliderSettings = {
-    dots: true, // Hiển thị các chỉ số slide (dạng chấm) ở dưới carousel
-    infinite: true, // Cho phép lặp lại các slide vô hạn sau khi đến slide cuối cùng
-    speed: 500, // Tốc độ chuyển động giữa các slide (miliseconds)
-    slidesToShow: 1, // Số lượng slide hiển thị cùng lúc trong viewport
-    slidesToScroll: 1, // Số lượng slide cuộn đi sau mỗi lần chuyển (tự động hoặc bằng nút)
-    autoplay: true, // Tự động chuyển slide sau mỗi khoảng thời gian
-    autoplaySpeed: 3000, // Khoảng thời gian chờ trước khi tự động chuyển slide tiếp theo (miliseconds)
-    arrows: true, // Hiển thị các mũi tên điều hướng (trước/sau)
+    dots: true, // Display slide indicators (dots) below the carousel
+    infinite: true, // Allow infinite looping of slides after reaching the last one
+    speed: 500, // Transition speed between slides (milliseconds)
+    slidesToShow: 1, // Number of slides to show simultaneously in the viewport
+    slidesToScroll: 1, // Number of slides to scroll per transition (automatic or by button)
+    autoplay: true, // Automatically advance slides after a certain interval
+    autoplaySpeed: 3000, // Delay before automatically advancing to the next slide (milliseconds)
+    arrows: true, // Display previous/next navigation arrows
   };
 
-  // --- Effect hook để tải dữ liệu sản phẩm từ API khi component mount ---
-  // Effect này là nơi thực hiện việc fetch dữ liệu sản phẩm ban đầu.
+  // --- Effect hook to fetch product data from the API when the component mounts ---
+  // This effect is where the initial product data fetching occurs.
   useEffect(() => {
-    // Tạo một instance của AbortController. Được dùng để hủy yêu cầu fetch nếu component bị hủy trước khi fetch hoàn thành.
+    // Create an instance of AbortController. Used to cancel the fetch request if the component is unmounted before the fetch completes.
     const controller = new AbortController();
-    const signal = controller.signal; // Lấy signal từ controller để truyền vào tùy chọn của fetch().
+    const signal = controller.signal; // Get the signal from the controller to pass into the fetch() options.
 
-    // Định nghĩa một hàm async để thực hiện quá trình tải dữ liệu và cập nhật state.
+    // Define an async function to perform the data loading process and update state.
     const load = async () => {
       try {
-        setIsLoading(true); // Bắt đầu quá trình tải, đặt state 'isLoading' thành true.
-        setError(null); // Xóa thông báo lỗi cũ nếu có.
+        setIsLoading(true); // Start the loading process, set 'isLoading' state to true.
+        setError(null); // Clear any previous error message.
 
-        // Gọi hàm fetchProducts để lấy dữ liệu từ API, truyền signal để có thể hủy.
+        // Call the fetchProducts function to get data from the API, passing the signal for cancellation.
         const productList = await fetchProducts(signal);
-        setProducts(productList); // Cập nhật state 'products' (danh sách gốc) với dữ liệu vừa tải.
-        setFilteredProducts(productList); // Ban đầu, danh sách sản phẩm đã lọc cũng chính là danh sách gốc.
-        // Không cần đặt showNoResults ở đây ngay lập tức. Logic trong effect lọc (useEffect thứ hai) sẽ xử lý sau.
+        setProducts(productList); // Update the 'products' state (original list) with the fetched data.
+        setFilteredProducts(productList); // Initially, the filtered product list is the same as the original list.
+        // No need to set showNoResults here immediately. Logic in the filtering effect (second useEffect) will handle this later.
       } catch (err) {
-        // Bắt các lỗi xảy ra trong quá trình fetch.
-        // Kiểm tra nếu lỗi KHÔNG phải là AbortError (lỗi do cleanup hủy yêu cầu).
+        // Catch any errors that occur during the fetch process.
+        // Check if the error is NOT an AbortError (an error caused by cleanup cancelling the request).
         if (err.name !== "AbortError") {
-          console.error("Error fetching products:", err); // Ghi log lỗi thật ra console.
-          setError(err.message); // Cập nhật state 'error' với thông báo lỗi để hiển thị trên UI.
-          setProducts([]); // Đặt state 'products' về mảng rỗng khi có lỗi fetch.
-          setFilteredProducts([]); // Đảm bảo 'filteredProducts' cũng rỗng khi có lỗi.
-          setShowNoResults(true); // Hiển thị thông báo "Không có kết quả" nếu fetch lỗi hoặc trả về danh sách rỗng.
+          console.error("Error fetching products:", err); // Log the real error to the console.
+          setError(err.message); // Update the 'error' state with the error message to display on the UI.
+          setProducts([]); // Set the 'products' state to an empty array on fetch error.
+          setFilteredProducts([]); // Ensure 'filteredProducts' is also empty on error.
+          setShowNoResults(true); // Display the "No results" message if fetch fails or returns an empty list.
         }
-        // Nếu là AbortError, bỏ qua vì đó là lỗi do cleanup xử lý.
+        // If it's an AbortError, ignore it as it's handled by cleanup.
       } finally {
-        // Khối finally luôn chạy sau try/catch (trừ khi có lỗi nghiêm trọng không thể phục hồi).
-        setIsLoading(false); // Kết thúc quá trình tải, đặt state 'isLoading' thành false.
+        // The finally block always runs after try/catch (unless a severe, unrecoverable error occurs).
+        setIsLoading(false); // End the loading process, set 'isLoading' state to false.
       }
     };
 
-    load(); // Gọi hàm load() để bắt đầu quá trình tải dữ liệu khi component mount.
+    load(); // Call the load() function to start the data loading process when the component mounts.
 
-    // Hàm cleanup cho effect này. Chạy khi component unmount hoặc khi dependencies thay đổi và effect sắp chạy lại.
-    return () => controller.abort(); // Hủy yêu cầu fetch API đang chờ xử lý nếu nó vẫn chưa hoàn thành. Giúp tránh memory leaks và các vấn đề liên quan đến cập nhật state trên component đã bị hủy.
-  }, []); // Mảng dependencies rỗng []: Đảm bảo effect này chỉ chạy MỘT LẦN duy nhất sau lần render đầu tiên (tương tự lifecycle method componentDidMount).
+    // Cleanup function for this effect. Runs when the component unmounts or when dependencies change and the effect is about to re-run.
+    return () => controller.abort(); // Cancel the pending API fetch request if it hasn't completed yet. Helps prevent memory leaks and issues related to updating state on an unmounted component.
+  }, []); // Empty dependency array []: Ensures this effect runs only ONCE after the initial render (similar to componentDidMount lifecycle method).
 
-  // --- Effect hook để áp dụng các bộ lọc (tìm kiếm và thương hiệu) và sắp xếp ---
-  // Effect này chạy mỗi khi state 'filters' hoặc state 'products' thay đổi.
+  // --- Effect hook to apply filters (search and brand) and sorting ---
+  // This effect runs whenever the 'filters' state or the 'products' state changes.
   useEffect(() => {
-    let filtered = [...products]; // Tạo một bản sao của danh sách sản phẩm gốc ('products') để làm việc, tránh sửa đổi trực tiếp state gốc.
+    let filtered = [...products]; // Create a copy of the original product list ('products') to work with, avoiding direct modification of the original state.
 
-    // 1. Lọc theo thương hiệu: Nếu bộ lọc thương hiệu hiện tại KHÔNG phải là "Tất cả"
+    // 1. Filter by brand: If the current brand filter is NOT "Tất cả" (All)
     if (filters.brand !== "Tất cả") {
-      filtered = filtered.filter((p) => p.brand === filters.brand); // Lọc và chỉ giữ lại các sản phẩm có thuộc tính 'brand' trùng khớp với 'filters.brand'.
+      filtered = filtered.filter((p) => p.brand === filters.brand); // Filter and keep only products whose 'brand' property matches 'filters.brand'.
     }
 
-    // 2. Lọc theo từ khóa tìm kiếm: Nếu có từ khóa tìm kiếm (kiểm tra sau khi loại bỏ khoảng trắng ở đầu/cuối không rỗng)
+    // 2. Filter by search keyword: If there is a search keyword (check after trimming whitespace is not empty)
     if (filters.search.trim()) {
-      // Lọc và chỉ giữ lại các sản phẩm có thuộc tính 'name' (sau khi chuyển sang chữ thường)
-      // bao gồm (includes) chuỗi từ khóa tìm kiếm (sau khi loại bỏ khoảng trắng và chuyển sang chữ thường).
+      // Filter and keep only products whose 'name' property (after converting to lowercase)
+      // includes the search keyword string (after trimming whitespace and converting to lowercase).
       filtered = filtered.filter((p) =>
         p.name.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
-    // --- Logic Debouncing và cập nhật UI ---
-    setIsSearching(true); // Đặt state 'isSearching' thành true để báo hiệu rằng đang có quá trình lọc/tìm kiếm (có thể hiển thị spinner hoặc hiệu ứng).
-    setShowNoResults(false); // Ẩn thông báo "Không có kết quả" trong khi đang xử lý tìm kiếm mới.
+    // --- Debouncing Logic and UI Update ---
+    setIsSearching(true); // Set 'isSearching' state to true to indicate that filtering/searching is in progress (can show a spinner or effect).
+    setShowNoResults(false); // Hide the "No results" message while a new search is being processed.
 
-    // Sử dụng setTimeout để tạo hiệu ứng "debounce". Logic cập nhật state 'filteredProducts' và 'isSearching'
-    // sẽ chỉ được thực thi sau khi người dùng ngừng gõ hoặc thay đổi bộ lọc trong một khoảng thời gian nhất định (500ms).
-    // Điều này giúp giảm số lần cập nhật UI không cần thiết khi người dùng gõ nhanh liên tục vào ô tìm kiếm.
+    // Use setTimeout to create a "debounce" effect. The logic to update the 'filteredProducts' and 'isSearching' states
+    // will only be executed after the user stops typing or changing filters for a certain period (500ms).
+    // This helps reduce unnecessary UI updates when the user types rapidly into the search box.
     const timeout = setTimeout(() => {
-      setFilteredProducts(filtered); // Cập nhật state 'filteredProducts' với danh sách sản phẩm đã lọc cuối cùng.
-      setIsSearching(false); // Kết thúc trạng thái đang tìm kiếm.
-      // Sau khi quá trình lọc/tìm kiếm hoàn tất, kiểm tra xem danh sách kết quả ('filtered') có rỗng không.
-      // Nếu rỗng, đặt state 'showNoResults' thành true để hiển thị thông báo "Không có sản phẩm nào phù hợp".
+      setFilteredProducts(filtered); // Update the 'filteredProducts' state with the final filtered list of products.
+      setIsSearching(false); // End the searching state.
+      // After the filtering/searching process is complete, check if the result list ('filtered') is empty.
+      // If empty, set the 'showNoResults' state to true to display the "No matching products found" message.
       setShowNoResults(filtered.length === 0);
-      setCurrentPage(1); // Luôn reset về trang 1 mỗi khi áp dụng bộ lọc mới hoặc khi danh sách sản phẩm gốc thay đổi.
-    }, 500); // Độ trễ là 500 miliseconds.
+      setCurrentPage(1); // Always reset to page 1 whenever a new filter is applied or the original product list changes.
+    }, 500); // The delay is 500 milliseconds.
 
-    // Hàm cleanup cho effect này: Chạy khi state 'filters' hoặc 'products' thay đổi (trước khi effect mới chạy lại)
-    // hoặc khi component unmount.
-    // Xóa bỏ hẹn giờ đã tạo (timeout) để ngăn hàm callback bên trong setTimeout chạy
-    // nếu một thay đổi khác đến trước khi timeout cũ kết thúc.
+    // Cleanup function for this effect: Runs when the 'filters' or 'products' state changes (before the new effect runs)
+    // or when the component unmounts.
+    // Clear the scheduled timeout to prevent the callback function inside setTimeout from running
+    // if another change occurs before the old timeout finishes.
     return () => clearTimeout(timeout);
-  }, [filters, products]); // Mảng dependencies: Effect chạy lại mỗi khi state 'filters' hoặc state 'products' thay đổi.
+  }, [filters, products]); // Dependency array: The effect re-runs whenever the 'filters' state or 'products' state changes.
 
-  // --- Hàm xử lý khi chuyển trang (trong phân trang) ---
-  // Nhận số trang mới cần chuyển đến ('page').
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm sẽ được tạo lại khi state 'filteredProducts' thay đổi.
-  // Điều này là cần thiết vì logic giới hạn số trang hợp lệ phụ thuộc vào tổng số trang, mà tổng số trang lại phụ thuộc vào 'filteredProducts'.
+  // --- Function to handle page changes (in pagination) ---
+  // Accepts the new page number to navigate to ('page').
+  // Uses useCallback to memoize this function. The function will be re-created when the 'filteredProducts' state changes.
+  // This is necessary because the logic for clamping the valid page number depends on the total number of pages, which in turn depends on 'filteredProducts'.
   const handlePageChange = useCallback(
     (page) => {
-      // Tính toán số trang mới, đảm bảo nó nằm trong khoảng hợp lệ từ 1 đến tổng số trang ('totalPages').
-      // Math.max(1, page) đảm bảo số trang không nhỏ hơn 1.
-      // Math.min(..., totalPages) đảm bảo số trang không lớn hơn tổng số trang.
-      const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE); // Tính lại tổng số trang (phụ thuộc vào filteredProducts)
+      // Calculate the new page number, ensuring it stays within the valid range from 1 to the total number of pages ('totalPages').
+      // Math.max(1, page) ensures the page number is not less than 1.
+      // Math.min(..., totalPages) ensures the page number is not greater than the total number of pages.
+      const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE); // Recalculate the total number of pages (depends on filteredProducts)
       const newPage = Math.max(1, Math.min(page, totalPages));
-      setCurrentPage(newPage); // Cập nhật state 'currentPage' với số trang mới đã được giới hạn hợp lệ.
+      setCurrentPage(newPage); // Update the 'currentPage' state with the new, valid page number.
     },
-    [filteredProducts] // Mảng dependencies: Hàm phụ thuộc vào state 'filteredProducts' (để tính tổng số trang).
+    [filteredProducts] // Dependency array: The function depends on the 'filteredProducts' state (to calculate total pages).
   );
 
-  // --- Hàm xử lý khi giá trị của input tìm kiếm hoặc input khác trong filter-section thay đổi ---
-  // Nhận sự kiện thay đổi (change event 'e').
+  // --- Function to handle changes in the search input or other inputs in the filter-section ---
+  // Accepts the change event ('e').
   const handleFilterChange = (e) => {
-    const { name, value } = e.target; // Lấy thuộc tính 'name' và 'value' của input đã thay đổi.
-    // Cập nhật state 'filters'. Sử dụng functional update để đảm bảo cập nhật dựa trên giá trị trước đó ('prev').
-    // Tạo một bản sao của state 'filters' hiện tại (...prev) và ghi đè lên thuộc tính có tên [name] với giá trị mới 'value'.
+    const { name, value } = e.target; // Get the 'name' and 'value' properties of the changed input.
+    // Update the 'filters' state. Use a functional update to ensure the update is based on the previous value ('prev').
+    // Create a copy of the current 'filters' state (...prev) and overwrite the property with the name [name] with the new value 'value'.
     setFilters((prev) => ({ ...prev, [name]: value }));
-    // Lưu ý: Việc cập nhật state 'filters' sẽ kích hoạt effect hook thứ hai (useEffect([filters, products])) để thực hiện lọc lại.
+    // Note: Updating the 'filters' state will trigger the second effect hook (useEffect([filters, products])) to re-run the filtering.
   };
 
-  // --- Hàm xử lý khi người dùng chọn một thương hiệu từ bộ lọc nút ---
-  // Nhận tên thương hiệu ('brand') được chọn.
+  // --- Function to handle user selecting a brand from the button filter ---
+  // Accepts the selected brand name ('brand').
   const handleBrandSelect = (brand) => {
-    // Cập nhật state 'filters'. Đặt lại chỉ thuộc tính 'brand' thành tên thương hiệu mới được chọn.
+    // Update the 'filters' state. Only update the 'brand' property to the new selected brand name.
     setFilters((prev) => ({ ...prev, brand }));
-    // Việc cập nhật state 'filters' này cũng sẽ kích hoạt effect hook thứ hai để thực hiện lọc lại.
+    // Updating the 'filters' state will also trigger the second effect hook to re-run the filtering.
   };
 
-  // --- Hàm xử lý sắp xếp sản phẩm theo giá từ thấp đến cao ---
+  // --- Function to handle sorting products by price from low to high ---
   const sortLowToHigh = () => {
-    // Tạo một bản sao của mảng 'filteredProducts' hiện tại ([...filteredProducts]).
-    // Sử dụng phương thức .sort() để sắp xếp bản sao này.
-    // Hàm so sánh (a, b) => a.price - b.price sẽ sắp xếp tăng dần theo giá (a đứng trước b nếu giá a nhỏ hơn giá b).
-    setFilteredProducts([...filteredProducts].sort((a, b) => a.price - b.price)); // Cập nhật state 'filteredProducts' với mảng đã sắp xếp.
-    setCurrentPage(1); // Reset về trang 1 sau khi sắp xếp.
+    // Create a copy of the current 'filteredProducts' array ([...filteredProducts]).
+    // Use the .sort() method to sort this copy.
+    // The comparison function (a, b) => a.price - b.price will sort in ascending order by price (a comes before b if a's price is less than b's price).
+    setFilteredProducts([...filteredProducts].sort((a, b) => a.price - b.price)); // Update the 'filteredProducts' state with the sorted array.
+    setCurrentPage(1); // Reset to page 1 after sorting.
   };
 
-  // --- Hàm xử lý sắp xếp sản phẩm theo giá từ cao đến thấp ---
+  // --- Function to handle sorting products by price from high to low ---
   const sortHighToLow = () => {
-    // Tạo một bản sao của mảng 'filteredProducts' hiện tại ([...filteredProducts]).
-    // Sử dụng phương thức .sort() để sắp xếp bản sao này.
-    // Hàm so sánh (a, b) => b.price - a.price sẽ sắp xếp giảm dần theo giá (b đứng trước a nếu giá b lớn hơn giá a).
-    setFilteredProducts([...filteredProducts].sort((a, b) => b.price - a.price)); // Cập nhật state 'filteredProducts' với mảng đã sắp xếp.
-    setCurrentPage(1); // Reset về trang 1 sau khi sắp xếp.
+    // Create a copy of the current 'filteredProducts' array ([...filteredProducts]).
+    // Use the .sort() method to sort this copy.
+    // The comparison function (a, b) => b.price - a.price will sort in descending order by price (b comes before a if b's price is greater than a's price).
+    setFilteredProducts([...filteredProducts].sort((a, b) => b.price - a.price)); // Update the 'filteredProducts' state with the sorted array.
+    setCurrentPage(1); // Reset to page 1 after sorting.
   };
 
-  // --- Hàm xử lý reset lại tất cả các bộ lọc (thương hiệu và tìm kiếm) ---
+  // --- Function to handle resetting all filters (brand and search) ---
   const resetFilters = () => {
-    // Đặt lại state 'filters' về giá trị mặc định ban đầu ("Tất cả" thương hiệu, tìm kiếm rỗng).
+    // Reset the 'filters' state to its initial default values ("Tất cả" brand, empty search).
     setFilters({ brand: "Tất cả", search: "" });
-    setFilteredProducts(products); // Đặt lại danh sách sản phẩm hiển thị về toàn bộ danh sách gốc ('products').
-    setCurrentPage(1); // Reset về trang 1.
+    setFilteredProducts(products); // Reset the displayed product list back to the entire original list ('products').
+    setCurrentPage(1); // Reset to page 1.
   };
 
-  // --- Tính toán các giá trị dẫn xuất từ state ---
-  // Các giá trị này được tính toán mỗi khi state liên quan thay đổi và component re-render.
+  // --- Calculate derived values from state ---
+  // These values are calculated each time the related state changes and the component re-renders.
 
-  // Tính tổng số trang cần thiết cho phân trang dựa trên số lượng sản phẩm đã lọc và số sản phẩm trên mỗi trang.
-  // Math.ceil() đảm bảo làm tròn lên để có đủ trang cho những sản phẩm lẻ.
+  // Calculate the total number of pages needed for pagination based on the number of filtered products and products per page.
+  // Math.ceil() ensures rounding up to have enough pages for any remaining products.
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-  // Tính chỉ số (index) bắt đầu của slice mảng 'filteredProducts' để lấy ra các sản phẩm cho trang hiện tại.
+  // Calculate the starting index of the slice from the 'filteredProducts' array to get products for the current page.
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  // Tính chỉ số (index) kết thúc (không bao gồm) của slice mảng 'filteredProducts'.
+  // Calculate the ending index (exclusive) of the slice from the 'filteredProducts' array.
   const endIndex = startIndex + PRODUCTS_PER_PAGE;
-  // Lấy ra mảng con chứa các sản phẩm chỉ hiển thị trên trang hiện tại bằng phương thức .slice().
+  // Get the sub-array containing only the products to be displayed on the current page using the .slice() method.
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // --- Render giao diện dựa trên trạng thái loading và lỗi ---
+  // --- Render UI based on loading and error states ---
 
-  // Nếu state 'isLoading' là true (đang tải dữ liệu ban đầu), hiển thị giao diện loading spinner.
+  // If the 'isLoading' state is true (initial data is being loaded), display a loading spinner UI.
   if (isLoading) {
     return (
       <div className="loading-container">
         {" "}
-        {/* Container cho giao diện loading */}
+        {/* Container for the loading UI */}
         <div className="loading-spinner"></div>{" "}
-        {/* Biểu tượng spinner quay */}
+        {/* Spinning spinner icon */}
         <p className="loading-text">Đang tải...</p>{" "}
-        {/* Thông báo "Đang tải..." */}
+        {/* "Loading..." message */}
       </div>
     );
   }
 
-  // Nếu state 'error' có giá trị (khác null), hiển thị thông báo lỗi.
+  // If the 'error' state has a value (is not null), display the error message.
   if (error) {
     return (
       <div className="status error">
         {" "}
-        {/* Container cho thông báo lỗi */}
+        {/* Container for the error message */}
         <p>❌ {error}</p>{" "}
-        {/* Hiển thị nội dung thông báo lỗi */}
-        {/* Nút "Thử lại", khi click sẽ tải lại toàn bộ trang trình duyệt để thử fetch lại dữ liệu. */}
+        {/* Display the error message content */}
+        {/* "Retry" button, clicking which reloads the entire browser page to attempt fetching data again. */}
         <button onClick={() => window.location.reload()} className="retry-button">
           Thử lại{" "}
-          {/* Nội dung nút */}
+          {/* Button text */}
         </button>
       </div>
     );
   }
 
-  // --- Render giao diện chính của trang sản phẩm khi dữ liệu đã tải xong và không có lỗi ---
-  // Đây là phần giao diện hiển thị sau khi quá trình tải dữ liệu ban đầu hoàn tất thành công.
+  // --- Render the main UI of the product page when data is loaded and no errors occurred ---
+  // This is the UI section displayed after the initial data loading process is successfully completed.
   return (
     <main className="product-page">
       {" "}
-      {/* Thẻ <main> bao bọc nội dung chính của trang */}
-      {/* Phần hiển thị Carousel (banner quảng cáo) ở đầu trang */}
+      {/* <main> tag wraps the main content of the page */}
+      {/* Section displaying the Carousel (promotional banner) at the top */}
       <div className="carousel-section">
-        {/* Sử dụng component Slider từ react-slick. Thuộc tính {...sliderSettings} áp dụng tất cả các cài đặt đã định nghĩa trước đó. */}
+        {/* Use the Slider component from react-slick. The {...sliderSettings} prop applies all the previously defined settings. */}
         <Slider {...sliderSettings}>
-          {/* Lặp (map) qua mảng SLIDES (chứa dữ liệu cho các banner) */}
+          {/* Map over the SLIDES array (containing data for the banners) */}
           {SLIDES.map((slide, i) => (
-            <Slide key={i} slide={slide} /> // Render component con Slide cho mỗi banner. Sử dụng index làm key (an toàn vì mảng SLIDES cố định).
+            <Slide key={i} slide={slide} /> // Render the child Slide component for each banner. Use index as key (safe as SLIDES array is fixed).
           ))}
         </Slider>
       </div>
 
-      {/* Tiêu đề chính của trang danh sách sản phẩm */}
+      {/* Main title of the product list page */}
       <h1 className="page-title">Danh sách sản phẩm</h1>{" "}
-      {/* Tiêu đề trang */}
+      {/* Page title */}
 
-      {/* Phần chứa các bộ lọc và sắp xếp sản phẩm */}
+      {/* Section containing product filters and sorting controls */}
       <div className="filter-section">
         {" "}
-        {/* Container cho các bộ điều khiển lọc và sắp xếp */}
-        {/* Input để tìm kiếm sản phẩm theo tên */}
+        {/* Container for filter and sort controls */}
+        {/* Input for searching products by name */}
         <input
-          type="text" // Kiểu input là text
-          name="search" // Tên của input, dùng để cập nhật state 'filters'
-          className="search-input" // Class CSS
-          placeholder="Tìm kiếm sản phẩm..." // Placeholder
-          value={filters.search} // Gán giá trị từ state 'filters.search' (Controlled Component)
-          onChange={handleFilterChange} // Gắn hàm xử lý sự kiện thay đổi input.
-          aria-label="Tìm kiếm sản phẩm theo tên" // Thuộc tính hỗ trợ khả năng tiếp cận
+          type="text" // Input type is text
+          name="search" // Input name, used to update the 'filters' state
+          className="search-input" // CSS class
+          placeholder="Tìm kiếm sản phẩm..." // Placeholder text
+          value={filters.search} // Bind value from 'filters.search' state (Controlled Component)
+          onChange={handleFilterChange} // Attach input change event handler function.
+          aria-label="Tìm kiếm sản phẩm theo tên" // Accessibility attribute
         />
-        {/* Component BrandFilter để hiển thị các nút lọc theo thương hiệu */}
+        {/* BrandFilter component to display brand filtering buttons */}
         <BrandFilter
-          brands={BRANDS} // Truyền danh sách các thương hiệu có sẵn (từ hằng số)
-          selectedBrand={filters.brand} // Truyền thương hiệu hiện tại đang được chọn từ state 'filters'
-          onBrandSelect={handleBrandSelect} // Truyền hàm xử lý khi người dùng chọn một thương hiệu từ bộ lọc
+          brands={BRANDS} // Pass the list of available brands (from constants)
+          selectedBrand={filters.brand} // Pass the currently selected brand from the 'filters' state
+          onBrandSelect={handleBrandSelect} // Pass the handler function for when a user selects a brand from the filter
         />
-        {/* Nút để sắp xếp danh sách sản phẩm theo giá từ thấp đến cao */}
+        {/* Button to sort the product list by price from low to high */}
         <button className="sort-button" onClick={sortLowToHigh}>
           Giá từ thấp tới cao{" "}
-          {/* Nội dung nút */}
+          {/* Button text */}
         </button>
-        {/* Nút để sắp xếp danh sách sản phẩm theo giá từ cao đến thấp */}
+        {/* Button to sort the product list by price from high to low */}
         <button className="sort-button" onClick={sortHighToLow}>
           Giá từ cao tới thấp{" "}
-          {/* Nội dung nút */}
+          {/* Button text */}
         </button>
       </div>
 
-      {/* Khu vực hiển thị danh sách sản phẩm hoặc các thông báo trạng thái khác */}
+      {/* Area displaying the product list or other status messages */}
       <div className="product-list">
         {" "}
-        {/* Container chính hiển thị danh sách sản phẩm hoặc thông báo */}
-        {/* Conditional Rendering: Hiển thị spinner nếu đang tìm kiếm, thông báo "Không có kết quả" nếu không tìm thấy, hoặc lưới sản phẩm. */}
-        {isSearching ? ( // Nếu state 'isSearching' là true
+        {/* Main container for displaying the product list or messages */}
+        {/* Conditional Rendering: Display spinner if searching, "No results" message if no matches found, or the product grid. */}
+        {isSearching ? ( // If 'isSearching' state is true
           <div className="loading-container">
             {" "}
-            {/* Container cho spinner loading */}
+            {/* Container for loading spinner */}
             <div className="loading-spinner"></div>{" "}
-            {/* Biểu tượng spinner quay */}
+            {/* Spinning spinner icon */}
             <p className="loading-text">Đang tải...</p>{" "}
-            {/* Thông báo "Đang tải..." */}
+            {/* "Loading..." message */}
           </div>
-        ) : showNoResults ? ( // Nếu KHÔNG đang tìm kiếm VÀ state 'showNoResults' là true (nghĩa là không có sản phẩm nào khớp bộ lọc)
+        ) : showNoResults ? ( // If NOT searching AND 'showNoResults' state is true (meaning no products match the filters)
           <div className="no-products-container">
             {" "}
-            {/* Container thông báo không có kết quả */}
+            {/* Container for no results message */}
             <p className="no-products-message">Không có sản phẩm nào phù hợp</p>{" "}
-            {/* Thông báo "Không có sản phẩm nào phù hợp" */}
-            {/* Nút "Xóa bộ lọc", khi click sẽ gọi hàm resetFilters để đặt lại tất cả các bộ lọc. */}
+            {/* "No matching products found" message */}
+            {/* "Clear Filters" button, clicking which calls the resetFilters function to reset all filters. */}
             <button onClick={resetFilters} className="reset-filters-button">
               <span className="reset-icon">✕</span> Xóa bộ lọc{" "}
-              {/* Nội dung nút */}
+              {/* Button text */}
             </button>
           </div>
         ) : (
-          // Nếu KHÔNG đang tìm kiếm VÀ state 'showNoResults' là false (nghĩa là có sản phẩm sau khi lọc)
+          // If NOT searching AND 'showNoResults' state is false (meaning there are products after filtering)
           <div className="product-grid">
             {" "}
-            {/* Container dạng lưới để hiển thị các thẻ sản phẩm */}
-            {/* Lặp (map) qua mảng 'currentProducts' (các sản phẩm chỉ trên trang hiện tại)
-                      để render một component ProductCard cho mỗi sản phẩm. */}
+            {/* Grid container to display product cards */}
+            {/* Map over the 'currentProducts' array (products only on the current page)
+                            to render a ProductCard component for each product. */}
             {currentProducts.map((product) => (
-              <ProductCard key={product.id} product={product} /> // Render component con ProductCard, truyền ID sản phẩm làm key và đối tượng product làm prop.
+              <ProductCard key={product.id} product={product} /> // Render the child ProductCard component, passing product ID as key and the product object as prop.
             ))}
           </div>
         )}
       </div>
 
-      {/* Hiển thị component Phân trang chỉ khi tổng số trang lớn hơn 1 */}
-      {totalPages > 1 && ( // Kiểm tra nếu tổng số trang (totalPages) lớn hơn 1
+      {/* Display the Pagination component only when the total number of pages is greater than 1 */}
+      {totalPages > 1 && ( // Check if the total number of pages (totalPages) is greater than 1
         <Pagination
-          currentPage={currentPage} // Truyền state 'currentPage' làm prop cho Pagination
-          totalPages={totalPages} // Truyền biến 'totalPages' đã tính toán làm prop
-          onPageChange={handlePageChange} // Truyền hàm xử lý chuyển trang ('handlePageChange', đã memoize) làm prop
+          currentPage={currentPage} // Pass the 'currentPage' state as a prop to Pagination
+          totalPages={totalPages} // Pass the calculated 'totalPages' variable as a prop
+          onPageChange={handlePageChange} // Pass the memoized page change handler function ('handlePageChange') as a prop
         />
       )}
     </main>
   );
 };
 
-export default ProductPage; // Export component ProductPage làm default export để có thể sử dụng ở các file khác (thường là trong cấu hình định tuyến)
+export default ProductPage; // Export the ProductPage component as the default export so it can be used in other files (usually in routing configuration)

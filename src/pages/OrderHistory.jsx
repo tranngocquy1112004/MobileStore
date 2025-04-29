@@ -1,351 +1,351 @@
-import React, { useState, useEffect, useCallback } from "react"; // Import các hook cần thiết từ thư viện React: useState để quản lý trạng thái cục bộ, useEffect để thực hiện các tác vụ phụ (side effects), và useCallback để ghi nhớ (memoize) các hàm nhằm tối ưu hiệu suất
-import { Link } from "react-router-dom"; // Import component Link từ react-router-dom để tạo các liên kết điều hướng trong ứng dụng SPA
-import "./OrderHistory.css"; // Import file CSS tùy chỉnh để định dạng giao diện cho component OrderHistory này
+import React, { useState, useEffect, useCallback } from "react"; // Import necessary React hooks: useState for local state management, useEffect for performing side effects, and useCallback for memoizing functions to optimize performance.
+import { Link } from "react-router-dom"; // Import the Link component from react-router-dom to create navigation links in a Single Page Application (SPA).
+import "./OrderHistory.css"; // Import a custom CSS file to style this OrderHistory component.
 
-// --- Định nghĩa hằng số ---
+// --- Constant Definitions ---
 
-// Khóa sử dụng để lưu trữ danh sách các đơn hàng trong localStorage của trình duyệt.
-// Việc sử dụng hằng số giúp tránh gõ sai key và dễ dàng quản lý. Key này nên nhất quán với component xử lý đặt hàng (ví dụ: CartPage).
+// The key used to store the list of orders in the browser's localStorage.
+// Using a constant helps avoid typos and makes it easier to manage. This key should be consistent with the component handling order placement (e.g., CartPage).
 const LOCAL_STORAGE_ORDERS_KEY = "orders";
-// Số lượng đơn hàng tối đa sẽ hiển thị trên mỗi trang khi thực hiện phân trang.
+// The maximum number of orders to display per page during pagination.
 const ORDERS_PER_PAGE = 5;
 
-// --- Component con: OrderItem (Hiển thị thông tin chi tiết một đơn hàng) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering của component con này.
-// Component chỉ render lại khi props của nó thay đổi (order, onDelete).
+// --- Child Component: OrderItem (Displays detailed information for a single order) ---
+// Uses React.memo() to optimize the rendering performance of this child component.
+// The component will only re-render when its props change (order, onDelete).
 const OrderItem = React.memo(({ order, onDelete }) => {
-  // Định dạng thuộc tính 'date' của đơn hàng (là một chuỗi ISO) thành chuỗi ngày giờ dễ đọc theo định dạng tiếng Việt.
+  // Format the 'date' property of the order (which is an ISO string) into a human-readable date and time string according to Vietnamese locale.
   const orderDate = new Date(order.date).toLocaleString("vi-VN", {
-    day: "2-digit", // Ngày hiển thị luôn 2 chữ số (ví dụ: 01, 15)
-    month: "2-digit", // Tháng hiển thị luôn 2 chữ số (ví dụ: 01, 12)
-    year: "numeric", // Năm hiển thị đầy đủ 4 chữ số (ví dụ: 2023)
-    hour: "2-digit", // Giờ hiển thị luôn 2 chữ số (ví dụ: 09, 21)
-    minute: "2-digit", // Phút hiển thị luôn 2 chữ số (ví dụ: 05, 55)
+    day: "2-digit", // Display day with 2 digits (e.g., 01, 15)
+    month: "2-digit", // Display month with 2 digits (e.g., 01, 12)
+    year: "numeric", // Display full 4-digit year (e.g., 2023)
+    hour: "2-digit", // Display hour with 2 digits (e.g., 09, 21)
+    minute: "2-digit", // Display minute with 2 digits (e.g., 05, 55)
   });
 
   return (
     <div className="order-card">
       {" "}
-      {/* Container chính cho một đơn hàng riêng lẻ trong danh sách lịch sử */}
-      {/* Header của card đơn hàng, chứa ID đơn hàng và ngày đặt hàng */}
+      {/* Main container for a single order in the history list */}
+      {/* Header of the order card, containing the order ID and order date */}
       <div className="order-header">
         <h3 className="order-id">Đơn hàng #{order.id}</h3>{" "}
-        {/* Hiển thị mã đơn hàng (ID) */}
+        {/* Display the order code (ID) */}
         <span className="order-date">📅 {orderDate}</span>{" "}
-        {/* Hiển thị ngày và giờ đặt hàng đã được định dạng */}
+        {/* Display the formatted order date and time */}
       </div>
-      {/* Phần thông tin giao hàng của đơn hàng */}
+      {/* Section for the shipping information of the order */}
       <div className="shipping-info">
         {" "}
-        {/* Container cho thông tin giao hàng */}
+        {/* Container for shipping information */}
         <h4 className="section-title">🚚 Thông tin giao hàng</h4>{" "}
-        {/* Tiêu đề cho phần thông tin giao hàng */}
+        {/* Title for the shipping information section */}
         <div className="info-grid">
           {" "}
-          {/* Sử dụng CSS Grid để căn chỉnh các label và value của thông tin */}
+          {/* Use CSS Grid to align information labels and values */}
           <span className="info-label">👤 Tên:</span>{" "}
-          {/* Label cho tên người nhận */}
+          {/* Label for recipient name */}
           <span className="info-value">{order.shippingInfo.name}</span>{" "}
-          {/* Hiển thị tên người nhận từ dữ liệu đơn hàng */}
+          {/* Display the recipient name from order data */}
           <span className="info-label">🏠 Địa chỉ:</span>{" "}
-          {/* Label cho địa chỉ */}
+          {/* Label for address */}
           <span className="info-value">{order.shippingInfo.address}</span>{" "}
-          {/* Hiển thị địa chỉ người nhận */}
+          {/* Display the recipient address */}
           <span className="info-label">📞 Điện thoại:</span>{" "}
-          {/* Label cho số điện thoại */}
+          {/* Label for phone number */}
           <span className="info-value">{order.shippingInfo.phone}</span>{" "}
-          {/* Hiển thị số điện thoại người nhận */}
+          {/* Display the recipient phone number */}
         </div>
       </div>
-      {/* Phần chi tiết các mặt hàng có trong đơn hàng */}
+      {/* Section detailing the items included in the order */}
       <div className="order-details">
         {" "}
-        {/* Container cho danh sách các mặt hàng */}
+        {/* Container for the list of items */}
         <h4 className="section-title">🛍️ Chi tiết đơn hàng</h4>{" "}
-        {/* Tiêu đề cho phần chi tiết đơn hàng */}
+        {/* Title for the order details section */}
         <ul className="item-list">
           {" "}
-          {/* Danh sách (unordered list) hiển thị các mặt hàng */}
-          {/* Lặp (map) qua mảng các mặt hàng (order.items) trong đơn hàng hiện tại */}
+          {/* Unordered list displaying the items */}
+          {/* Map over the array of items (order.items) in the current order */}
           {order.items.map((item) => (
             <li key={item.id} className="item-row">
               {" "}
-              {/* Mỗi mặt hàng là một list item */}
+              {/* Each item is a list item */}
               <span className="item-name">{item.name}</span>{" "}
-              {/* Hiển thị tên mặt hàng */}
+              {/* Display the item name */}
               <span className="item-quantity">x{item.quantity}</span>{" "}
-              {/* Hiển thị số lượng của mặt hàng */}
+              {/* Display the quantity of the item */}
               <span className="item-price">
-                {/* Tính tổng giá của mặt hàng đó (giá * số lượng) và định dạng theo tiền tệ Việt Nam */}
+                {/* Calculate the total price of the item (price * quantity) and format it according to Vietnamese currency */}
                 {(item.price * item.quantity).toLocaleString("vi-VN")} VNĐ
               </span>
             </li>
           ))}
         </ul>
       </div>
-      {/* Phần chân của card đơn hàng, hiển thị tổng tiền và nút xóa */}
+      {/* Footer of the order card, displaying the total price and delete button */}
       <div className="order-footer">
         {" "}
-        {/* Container cho phần chân */}
+        {/* Container for the footer section */}
         <p className="total-price">
           💰 Tổng tiền: {order.totalPrice.toLocaleString("vi-VN")} VNĐ{" "}
-          {/* Hiển thị tổng tiền của toàn bộ đơn hàng, định dạng tiền tệ */}
+          {/* Display the total price of the entire order, formatted as currency */}
         </p>
-        {/* Nút xóa đơn hàng */}
+        {/* Delete order button */}
         <button
-          className="delete-button" // Class CSS để định dạng nút xóa
-          onClick={() => onDelete(order.id)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onDelete' (được truyền từ component cha qua props) với ID của đơn hàng hiện tại.
-          aria-label={`Xóa đơn hàng #${order.id}`} // Thuộc tính hỗ trợ khả năng tiếp cận cho người dùng trình đọc màn hình
+          className="delete-button" // CSS class for button styling
+          onClick={() => onDelete(order.id)} // Attach click event handler. Call the 'onDelete' function (passed from the parent component via props) with the ID of the current order.
+          aria-label={`Xóa đơn hàng #${order.id}`} // Accessibility attribute for screen reader users
         >
           🗑️ Xóa{" "}
-          {/* Nội dung hiển thị trên nút xóa */}
+          {/* Text displayed on the delete button */}
         </button>
       </div>
     </div>
   );
-}); // Kết thúc React.memo() cho component OrderItem
+}); // End of React.memo() for the OrderItem component
 
-// --- Component con: Pagination (Hiển thị các nút điều hướng phân trang) ---
-// Sử dụng React.memo() để tối ưu hóa hiệu suất rendering.
-// Component chỉ render lại khi props của nó thay đổi (currentPage, totalPages, onPageChange).
+// --- Child Component: Pagination (Displays pagination navigation buttons) ---
+// Uses React.memo() to optimize rendering performance.
+// The component will only re-render when its props change (currentPage, totalPages, onPageChange).
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
-  // Không hiển thị bộ phân trang nếu tổng số trang nhỏ hơn hoặc bằng 1 (chỉ có một trang duy nhất).
+  // Do not display the pagination component if the total number of pages is less than or equal to 1 (only a single page).
   if (totalPages <= 1) return null;
 
   return (
     <div className="pagination">
       {" "}
-      {/* Container cho bộ phận phân trang */}
-      {/* Nút "Trang trước" */}
+      {/* Container for the pagination component */}
+      {/* "Previous Page" button */}
       <button
-        className="pagination-button" // Class CSS để định dạng nút phân trang
-        onClick={() => onPageChange(currentPage - 1)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onPageChange' (truyền qua props) với số trang mới là trang hiện tại trừ đi 1.
-        disabled={currentPage === 1} // Vô hiệu hóa nút nếu trang hiện tại đang là trang đầu tiên (1).
+        className="pagination-button" // CSS class for pagination button styling
+        onClick={() => onPageChange(currentPage - 1)} // Attach click event handler. Call the 'onPageChange' function (passed via props) with the new page number (current page minus 1).
+        disabled={currentPage === 1} // Disable the button if the current page is the first page (1).
       >
         Trang trước{" "}
-        {/* Nội dung nút */}
+        {/* Button text */}
       </button>
-      {/* Hiển thị thông tin trang hiện tại và tổng số trang */}
+      {/* Display current page and total pages information */}
       <span className="pagination-current">
         Trang {currentPage} / {totalPages}{" "}
-        {/* Hiển thị định dạng "Trang X / Tổng Y" */}
+        {/* Display in the format "Page X / Total Y" */}
       </span>
-      {/* Nút "Trang sau" */}
+      {/* "Next Page" button */}
       <button
-        className="pagination-button" // Class CSS để định dạng nút phân trang
-        onClick={() => onPageChange(currentPage + 1)} // Gắn hàm xử lý sự kiện click. Gọi hàm 'onPageChange' với số trang mới là trang hiện tại cộng thêm 1.
-        disabled={currentPage === totalPages} // Vô hiệu hóa nút nếu trang hiện tại đang là trang cuối cùng (bằng totalPages).
+        className="pagination-button" // CSS class for pagination button styling
+        onClick={() => onPageChange(currentPage + 1)} // Attach click event handler. Call the 'onPageChange' function with the new page number (current page plus 1).
+        disabled={currentPage === totalPages} // Disable the button if the current page is the last page (equals totalPages).
       >
         Trang sau{" "}
-        {/* Nội dung nút */}
+        {/* Button text */}
       </button>
     </div>
   );
-}); // Kết thúc React.memo() cho component Pagination
+}); // End of React.memo() for the Pagination component
 
-// --- Component chính của trang Lịch sử đơn hàng ---
-// Đây là functional component hiển thị toàn bộ nội dung của trang Lịch sử đơn hàng.
+// --- Main Component for the Order History page ---
+// This is the functional component that renders the entire content of the Order History page.
 const OrderHistory = () => {
-  // --- State quản lý dữ liệu và trạng thái của component ---
-  // State 'orders': Lưu trữ danh sách tất cả các đơn hàng đã được tải từ localStorage. Ban đầu là mảng rỗng [].
+  // --- State management for component data and status ---
+  // 'orders' state: Stores the list of all orders loaded from localStorage. Initially an empty array [].
   const [orders, setOrders] = useState([]);
-  // State 'isLoading': Boolean theo dõi trạng thái đang tải dữ liệu đơn hàng. Ban đầu là true.
+  // 'isLoading' state: Boolean tracking the order data loading status. Initially true.
   const [isLoading, setIsLoading] = useState(true);
-  // State 'currentPage': Lưu trữ số trang hiện tại mà người dùng đang xem trong bộ phân trang. Ban đầu là 1.
+  // 'currentPage' state: Stores the current page number the user is viewing in pagination. Initially 1.
   const [currentPage, setCurrentPage] = useState(1);
 
-  // --- Effect hook để tải dữ liệu đơn hàng từ localStorage khi component mount ---
-  // Effect này chạy MỘT LẦN duy nhất sau lần render đầu tiên (tương tự componentDidMount).
+  // --- Effect hook to load order data from localStorage when the component mounts ---
+  // This effect runs only ONCE after the initial render (similar to componentDidMount).
   useEffect(() => {
-    // Định nghĩa hàm 'loadOrders' để thực hiện việc đọc dữ liệu từ localStorage.
+    // Define the 'loadOrders' function to perform the data reading from localStorage.
     const loadOrders = () => {
       try {
-        // Lấy chuỗi JSON chứa đơn hàng từ localStorage bằng key đã định nghĩa.
-        // Nếu không tìm thấy dữ liệu (localStorage.getItem trả về null), mặc định là mảng rỗng [].
-        // Sử dụng try-catch để xử lý lỗi nếu dữ liệu trong localStorage bị hỏng hoặc không phải JSON hợp lệ.
+        // Retrieve the JSON string containing orders from localStorage using the defined key.
+        // If no data is found (localStorage.getItem returns null), default to an empty array [].
+        // Use try-catch to handle errors if the data in localStorage is corrupted or not valid JSON.
         const storedOrders =
           JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || [];
-        // Sắp xếp mảng đơn hàng theo ngày đặt hàng giảm dần (đơn mới nhất sẽ hiển thị trước).
-        // Phương thức .sort() sắp xếp tại chỗ. Hàm so sánh (a, b) -> new Date(b.date) - new Date(a.date)
-        // trả về số dương nếu ngày của b lớn hơn ngày của a, đẩy b lên trước a.
+        // Sort the orders array by date in descending order (newest orders displayed first).
+        // The .sort() method sorts in place. The comparison function (a, b) -> new Date(b.date) - new Date(a.date)
+        // returns a positive number if b's date is greater than a's date, pushing b before a.
         const sortedOrders = storedOrders.sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
-        setOrders(sortedOrders); // Cập nhật state 'orders' với danh sách đơn hàng đã sắp xếp.
+        setOrders(sortedOrders); // Update the 'orders' state with the sorted list of orders.
       } catch (error) {
-        console.error("Lỗi khi đọc đơn hàng từ localStorage:", error); // Ghi log lỗi ra console nếu có vấn đề khi đọc hoặc parse localStorage.
-        // Nếu có lỗi, có thể setOrders([]) để hiển thị trạng thái rỗng hoặc một thông báo lỗi riêng biệt.
-        // Trong trường hợp này, chỉ ghi log và để orders là mảng rỗng mặc định nếu parse thất bại.
+        console.error("Error loading orders from localStorage:", error); // Log the error to the console if there's an issue reading or parsing localStorage.
+        // If an error occurs, you could potentially setOrders([]) to display an empty state or a separate error message.
+        // In this case, we just log and let orders remain the default empty array if parsing fails.
       } finally {
-        // Khối finally luôn chạy, đảm bảo 'isLoading' được đặt thành false sau khi quá trình tải (dù thành công hay lỗi) kết thúc.
+        // The finally block always runs, ensuring 'isLoading' is set to false after the loading process (whether successful or failed) finishes.
         setIsLoading(false);
       }
     };
 
-    // Sử dụng setTimeout để giả lập một độ trễ nhỏ (ví dụ: 500ms) khi tải dữ liệu.
-    // Điều này giúp người dùng thấy rõ trạng thái loading spinner trên giao diện.
-    // Trong ứng dụng thực tế fetch từ API thật, bạn sẽ không cần setTimeout này,
-    // việc setIsLoading(false) sẽ được gọi sau khi fetch hoàn thành.
-    const timer = setTimeout(loadOrders, 500); // Chờ 500ms trước khi gọi hàm loadOrders.
+    // Use setTimeout to simulate a small delay (e.g., 500ms) when loading data.
+    // This helps users clearly see the loading spinner state on the interface.
+    // In a real application fetching from a real API, you wouldn't need this setTimeout;
+    // setIsLoading(false) would be called after the fetch completes.
+    const timer = setTimeout(loadOrders, 500); // Wait 500ms before calling the loadOrders function.
 
-    // Hàm cleanup cho effect này: Chạy khi component bị hủy bỏ (unmount)
-    // hoặc trước khi effect chạy lại (nếu dependencies thay đổi, nhưng ở đây deps là mảng rỗng nên chỉ chạy khi unmount).
-    // Xóa bỏ hẹn giờ đã tạo để ngăn hàm loadOrders chạy và cập nhật state sau khi component đã unmount.
+    // Cleanup function for this effect: Runs when the component is unmounted
+    // or before the effect runs again (if dependencies change, but here the deps array is empty, so it only runs on unmount).
+    // Clear the created timeout to prevent the loadOrders function from running and updating state after the component has unmounted.
     return () => clearTimeout(timer);
-  }, []); // Mảng dependencies rỗng []: đảm bảo effect chỉ chạy MỘT LẦN duy nhất khi component được mount lần đầu.
+  }, []); // Empty dependency array []: ensures the effect runs only ONCE when the component is first mounted.
 
-  // --- Hàm xử lý logic xóa một đơn hàng ---
-  // Nhận ID của đơn hàng cần xóa (orderId).
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm sẽ được tạo lại khi state 'orders' hoặc 'currentPage' thay đổi.
-  // Điều này giúp ngăn việc tạo lại hàm không cần thiết qua mỗi lần render nếu 'orders' và 'currentPage' không đổi,
-  // đặc biệt hữu ích khi truyền hàm này xuống component con (OrderItem) có sử dụng React.memo().
+  // --- Function to handle the logic for deleting an order ---
+  // Accepts the ID of the order to be deleted (orderId).
+  // Uses useCallback to memoize this function. The function will be re-created when the 'orders' state or 'currentPage' state changes.
+  // This prevents unnecessary function re-creation on every render if 'orders' and 'currentPage' haven't changed,
+  // which is especially useful when passing this function down to a child component (OrderItem) that uses React.memo().
   const handleDeleteOrder = useCallback(
     (orderId) => {
-      // Hiển thị một hộp thoại xác nhận của trình duyệt trước khi thực hiện xóa.
-      // window.confirm() trả về true nếu người dùng nhấn 'OK', false nếu nhấn 'Cancel'.
+      // Display a browser confirmation dialog before proceeding with deletion.
+      // window.confirm() returns true if the user clicks 'OK', false if they click 'Cancel'.
       if (!window.confirm("Bạn có chắc muốn xóa đơn hàng này?")) {
-        return; // Nếu người dùng chọn 'Cancel' (kết quả là false), dừng hàm tại đây và không làm gì cả.
+        return; // If the user selects 'Cancel' (result is false), stop the function here and do nothing.
       }
 
-      // Tạo một mảng đơn hàng mới bằng cách sử dụng phương thức .filter() trên mảng 'orders'.
-      // Lọc ra chỉ những đơn hàng có ID KHÁC với 'orderId' được truyền vào. Điều này loại bỏ đơn hàng cần xóa.
+      // Create a new array of orders by using the .filter() method on the 'orders' array.
+      // Filter out only those orders whose ID is DIFFERENT from the passed 'orderId'. This effectively removes the order to be deleted.
       const updatedOrders = orders.filter((order) => order.id !== orderId);
-      setOrders(updatedOrders); // Cập nhật state 'orders' với danh sách đơn hàng mới sau khi xóa.
+      setOrders(updatedOrders); // Update the 'orders' state with the new list of orders after deletion.
 
-      // Lưu danh sách đơn hàng đã cập nhật trở lại vào localStorage (chuyển thành chuỗi JSON trước khi lưu).
+      // Save the updated list of orders back to localStorage (convert to a JSON string before saving).
       localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updatedOrders));
 
-      // --- Logic điều chỉnh số trang hiện tại sau khi xóa một đơn hàng ---
-      // Tính toán tổng số trang cần thiết dựa trên danh sách đơn hàng mới sau khi xóa.
+      // --- Logic to adjust the current page number after deleting an order ---
+      // Calculate the total number of pages needed based on the new list of orders after deletion.
       const totalPagesAfterDelete = Math.ceil(
         updatedOrders.length / ORDERS_PER_PAGE
       );
-      // Nếu trang hiện tại ('currentPage') lớn hơn tổng số trang mới sau khi xóa (totalPagesAfterDelete)
-      // VÀ tổng số trang mới vẫn lớn hơn 0 (đảm bảo không phải trường hợp xóa hết sạch đơn hàng):
+      // If the current page ('currentPage') is greater than the new total number of pages after deletion (totalPagesAfterDelete)
+      // AND the new total number of pages is still greater than 0 (ensuring it's not the case where all orders are deleted):
       if (currentPage > totalPagesAfterDelete && totalPagesAfterDelete > 0) {
-        setCurrentPage(totalPagesAfterDelete); // Cập nhật 'currentPage' về số trang cuối cùng mới.
+        setCurrentPage(totalPagesAfterDelete); // Update 'currentPage' to the new last page number.
       } else if (updatedOrders.length === 0) {
-        // Nếu sau khi xóa mà danh sách đơn hàng trở thành trống rỗng:
-        setCurrentPage(1); // Đảm bảo state 'currentPage' được đặt lại về 1.
+        // If after deleting, the orders list becomes empty:
+        setCurrentPage(1); // Ensure the 'currentPage' state is reset to 1.
       }
-      // Nếu các điều kiện trên không đúng, có nghĩa là trang hiện tại vẫn hợp lệ với tổng số trang mới, nên không cần thay đổi currentPage.
+      // If the above conditions are not met, it means the current page is still valid with the new total pages, so no need to change currentPage.
     },
-    [orders, currentPage] // Mảng dependencies: Hàm này cần truy cập giá trị hiện tại của state 'orders' (để filter) và state 'currentPage' (để điều chỉnh sau khi xóa).
+    [orders, currentPage] // Dependency array: This function needs access to the current value of the 'orders' state (to filter) and the 'currentPage' state (to adjust after deletion).
   );
 
-  // --- Tính toán các giá trị dẫn xuất từ state (để hiển thị và phân trang) ---
-  // Các giá trị này sẽ được tính toán lại mỗi khi state 'orders' hoặc 'currentPage' thay đổi,
-  // đảm bảo dữ liệu hiển thị và logic phân trang luôn chính xác.
+  // --- Calculate derived values from state ( for display and pagination) ---
+  // These values will be recalculated whenever the 'orders' state or 'currentPage' state changes,
+  // ensuring that the displayed data and pagination logic are always accurate.
 
-  // Tính tổng số trang cần thiết dựa trên tổng số lượng đơn hàng và số đơn hàng trên mỗi trang.
-  // Sử dụng Math.ceil() để làm tròn lên, đảm bảo có đủ trang cho cả những đơn hàng lẻ.
+  // Calculate the total number of pages required based on the total number of orders and products per page.
+  // Use Math.ceil() to round up, ensuring enough pages for any remaining orders.
   const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
-  // Tính chỉ số bắt đầu của đơn hàng trên trang hiện tại trong mảng 'orders'.
+  // Calculate the starting index of the orders on the current page within the 'orders' array.
   const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
-  // Tính chỉ số kết thúc (không bao gồm) của đơn hàng trên trang hiện tại.
-  // Sử dụng Math.min để đảm bảo endIndex không vượt quá độ dài mảng orders khi ở trang cuối cùng.
+  // Calculate the ending index (exclusive) of the orders on the current page.
+  // Use Math.min to ensure endIndex does not exceed the length of the orders array when on the last page.
   const endIndex = Math.min(startIndex + ORDERS_PER_PAGE, orders.length);
-  // Sử dụng phương thức .slice() trên mảng 'orders' để lấy ra danh sách các đơn hàng chỉ hiển thị trên trang hiện tại.
+  // Use the .slice() method on the 'orders' array to extract the list of orders to be displayed only on the current page.
   const currentOrders = orders.slice(startIndex, endIndex);
 
-  // --- Hàm xử lý khi người dùng click các nút phân trang (Trang trước/sau) ---
-  // Nhận số trang mới ('page') làm tham số.
-  // Sử dụng useCallback để ghi nhớ hàm này. Hàm sẽ được tạo lại khi 'totalPages' thay đổi.
-  // Điều này giúp tránh việc tạo lại hàm không cần thiết và có thể hữu ích khi truyền xuống component con (Pagination) nếu nó được memoize.
+  // --- Function to handle user clicking pagination buttons (Previous/Next Page) ---
+  // Accepts the new page number ('page') as a parameter.
+  // Uses useCallback to memoize this function. The function will be re-created when 'totalPages' changes.
+  // This helps prevent unnecessary function re-creation and can be beneficial when passing it down to a child component (Pagination) if it is memoized.
   const handlePageChange = useCallback(
     (page) => {
-      // Tính toán số trang mới, đảm bảo nó nằm trong khoảng hợp lệ từ 1 đến totalPages.
-      // Math.max(1, ...) đảm bảo số trang không nhỏ hơn 1.
-      // Math.min(page, totalPages) đảm bảo số trang không lớn hơn tổng số trang.
+      // Calculate the new page number, ensuring it stays within the valid range from 1 to totalPages.
+      // Math.max(1, ...) ensures the page number is not less than 1.
+      // Math.min(page, totalPages) ensures the page number is not greater than the total number of pages.
       const newPage = Math.max(1, Math.min(page, totalPages));
-      setCurrentPage(newPage); // Cập nhật state 'currentPage' với số trang mới đã được giới hạn hợp lệ.
+      setCurrentPage(newPage); // Update the 'currentPage' state with the new, valid page number.
     },
-    [totalPages] // Mảng dependencies: Hàm này cần truy cập giá trị hiện tại của biến 'totalPages' để giới hạn số trang hợp lệ.
+    [totalPages] // Dependency array: This function needs access to the current value of the 'totalPages' variable to clamp the valid page number.
   );
 
-  // --- Render giao diện dựa trên trạng thái loading ban đầu ---
+  // --- Render UI based on the initial loading state ---
 
-  // Nếu state 'isLoading' là true, hiển thị giao diện loading spinner.
+  // If the 'isLoading' state is true, display a loading spinner UI.
   if (isLoading) {
     return (
       <div className="loading-container">
         {" "}
-        {/* Container bao quanh spinner và text loading */}
+        {/* Container wrapping the spinner and loading text */}
         <div className="loading-spinner"></div>{" "}
-        {/* Biểu tượng spinner quay */}
-        <p>Đang tải...</p> {/* Hiển thị thông báo "Đang tải..." */}
+        {/* Spinning spinner icon */}
+        <p>Đang tải...</p> {/* Display "Loading..." message */}
       </div>
     );
   }
 
-  // --- Render giao diện chính của trang Lịch sử đơn hàng khi không còn loading ---
-  // Đây là phần giao diện hiển thị sau khi dữ liệu đã tải xong.
+  // --- Render the main UI of the Order History page when not loading ---
+  // This is the UI section displayed after the data has finished loading.
   return (
     <main className="order-history-container">
       {" "}
-      {/* Thẻ <main> bao bọc nội dung chính của trang */}
-      {/* Header của trang Lịch sử đơn hàng */}
+      {/* <main> tag wraps the main content of the page */}
+      {/* Header of the Order History page */}
       <header className="page-header">
-        <h1>📜 Lịch sử đơn hàng</h1> {/* Tiêu đề chính của trang */}
-        {/* Hiển thị tổng số lượng đơn hàng đã tải */}
+        <h1>📜 Lịch sử đơn hàng</h1> {/* Main title of the page */}
+        {/* Display the total number of loaded orders */}
         <p className="order-count">Bạn có {orders.length} đơn hàng</p>{" "}
       </header>
-      {/* Phần hiển thị danh sách đơn hàng hoặc thông báo khi danh sách rỗng */}
+      {/* Section displaying the list of orders or a message when the list is empty */}
       <section className="order-list">
         {" "}
-        {/* Container cho danh sách các đơn hàng */}
-        {orders.length === 0 ? ( // Conditional Rendering: Kiểm tra nếu mảng 'orders' rỗng (không có đơn hàng nào)
-          // --- Hiển thị giao diện khi không có đơn hàng ---
+        {/* Container for the list of orders */}
+        {orders.length === 0 ? ( // Conditional Rendering: Check if the 'orders' array is empty (no orders)
+          // --- Display UI when there are no orders ---
           <div className="empty-state">
             {" "}
-            {/* Container cho trạng thái rỗng */}
+            {/* Container for the empty state */}
             <img
-              src="/empty-order.png" // Đường dẫn đến ảnh minh họa giỏ hàng trống (hoặc trạng thái rỗng đơn hàng). Đảm bảo file ảnh này tồn tại trong thư mục 'public'.
-              alt="Không có đơn hàng" // Alt text cho ảnh, quan trọng cho SEO và khả năng tiếp cận
-              className="empty-image" // Class CSS để định dạng ảnh
-              loading="lazy" // Tải ảnh theo chế độ lazy loading, cải thiện hiệu suất
+              src="/empty-order.png" // Path to an illustrative image for an empty cart (or empty order state). Ensure this image file exists in the 'public' directory.
+              alt="Không có đơn hàng" // Alt text for the image, important for SEO and accessibility
+              className="empty-image" // CSS class for image styling
+              loading="lazy" // Load image using lazy loading, improving performance
             />
             <p className="empty-message">Chưa có đơn hàng nào</p>{" "}
-            {/* Thông báo "Chưa có đơn hàng nào" */}
-            {/* Nút "Mua sắm ngay" - một liên kết dẫn người dùng đến trang sản phẩm để bắt đầu mua sắm */}
+            {/* "No orders yet" message */}
+            {/* "Shop Now" button - a link leading users to the products page to start shopping */}
             <Link to="/products" className="shop-now-button">
               🛒 Mua sắm ngay{" "}
-              {/* Nội dung nút/liên kết */}
+              {/* Button/link text */}
             </Link>
           </div>
         ) : (
-          // --- Hiển thị danh sách đơn hàng khi có đơn hàng ---
-          // Lặp (map) qua mảng 'currentOrders' (các đơn hàng của trang hiện tại)
-          // để render một component OrderItem cho mỗi đơn hàng.
+          // --- Display the list of orders when there are orders ---
+          // Map over the 'currentOrders' array (orders for the current page)
+          // to render an OrderItem component for each order.
           currentOrders.map((order) => (
             <OrderItem
-              key={order.id} // Key duy nhất cho mỗi OrderItem trong danh sách, sử dụng ID đơn hàng (quan trọng cho hiệu suất React)
-              order={order} // Truyền đối tượng đơn hàng hiện tại ('order') làm prop cho OrderItem.
-              onDelete={handleDeleteOrder} // Truyền hàm xử lý xóa đơn hàng ('handleDeleteOrder', đã memoize) làm prop 'onDelete' cho OrderItem.
+              key={order.id} // Unique key for each OrderItem in the list, using the order ID (important for React performance)
+              order={order} // Pass the current order object ('order') as a prop to OrderItem.
+              onDelete={handleDeleteOrder} // Pass the memoized delete order handler function ('handleDeleteOrder') as the 'onDelete' prop to OrderItem.
             />
           ))
         )}
       </section>
-      {/* Hiển thị component Phân trang chỉ khi tổng số trang lớn hơn 1 */}
-      {totalPages > 1 && ( // Conditional Rendering: Chỉ hiển thị bộ phân trang nếu có nhiều hơn 1 trang
+      {/* Display the Pagination component only when the total number of pages is greater than 1 */}
+      {totalPages > 1 && ( // Conditional Rendering: Only display the pagination component if there is more than 1 page
         <Pagination
-          currentPage={currentPage} // Truyền số trang hiện tại làm prop
-          totalPages={totalPages} // Truyền tổng số trang làm prop
-          onPageChange={handlePageChange} // Truyền hàm xử lý chuyển trang (đã memoize) làm prop
+          currentPage={currentPage} // Pass the current page number as a prop
+          totalPages={totalPages} // Pass the total number of pages as a prop
+          onPageChange={handlePageChange} // Pass the memoized page change handler function as a prop
         />
       )}
-      {/* Footer của trang Lịch sử đơn hàng */}
+      {/* Footer of the Order History page */}
       <footer className="page-footer">
         {" "}
-        {/* Container cho phần chân trang */}
-        {/* Nút "Quay lại cửa hàng" - một liên kết dẫn về trang chủ hoặc trang sản phẩm */}
+        {/* Container for the footer section */}
+        {/* "Back to Store" button - a link leading back to the homepage or products page */}
         <Link to="/home" className="back-button">
           ← Quay lại cửa hàng{" "}
-          {/* Nội dung nút/liên kết */}
+          {/* Button/link text */}
         </Link>
       </footer>
     </main>
   );
 };
 
-export default OrderHistory; // Export component OrderHistory làm default export để có thể sử dụng ở các file khác (thường là trong cấu hình định tuyến)
+export default OrderHistory; // Export the OrderHistory component as the default export so it can be used in other files (usually in routing configuration)
