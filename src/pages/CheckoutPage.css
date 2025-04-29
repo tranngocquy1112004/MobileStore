@@ -1,0 +1,214 @@
+/* src/pages/CheckoutPage.css */
+
+.checkout-container {
+    max-width: 800px; /* Chiều rộng tối đa của nội dung trang */
+    margin: 20px auto; /* Căn giữa và tạo khoảng cách trên/dưới */
+    padding: 20px;
+    background-color: #fff; /* Nền trắng */
+    border-radius: 8px; /* Góc bo tròn */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+    font-family: Arial, sans-serif; /* Font chữ */
+}
+
+.checkout-container .page-title {
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Sections (Order Summary, Shipping Info) */
+.order-summary-section,
+.shipping-info-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.order-summary-section h2,
+.shipping-info-section h2 {
+     color: #555;
+     margin-top: 0;
+     margin-bottom: 20px;
+     border-bottom: 1px solid #eee;
+     padding-bottom: 10px;
+}
+
+/* Order Summary List */
+.checkout-cart-items-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+}
+
+.checkout-cart-item {
+    display: flex; /* Dùng flexbox để căn chỉnh các phần tử con */
+    justify-content: space-between; /* Đẩy tên, số lượng, giá ra hai đầu */
+    padding: 8px 0;
+    border-bottom: 1px dashed #ddd; /* Gạch đứt phân cách */
+}
+
+.checkout-cart-item:last-child {
+    border-bottom: none; /* Bỏ gạch đứt ở item cuối */
+}
+
+.checkout-cart-item .item-name {
+    flex-grow: 1; /* Tên sản phẩm chiếm hết không gian còn lại */
+    margin-right: 10px;
+}
+
+.checkout-cart-item .item-quantity {
+    font-weight: bold;
+    color: #777;
+    margin-right: 10px;
+}
+
+.checkout-cart-item .item-price {
+    font-weight: bold;
+    color: #007bff; /* Màu nổi bật cho giá */
+}
+
+.checkout-total-price {
+    text-align: right;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+
+/* Shipping Info Sections (Saved, Manual) */
+.saved-addresses-selection,
+.manual-address-entry {
+    margin-bottom: 20px;
+}
+
+.saved-addresses-selection h3,
+.manual-address-entry h4 { /* Điều chỉnh h4 thành h3 hoặc giữ nguyên tùy ý */
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.address-options-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+}
+
+.address-options-list li {
+    margin-bottom: 10px;
+}
+
+.address-options-list li input[type="radio"] {
+    margin-right: 10px; /* Khoảng cách giữa radio và label */
+}
+
+.address-option-label {
+    cursor: pointer; /* Biến con trỏ thành bàn tay khi rê chuột vào label */
+    color: #333;
+}
+
+.address-option-label strong {
+    color: #007bff; /* Màu nổi bật cho tên người nhận */
+}
+
+.toggle-address-form-button {
+    background: none; /* Nút trông giống link */
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font-size: 1rem;
+    margin-bottom: 15px; /* Khoảng cách dưới nút */
+}
+
+.toggle-address-form-button:hover {
+    text-decoration: none; /* Bỏ gạch chân khi hover */
+}
+
+.manual-address-entry .form-group { /* Sử dụng lại class form-group nếu có */
+    margin-bottom: 15px;
+}
+
+.manual-address-entry label {
+     display: block;
+     margin-bottom: 5px;
+     font-weight: bold;
+     color: #555;
+}
+
+.manual-address-entry input {
+    width: calc(100% - 22px); /* Adjust for padding and border */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+
+/* Final Shipping Preview */
+.final-shipping-preview h3 { /* Hoặc h4 tùy cấu trúc */
+    color: #555;
+     margin-top: 20px;
+    margin-bottom: 10px;
+     border-top: 1px solid #eee; /* Đường phân cách trên */
+     padding-top: 15px;
+}
+
+.final-shipping-preview .shipping-details {
+    font-size: 1.1rem;
+    color: #333;
+    line-height: 1.5; /* Giãn dòng */
+}
+
+.final-shipping-preview .shipping-placeholder {
+    color: #dc3545; /* Màu đỏ hoặc cam cho thông báo cần nhập */
+    font-style: italic;
+    text-align: center;
+}
+
+
+/* Place Order Button */
+.place-order-button {
+    display: block; /* Nút chiếm toàn bộ chiều rộng */
+    width: 100%;
+    padding: 15px;
+    background-color: #28a745; /* Màu xanh lá cây cho nút đặt hàng */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 30px; /* Khoảng cách trên */
+}
+
+.place-order-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.place-order-button:disabled {
+    background-color: #ccc; /* Màu xám khi bị disabled */
+    cursor: not-allowed; /* Con trỏ báo không được phép */
+}
+
+/* Message Styles (Copy from UserProfilePage.css if not in a shared CSS file) */
+.checkout-container .message {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.checkout-container .message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.checkout-container .message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}

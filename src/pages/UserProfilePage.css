@@ -1,0 +1,300 @@
+.user-profile-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.user-profile-container h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.user-profile-container p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.profile-sections-menu {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-sections-menu button {
+    padding: 10px 15px;
+    margin: 0 5px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #666;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+
+.profile-sections-menu button:hover {
+    color: #007bff;
+}
+
+.profile-sections-menu button.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+/* Sections */
+.profile-info-section,
+.change-password-section,
+.order-history-section,
+.addresses-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.profile-info-section h2,
+.change-password-section h2,
+.order-history-section h2,
+.addresses-section h2 {
+    color: #555;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Form Groups */
+.profile-form .form-group,
+.password-form .form-group {
+    margin-bottom: 15px;
+}
+
+.profile-form label,
+.password-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.profile-form input[type="text"],
+.profile-form input[type="email"],
+.password-form input[type="password"],
+.profile-input,
+.password-input {
+    width: calc(100% - 22px); /* Adjust for padding and border */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.profile-form input[disabled] {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+
+/* Buttons */
+.profile-update-button,
+.change-password-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745; /* Green for success actions */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.profile-update-button:hover,
+.change-password-button:hover {
+    background-color: #218838;
+}
+
+.profile-update-button:disabled {
+     background-color: #ccc;
+     cursor: not-allowed;
+}
+
+
+/* Messages */
+.user-profile-container .message {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.user-profile-container .message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.user-profile-container .message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Back Link */
+.back-link {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.back-link a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+
+/* Specific styles for Orders Section link */
+.order-history-section p a {
+     color: #007bff;
+    text-decoration: none;
+}
+.order-history-section p a:hover {
+     text-decoration: underline;
+}
+/* Bổ sung vào file UserProfilePage.css hiện có của bạn */
+
+/* Style cho Form thêm địa chỉ mới */
+.address-form {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.address-form .form-group {
+    margin-bottom: 10px;
+}
+
+.address-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.address-form input {
+     width: calc(100% - 22px); /* Adjust for padding and border */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.address-form button[type="submit"] {
+    display: inline-block; /* Hoặc block nếu muốn chiếm cả dòng */
+    padding: 10px 20px;
+    background-color: #007bff; /* Màu xanh cho hành động chính */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.address-form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+
+/* Style cho Danh sách địa chỉ */
+.address-list {
+    list-style: none; /* Bỏ dấu chấm mặc định của ul */
+    padding: 0;
+}
+
+.address-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+    position: relative; /* Để định vị nút xóa */
+}
+
+.address-item p {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.address-item p:last-child {
+    margin-bottom: 0;
+}
+
+/* Style cho nút xóa địa chỉ */
+.delete-address-button {
+    position: absolute; /* Đặt nút ở góc */
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545; /* Màu đỏ cho xóa */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.delete-address-button:hover {
+    background-color: #c82333;
+}
+
+/* Style cho trạng thái rỗng của địa chỉ */
+.addresses-section .empty-state {
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    margin-top: 20px;
+}
+
+
+/* Điều chỉnh style message cho rõ ràng hơn */
+.user-profile-container .message {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold; /* In đậm thông báo */
+}
+
+/* Các class success và error đã định nghĩa trước đó */
+.user-profile-container .message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.user-profile-container .message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+
+/* Có thể thêm style cho .order-history-section .order-history-status nếu OrderHistory có status message */
+.order-history-section .order-history-status {
+     text-align: center;
+     margin-top: 20px;
+     color: #555;
+}
+
+.order-history-section .order-history-status.error {
+    color: #dc3545;
+}
