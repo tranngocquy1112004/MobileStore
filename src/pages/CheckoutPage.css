@@ -1,40 +1,42 @@
-/* src/pages/CheckoutPage.css */
+/* src/pages/CheckoutPage.css - Theme Hoa Anh Đào Nhẹ Nhàng */
 
 .checkout-container {
-    max-width: 800px; /* Chiều rộng tối đa của nội dung trang */
-    margin: 20px auto; /* Căn giữa và tạo khoảng cách trên/dưới */
+    max-width: 800px;
+    margin: 20px auto;
     padding: 20px;
-    background-color: #fff; /* Nền trắng */
-    border-radius: 8px; /* Góc bo tròn */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
-    font-family: Arial, sans-serif; /* Font chữ */
+    background-color: #fff0f5; /* Hồng phấn nền */
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(236, 64, 122, 0.15); /* Hồng đậm nhạt */
+    font-family: 'Arial', sans-serif;
 }
 
 .checkout-container .page-title {
-    color: #333;
+    color: #ad1457; /* Hồng tím đậm */
     text-align: center;
     margin-bottom: 30px;
+    font-weight: bold;
 }
 
-/* Sections (Order Summary, Shipping Info) */
+/* Sections */
 .order-summary-section,
 .shipping-info-section {
     margin-bottom: 30px;
     padding: 15px;
-    border: 1px solid #eee;
+    border: 1px solid #f8bbd0;
     border-radius: 8px;
+    background-color: #fff;
 }
 
 .order-summary-section h2,
 .shipping-info-section h2 {
-     color: #555;
-     margin-top: 0;
-     margin-bottom: 20px;
-     border-bottom: 1px solid #eee;
-     padding-bottom: 10px;
+    color: #d81b60;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f8bbd0;
+    padding-bottom: 10px;
 }
 
-/* Order Summary List */
+/* Order Items */
 .checkout-cart-items-list {
     list-style: none;
     padding: 0;
@@ -42,137 +44,118 @@
 }
 
 .checkout-cart-item {
-    display: flex; /* Dùng flexbox để căn chỉnh các phần tử con */
-    justify-content: space-between; /* Đẩy tên, số lượng, giá ra hai đầu */
+    display: flex;
+    justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px dashed #ddd; /* Gạch đứt phân cách */
+    border-bottom: 1px dashed #f8bbd0;
 }
 
 .checkout-cart-item:last-child {
-    border-bottom: none; /* Bỏ gạch đứt ở item cuối */
+    border-bottom: none;
 }
 
 .checkout-cart-item .item-name {
-    flex-grow: 1; /* Tên sản phẩm chiếm hết không gian còn lại */
+    flex-grow: 1;
     margin-right: 10px;
+    color: #333;
 }
 
 .checkout-cart-item .item-quantity {
     font-weight: bold;
-    color: #777;
+    color: #d81b60;
     margin-right: 10px;
 }
 
 .checkout-cart-item .item-price {
     font-weight: bold;
-    color: #007bff; /* Màu nổi bật cho giá */
+    color: #ec407a;
 }
 
 .checkout-total-price {
     text-align: right;
     font-size: 1.2rem;
-    color: #333;
+    color: #ad1457;
 }
 
 
-/* Shipping Info Sections (Saved, Manual) */
-.saved-addresses-selection,
-.manual-address-entry {
-    margin-bottom: 20px;
-}
-
+/* Shipping Info */
 .saved-addresses-selection h3,
-.manual-address-entry h4 { /* Điều chỉnh h4 thành h3 hoặc giữ nguyên tùy ý */
-    color: #555;
+.manual-address-entry h4 {
+    color: #c2185b;
     margin-bottom: 15px;
-}
-
-.address-options-list {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 15px;
-}
-
-.address-options-list li {
-    margin-bottom: 10px;
-}
-
-.address-options-list li input[type="radio"] {
-    margin-right: 10px; /* Khoảng cách giữa radio và label */
 }
 
 .address-option-label {
-    cursor: pointer; /* Biến con trỏ thành bàn tay khi rê chuột vào label */
-    color: #333;
+    cursor: pointer;
+    color: #5d4037;
 }
 
 .address-option-label strong {
-    color: #007bff; /* Màu nổi bật cho tên người nhận */
+    color: #ec407a;
 }
 
 .toggle-address-form-button {
-    background: none; /* Nút trông giống link */
+    background: none;
     border: none;
-    color: #007bff;
+    color: #ec407a;
     cursor: pointer;
     text-decoration: underline;
     padding: 0;
     font-size: 1rem;
-    margin-bottom: 15px; /* Khoảng cách dưới nút */
+    margin-bottom: 15px;
 }
 
 .toggle-address-form-button:hover {
-    text-decoration: none; /* Bỏ gạch chân khi hover */
+    text-decoration: none;
 }
 
-.manual-address-entry .form-group { /* Sử dụng lại class form-group nếu có */
+.manual-address-entry .form-group {
     margin-bottom: 15px;
 }
 
 .manual-address-entry label {
-     display: block;
-     margin-bottom: 5px;
-     font-weight: bold;
-     color: #555;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #6d4c41;
 }
 
 .manual-address-entry input {
-    width: calc(100% - 22px); /* Adjust for padding and border */
+    width: calc(100% - 22px);
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #f8bbd0;
     border-radius: 4px;
     font-size: 1rem;
+    background-color: #fffafc;
 }
 
-
 /* Final Shipping Preview */
-.final-shipping-preview h3 { /* Hoặc h4 tùy cấu trúc */
-    color: #555;
-     margin-top: 20px;
+.final-shipping-preview h3 {
+    color: #c2185b;
+    margin-top: 20px;
     margin-bottom: 10px;
-     border-top: 1px solid #eee; /* Đường phân cách trên */
-     padding-top: 15px;
+    border-top: 1px solid #f8bbd0;
+    padding-top: 15px;
 }
 
 .final-shipping-preview .shipping-details {
     font-size: 1.1rem;
-    color: #333;
-    line-height: 1.5; /* Giãn dòng */
+    color: #4e342e;
+    line-height: 1.5;
 }
 
 .final-shipping-preview .shipping-placeholder {
-    color: #dc3545; /* Màu đỏ hoặc cam cho thông báo cần nhập */
+    color: #e53935;
     font-style: italic;
     text-align: center;
 }
 
-
 /* Place Order Button */
 .place-order-button {
-    display: block; /* Nút chiếm toàn bộ chiều rộng */
+    display: block;
     width: 100%;
     padding: 15px;
-    background-color: #28a745; /* Màu xanh lá cây cho nút đặt hàng */
+    background-color: #ec407a;
     color: white;
     border: none;
     border-radius: 8px;
@@ -180,19 +163,19 @@
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    margin-top: 30px; /* Khoảng cách trên */
+    margin-top: 30px;
 }
 
 .place-order-button:hover:not(:disabled) {
-    background-color: #218838;
+    background-color: #d81b60;
 }
 
 .place-order-button:disabled {
-    background-color: #ccc; /* Màu xám khi bị disabled */
-    cursor: not-allowed; /* Con trỏ báo không được phép */
+    background-color: #f8bbd0;
+    cursor: not-allowed;
 }
 
-/* Message Styles (Copy from UserProfilePage.css if not in a shared CSS file) */
+/* Message Styles */
 .checkout-container .message {
     text-align: center;
     margin-top: 15px;
@@ -202,13 +185,85 @@
 }
 
 .checkout-container .message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background-color: #fce4ec;
+    color: #4a148c;
+    border: 1px solid #f8bbd0;
 }
 
 .checkout-container .message.error {
     background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    color: #b71c1c;
+    border: 1px solid #f48fb1;
 }
+@media (max-width: 768px) {
+    .checkout-container {
+      padding: 15px;
+      margin: 10px;
+    }
+  
+    .checkout-container .page-title {
+      font-size: 1.5rem;
+    }
+  
+    .order-summary-section,
+    .shipping-info-section {
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+  
+    .order-summary-section h2,
+    .shipping-info-section h2 {
+      font-size: 1.2rem;
+      padding-bottom: 8px;
+    }
+  
+    .checkout-cart-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .checkout-cart-item .item-name,
+    .checkout-cart-item .item-quantity,
+    .checkout-cart-item .item-price {
+      margin: 4px 0;
+      text-align: left;
+    }
+  
+    .checkout-total-price {
+      font-size: 1rem;
+      text-align: left;
+      margin-top: 10px;
+    }
+  
+    .saved-addresses-selection h3,
+    .manual-address-entry h4 {
+      font-size: 1.1rem;
+    }
+  
+    .manual-address-entry input {
+      width: 100%;
+      font-size: 0.95rem;
+      padding: 8px;
+    }
+  
+    .final-shipping-preview h3 {
+      font-size: 1.1rem;
+      padding-top: 10px;
+    }
+  
+    .final-shipping-preview .shipping-details {
+      font-size: 1rem;
+    }
+  
+    .place-order-button {
+      font-size: 1.1rem;
+      padding: 12px;
+      margin-top: 20px;
+    }
+  
+    .checkout-container .message {
+      font-size: 0.95rem;
+      padding: 8px;
+    }
+  }
+  

@@ -242,3 +242,96 @@
   0% { transform: rotate(0deg); } /* Bắt đầu từ 0 độ */
   100% { transform: rotate(360deg); } /* Kết thúc 360 độ */
 }
+@media (max-width: 768px) {
+  .order-history-container {
+    padding: 15px;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .order-count {
+    font-size: 14px;
+  }
+
+  .order-card {
+    padding: 12px;
+  }
+
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .order-id {
+    font-size: 16px;
+  }
+
+  .order-date {
+    font-size: 13px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr; /* Stack label and value */
+  }
+
+  .item-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item-name,
+  .item-quantity,
+  .item-price {
+    flex: none;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 5px;
+  }
+
+  .order-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .total-price {
+    font-size: 15px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pagination-button {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .empty-message {
+    font-size: 16px;
+  }
+
+  .shop-now-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .back-button {
+    font-size: 15px;
+  }
+
+  .loading-container {
+    height: auto;
+    padding: 40px 10px;
+  }
+
+  .loading-spinner {
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+  }
+}

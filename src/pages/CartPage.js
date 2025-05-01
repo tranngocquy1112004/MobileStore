@@ -58,7 +58,7 @@ const CartPage = () => {
                  // If cart is empty, show message and link back to store
                  <div className="empty-cart-message">
                      <p>Giỏ hàng của bạn đang trống.</p>
-                     <Link to="/home">Quay lại cửa hàng</Link>
+                     <Link to="/home" className="back-to-home">Quay lại cửa hàng</Link>
                  </div>
              ) : (
                  // If cart has items, display the list and summary

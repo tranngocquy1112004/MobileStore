@@ -2,21 +2,21 @@
     max-width: 800px;
     margin: 20px auto;
     padding: 20px;
-    background-color: #fff;
+    background-color: #fff0f5; /* hồng rất nhạt */
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 6px rgba(220, 120, 160, 0.1);
+    font-family: 'Segoe UI', sans-serif;
 }
 
 .user-profile-container h1 {
-    color: #333;
+    color: #b35b8e;
     text-align: center;
     margin-bottom: 20px;
 }
 
 .user-profile-container p {
     text-align: center;
-    color: #666;
+    color: #a0788f;
     margin-bottom: 30px;
 }
 
@@ -33,17 +33,17 @@
     background-color: transparent;
     cursor: pointer;
     font-size: 1rem;
-    color: #666;
+    color: #a0788f;
     transition: color 0.3s ease, border-bottom-color 0.3s ease;
 }
 
 .profile-sections-menu button:hover {
-    color: #007bff;
+    color: #d17ca2;
 }
 
 .profile-sections-menu button.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
+    color: #d17ca2;
+    border-bottom-color: #d17ca2;
 }
 
 /* Sections */
@@ -53,14 +53,14 @@
 .addresses-section {
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #f3d9e1;
 }
 
 .profile-info-section h2,
 .change-password-section h2,
 .order-history-section h2,
 .addresses-section h2 {
-    color: #555;
+    color: #b35b8e;
     margin-bottom: 20px;
     text-align: center;
 }
@@ -76,7 +76,7 @@
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #555;
+    color: #8b5d73;
 }
 
 .profile-form input[type="text"],
@@ -84,18 +84,18 @@
 .password-form input[type="password"],
 .profile-input,
 .password-input {
-    width: calc(100% - 22px); /* Adjust for padding and border */
+    width: calc(100% - 22px);
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #e8c2d4;
     border-radius: 4px;
     font-size: 1rem;
+    background-color: #fff;
 }
 
 .profile-form input[disabled] {
-    background-color: #f0f0f0;
+    background-color: #f9edf1;
     cursor: not-allowed;
 }
-
 
 /* Buttons */
 .profile-update-button,
@@ -103,7 +103,7 @@
     display: block;
     width: 100%;
     padding: 10px;
-    background-color: #28a745; /* Green for success actions */
+    background-color: #e07a9b;
     color: white;
     border: none;
     border-radius: 4px;
@@ -114,14 +114,13 @@
 
 .profile-update-button:hover,
 .change-password-button:hover {
-    background-color: #218838;
+    background-color: #c56289;
 }
 
 .profile-update-button:disabled {
-     background-color: #ccc;
-     cursor: not-allowed;
+    background-color: #eac6d3;
+    cursor: not-allowed;
 }
-
 
 /* Messages */
 .user-profile-container .message {
@@ -129,18 +128,19 @@
     margin-top: 15px;
     padding: 10px;
     border-radius: 4px;
+    font-weight: bold;
 }
 
 .user-profile-container .message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background-color: #f3e6ec;
+    color: #7e415a;
+    border: 1px solid #e5b2c2;
 }
 
 .user-profile-container .message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: #fae0e8;
+    color: #b0003a;
+    border: 1px solid #eaa3b6;
 }
 
 /* Back Link */
@@ -150,7 +150,7 @@
 }
 
 .back-link a {
-    color: #007bff;
+    color: #d17ca2;
     text-decoration: none;
 }
 
@@ -158,23 +158,23 @@
     text-decoration: underline;
 }
 
-/* Specific styles for Orders Section link */
+/* Order Section Links */
 .order-history-section p a {
-     color: #007bff;
+    color: #d17ca2;
     text-decoration: none;
 }
-.order-history-section p a:hover {
-     text-decoration: underline;
-}
-/* Bổ sung vào file UserProfilePage.css hiện có của bạn */
 
-/* Style cho Form thêm địa chỉ mới */
+.order-history-section p a:hover {
+    text-decoration: underline;
+}
+
+/* Address Form */
 .address-form {
     margin-bottom: 30px;
     padding: 15px;
-    border: 1px solid #eee;
+    border: 1px solid #f3d9e1;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    background-color: #fffafc;
 }
 
 .address-form .form-group {
@@ -185,21 +185,21 @@
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #555;
+    color: #8b5d73;
 }
 
 .address-form input {
-     width: calc(100% - 22px); /* Adjust for padding and border */
+    width: calc(100% - 22px);
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #e8c2d4;
     border-radius: 4px;
     font-size: 1rem;
 }
 
 .address-form button[type="submit"] {
-    display: inline-block; /* Hoặc block nếu muốn chiếm cả dòng */
+    display: inline-block;
     padding: 10px 20px;
-    background-color: #007bff; /* Màu xanh cho hành động chính */
+    background-color: #d17ca2;
     color: white;
     border: none;
     border-radius: 4px;
@@ -209,40 +209,39 @@
 }
 
 .address-form button[type="submit"]:hover {
-    background-color: #0056b3;
+    background-color: #b35b8e;
 }
 
-
-/* Style cho Danh sách địa chỉ */
+/* Address List */
 .address-list {
-    list-style: none; /* Bỏ dấu chấm mặc định của ul */
+    list-style: none;
     padding: 0;
 }
 
 .address-item {
-    border: 1px solid #ddd;
+    border: 1px solid #f3d9e1;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
     background-color: #fff;
-    position: relative; /* Để định vị nút xóa */
+    position: relative;
 }
 
 .address-item p {
     margin-bottom: 5px;
-    color: #333;
+    color: #4b2f3b;
 }
 
 .address-item p:last-child {
     margin-bottom: 0;
 }
 
-/* Style cho nút xóa địa chỉ */
+/* Delete Button */
 .delete-address-button {
-    position: absolute; /* Đặt nút ở góc */
+    position: absolute;
     top: 10px;
     right: 10px;
-    background-color: #dc3545; /* Màu đỏ cho xóa */
+    background-color: #e75c7c;
     color: white;
     border: none;
     border-radius: 4px;
@@ -253,48 +252,113 @@
 }
 
 .delete-address-button:hover {
-    background-color: #c82333;
+    background-color: #c94765;
 }
 
-/* Style cho trạng thái rỗng của địa chỉ */
+/* Empty Address State */
 .addresses-section .empty-state {
     text-align: center;
-    color: #777;
+    color: #aa7d90;
     font-style: italic;
     margin-top: 20px;
 }
 
-
-/* Điều chỉnh style message cho rõ ràng hơn */
-.user-profile-container .message {
-    text-align: center;
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold; /* In đậm thông báo */
-}
-
-/* Các class success và error đã định nghĩa trước đó */
-.user-profile-container .message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.user-profile-container .message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-
-/* Có thể thêm style cho .order-history-section .order-history-status nếu OrderHistory có status message */
+/* Order Status */
 .order-history-section .order-history-status {
-     text-align: center;
-     margin-top: 20px;
-     color: #555;
+    text-align: center;
+    margin-top: 20px;
+    color: #7e415a;
 }
 
 .order-history-section .order-history-status.error {
-    color: #dc3545;
+    color: #e75c7c;
+}
+@media (max-width: 768px) {
+    .user-profile-container {
+        padding: 15px;
+        margin: 15px 10px;
+    }
+
+    .profile-sections-menu button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .profile-update-button,
+    .change-password-button {
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    .address-form {
+        padding: 10px;
+    }
+
+    .address-form input {
+        font-size: 0.95rem;
+    }
+
+    .address-form button[type="submit"] {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .address-item {
+        padding: 12px;
+    }
+
+    .delete-address-button {
+        top: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive styles for mobile phones */
+@media (max-width: 480px) {
+    .user-profile-container h1 {
+        font-size: 1.4rem;
+    }
+
+    .user-profile-container p {
+        font-size: 0.95rem;
+    }
+
+    .profile-form input[type="text"],
+    .profile-form input[type="email"],
+    .password-form input[type="password"],
+    .profile-input,
+    .password-input {
+        width: 100%;
+    }
+
+    .profile-sections-menu {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .profile-sections-menu button {
+        font-size: 0.95rem;
+        padding: 8px;
+    }
+
+    .profile-update-button,
+    .change-password-button {
+        font-size: 1rem;
+    }
+
+    .address-form input {
+        width: 100%;
+    }
+
+    .back-link {
+        font-size: 0.95rem;
+    }
+
+    .order-history-section .order-history-status {
+        font-size: 0.95rem;
+    }
 }

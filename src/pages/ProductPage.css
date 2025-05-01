@@ -8,6 +8,7 @@
   background: linear-gradient(135deg, #fff0f5, #ffe4e9);
   min-height: 100vh;
   box-sizing: border-box;
+  
 }
 
 /* Container cho trạng thái loading */
@@ -243,18 +244,23 @@
 /* Định dạng danh sách sản phẩm */
 .product-list {
   margin-top: 2rem;
-  padding: 0 4rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  /* Thêm dòng này để dịch chuyển toàn bộ khối sang phải */
+  /* Thay 10px bằng giá trị bạn muốn dịch chuyển */
+  transform: translateX(10px);
 }
 
+/* Giữ nguyên .product-grid vì nó đã có margin: 0 auto để căn giữa lưới bên trong .product-list */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   justify-content: center;
-  /* max-width: 1000px; hoặc 1000px tùy thiết kế bạn muốn */
-  margin: 0 auto;     /* căn giữa ngang */
+  margin: 0 auto; /* Cái này giúp lưới sản phẩm căn giữa BÊN TRONG .product-list */
   padding: 0 1rem;
 }
+
 
 
 /* Thẻ sản phẩm */
