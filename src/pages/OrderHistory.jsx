@@ -1,78 +1,83 @@
 // OrderHistory.js
-import React, { useEffect, useState, useContext } from "react"; // Import các hook cần thiết
-import { AuthContext } from "../account/AuthContext"; // Import AuthContext
-import "./OrderHistory.css"; // Import CSS cho lịch sử đơn hàng
+import React, { useEffect, useState, useContext } from "react";
+import { AuthContext } from "../account/AuthContext";
+import "./OrderHistory.css";
 
-// Định nghĩa key hằng số cho đơn hàng trong localStorage
-const LOCAL_STORAGE_ORDERS_KEY = "orders"; // Đảm bảo key này khớp với nơi bạn lưu đơn hàng
+// Constant key for orders in localStorage
+const LOCAL_STORAGE_ORDERS_KEY = "orders";
 
 const OrderHistory = () => {
-  // Lấy thông tin người dùng hiện tại từ AuthContext
+  // Get current user info from AuthContext
   const { user, isLoggedIn } = useContext(AuthContext);
 
-  // State để lưu danh sách đơn hàng của người dùng hiện tại
+  // State to store the current user's orders
   const [userOrders, setUserOrders] = useState([]);
-  // State loading và error (tương tự như các component fetch data khác)
+  // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Effect để tải và lọc đơn hàng khi component mount hoặc user thay đổi
+  // Effect to load and filter orders when component mounts or user changes
   useEffect(() => {
     const loadOrders = () => {
       setIsLoading(true);
       setError(null);
       setUserOrders([]); // Clear previous orders
 
-      // Chỉ tải đơn hàng nếu người dùng đã đăng nhập
+      // Only load orders if a user is logged in
       if (!isLoggedIn || !user || !user.username) {
-        setIsLoading(false);
-        // Nếu không đăng nhập, có thể đặt thông báo hoặc chỉ hiển thị rỗng
-         console.log("Không có người dùng đăng nhập để tải lịch sử đơn hàng.");
+        console.log("Không có người dùng đăng nhập để tải lịch sử đơn hàng.");
+        setIsLoading(false); // Stop loading state
         return;
       }
 
       try {
-        // Lấy tất cả đơn hàng từ localStorage
-        const allOrders = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || [];
-         // Đảm bảo dữ liệu đọc được là mảng
-         if (!Array.isArray(allOrders)) {
-             console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, đặt lại.");
-             localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY);
-             allOrders = [];
-         }
+        // Get all orders from localStorage
+        const storedData = localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY);
+        let allOrders = [];
 
+        if (storedData) {
+            try {
+                allOrders = JSON.parse(storedData);
+            } catch (parseError) {
+                console.error("Lỗi khi phân tích dữ liệu đơn hàng từ localStorage:", parseError);
+                // Optionally clear corrupted data, but let's just log and proceed with empty array
+                // localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY);
+            }
+        }
 
-        // Lọc đơn hàng chỉ của người dùng hiện tại
-        // So sánh thuộc tính 'username' của mỗi đơn hàng với 'username' của người dùng đang đăng nhập
+        // Ensure data is an array, otherwise use an empty array
+        if (!Array.isArray(allOrders)) {
+           console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, sử dụng mảng rỗng.");
+           allOrders = [];
+        }
+
+        // Filter orders for the current user
         const filteredOrders = allOrders.filter(
           (order) => order.username === user.username
         );
 
-         // Sắp xếp đơn hàng theo ngày giảm dần (mới nhất lên trước)
+        // Sort orders by date descending (newest first)
         const sortedOrders = filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-
-        setUserOrders(sortedOrders); // Cập nhật state với danh sách đơn hàng đã lọc và sắp xếp
+        setUserOrders(sortedOrders); // Update state with filtered and sorted list
         console.log(`Đã tải và lọc ${sortedOrders.length} đơn hàng cho người dùng ${user.username}.`);
 
       } catch (err) {
         console.error("Lỗi khi tải hoặc lọc đơn hàng từ localStorage:", err);
         setError("Không thể tải lịch sử đơn hàng.");
-        setUserOrders([]); // Đặt lại danh sách đơn hàng khi có lỗi
-        // Có thể xóa dữ liệu lỗi nếu muốn: localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY);
+        setUserOrders([]); // Reset orders list on error
       } finally {
-        setIsLoading(false); // Kết thúc quá trình tải
+        setIsLoading(false); // End loading process
       }
     };
 
-    loadOrders(); // Gọi hàm tải đơn hàng khi effect chạy
+    loadOrders(); // Call the function to load orders when the effect runs
 
-     // Cleanup function (không cần thiết cho localStorage trong trường hợp này)
-    // return () => { /* cleanup if needed */ };
+    // Cleanup function is not strictly needed for localStorage reads
 
-  }, [user, isLoggedIn]); // Dependency array: effect chạy lại khi user hoặc isLoggedIn thay đổi
+  }, [user, isLoggedIn]); // Effect runs again if user or isLoggedIn changes
 
-  // Render giao diện dựa trên trạng thái (loading, error, hiển thị danh sách)
+  // Render UI based on state (loading, error, display list)
 
   if (isLoading) {
     return <div className="order-history-status">Đang tải lịch sử đơn hàng...</div>;
@@ -82,48 +87,47 @@ const OrderHistory = () => {
     return <div className="order-history-status error">❌ {error}</div>;
   }
 
-  // Nếu không có đơn hàng sau khi tải/lọc
+  // If no orders found after loading/filtering
   if (userOrders.length === 0) {
     return <div className="order-history-status">Bạn chưa có đơn hàng nào.</div>;
   }
 
-  // Hiển thị danh sách đơn hàng
+  // Display the list of orders
   return (
     <div className="order-history-container">
-      {/* Title sẽ được hiển thị trong UserProfilePage, ở đây chỉ cần danh sách */}
-      {/* <h2>Lịch sử đơn hàng của bạn</h2> */}
+      {/* Title is handled by the parent UserProfilePage */}
       <ul className="order-list">
         {userOrders.map((order) => (
-          // Mỗi item trong danh sách đơn hàng
           <li key={order.id} className="order-item">
             <p>
               <strong>ID Đơn hàng:</strong> #{order.id}
             </p>
-            {/* Định dạng ngày/giờ */}
+            {/* Format date and time */}
             <p>
               <strong>Ngày đặt:</strong>{" "}
               {new Date(order.date).toLocaleString("vi-VN")}
             </p>
-            {/* Định dạng tổng tiền */}
+            {/* Format total price */}
             <p>
               <strong>Tổng tiền:</strong>{" "}
-              {order.totalPrice.toLocaleString("vi-VN")} VNĐ
+              {order.totalPrice?.toLocaleString("vi-VN") || '0' } VNĐ {/* Added optional chaining for safety */}
             </p>
-            {/* Thông tin người nhận (từ shippingInfo) */}
-            <p><strong>Người nhận:</strong> {order.shippingInfo?.name}</p>
-            <p><strong>Địa chỉ:</strong> {order.shippingInfo?.address}</p>
-            <p><strong>Điện thoại:</strong> {order.shippingInfo?.phone}</p>
+            {/* Receiver info (from shippingInfo), using optional chaining */}
+            <p><strong>Người nhận:</strong> {order.shippingInfo?.name || 'N/A'}</p> {/* Added default 'N/A' */}
+            <p><strong>Địa chỉ:</strong> {order.shippingInfo?.address || 'N/A'}</p> {/* Added default 'N/A' */}
+            <p><strong>Điện thoại:</strong> {order.shippingInfo?.phone || 'N/A'}</p> {/* Added default 'N/A' */}
 
 
-            {/* Chi tiết các sản phẩm trong đơn hàng */}
+            {/* Details of products in the order */}
             <div className="order-items-detail">
               <h5>Chi tiết sản phẩm:</h5>
               <ul>
-                {order.items.map((item) => (
-                  // Mỗi sản phẩm trong đơn hàng
-                  <li key={item.id}>
-                    {item.name} (x{item.quantity}) -{" "}
-                    {(item.price * item.quantity).toLocaleString("vi-VN")} VNĐ
+                {/* Ensure order.items is an array before mapping */}
+                {Array.isArray(order.items) && order.items.map((item, index) => (
+                  // Using item.id as key, fallback to index if id is missing (less ideal)
+                  <li key={item.id || index}>
+                    {item.name || 'Sản phẩm không rõ'} (x{item.quantity || 0}) -{" "} {/* Added default values */}
+                    {((item.price || 0) * (item.quantity || 0)).toLocaleString("vi-VN")} VNĐ
                   </li>
                 ))}
               </ul>
@@ -135,4 +139,4 @@ const OrderHistory = () => {
   );
 };
 
-export default OrderHistory; // Export component
+export default OrderHistory;

@@ -1,297 +1,324 @@
 // src/pages/CheckoutPage.js
 
 import React, { useState, useContext, useEffect, useCallback } from 'react';
-// Import các hook cần thiết
-import { useNavigate } from 'react-router-dom'; // Để điều hướng sau khi đặt hàng
+import { useNavigate } from 'react-router-dom';
 
-// Import Contexts
-import { AuthContext } from '../account/AuthContext'; // Lấy thông tin người dùng và địa chỉ đã lưu
-import { CartContext } from '../pages/CartContext'; // Lấy thông tin giỏ hàng và hàm xóa giỏ hàng
+import { AuthContext } from '../account/AuthContext';
+import { CartContext } from '../pages/CartContext';
 
-// Import CSS
 import './CheckoutPage.css';
 
-// Định nghĩa key cho đơn hàng trong localStorage
-const LOCAL_STORAGE_ORDERS_KEY = "orders"; // Đảm bảo key này khớp với OrderHistory và AdminDashboard
+// Constant key for orders in localStorage
+const LOCAL_STORAGE_ORDERS_KEY = "orders";
 
 const CheckoutPage = () => {
-    // Lấy thông tin người dùng và trạng thái đăng nhập từ AuthContext
+    // Get user info and login status from AuthContext
     const { user, isLoggedIn } = useContext(AuthContext);
-    // Lấy thông tin giỏ hàng và hàm xóa giỏ hàng từ CartContext
-    const { cart, clearCart } = useContext(CartContext); // Giả định CartContext có hàm clearCart
+    // Get cart info and clearCart function from CartContext
+    const { cart, clearCart } = useContext(CartContext);
 
-    // Sử dụng hook useNavigate để điều hướng
+    // Navigation hook
     const navigate = useNavigate();
 
-    // --- State quản lý thông tin địa chỉ giao hàng ---
-    // State để lưu địa chỉ giao hàng cuối cùng được chọn/nhập sẽ dùng cho đơn hàng
+    // --- State management for shipping information ---
+    // Stores the final shipping details to be used for the order
     const [shippingInfo, setShippingInfo] = useState({ address: '', name: '', phone: '' });
 
-    // State để lưu ID của địa chỉ đã lưu được chọn (nếu người dùng chọn địa chỉ đã lưu)
+    // Stores the ID of the selected saved address (if any)
     const [selectedSavedAddressId, setSelectedSavedAddressId] = useState(null);
 
-    // State để điều khiển việc hiển thị form nhập địa chỉ mới
+    // Controls visibility of the manual address entry form
     const [showManualAddressForm, setShowManualAddressForm] = useState(false);
 
-    // --- Effect để tải địa chỉ đã lưu và chọn mặc định (nếu có) khi component mount ---
+
+    // --- Effect hook to handle initial setup and redirects ---
     useEffect(() => {
-        // Chuyển hướng về trang chủ hoặc trang đăng nhập nếu chưa đăng nhập
+        // Redirect if not logged in
         if (!isLoggedIn || !user) {
-             console.log("Người dùng chưa đăng nhập, chuyển hướng về trang đăng nhập.");
-             navigate("/");
-             return; // Dừng effect ở đây
+            console.log("Người dùng chưa đăng nhập, chuyển hướng về trang đăng nhập.");
+            navigate("/");
+            return;
         }
 
-         // Nếu giỏ hàng rỗng, chuyển hướng về trang giỏ hàng hoặc trang sản phẩm
+        // Redirect if cart is empty
         if (!cart || cart.length === 0) {
-             console.log("Giỏ hàng rỗng, chuyển hướng về trang giỏ hàng.");
-             navigate("/cart"); // Hoặc navigate("/home")
-             return; // Dừng effect ở đây
+            console.log("Giỏ hàng rỗng, chuyển hướng về trang giỏ hàng.");
+            navigate("/cart");
+            return;
         }
 
-
-        // Nếu người dùng đã đăng nhập và có địa chỉ đã lưu
+        // If user is logged in and has saved addresses
         if (user.addresses && user.addresses.length > 0) {
-            // Tự động chọn địa chỉ đầu tiên đã lưu làm mặc định
-            setShippingInfo(user.addresses[0]);
-            setSelectedSavedAddressId(user.addresses[0].id);
-            setShowManualAddressForm(false); // Ẩn form nhập mới
+            // Automatically select the first saved address
+            const firstAddress = user.addresses[0];
+            setShippingInfo(firstAddress);
+            setSelectedSavedAddressId(firstAddress.id);
+            setShowManualAddressForm(false); // Hide manual form
         } else {
-            // Nếu không có địa chỉ đã lưu, hiển thị form nhập mới
+            // If no saved addresses, show the manual form
             setShowManualAddressForm(true);
-            setShippingInfo({ address: '', name: '', phone: '' }); // Reset shippingInfo
-            setSelectedSavedAddressId(null);
+            setShippingInfo({ address: '', name: '', phone: '' }); // Ensure shippingInfo is reset
+            setSelectedSavedAddressId(null); // Ensure no saved address is selected
         }
-    }, [user, isLoggedIn, cart, navigate]); // Dependencies: user, isLoggedIn, cart, và navigate
+    }, [user, isLoggedIn, cart, navigate]); // Dependencies
 
-    // --- Handlers cho phần chọn và nhập địa chỉ ---
+    // --- Handlers for address selection and entry ---
 
-    // Handler khi người dùng chọn một địa chỉ đã lưu (Radio button onChange)
+    // Handler when a user selects a saved address radio button
     const handleSelectSavedAddress = useCallback((addressId) => {
-        // Tìm địa chỉ được chọn trong danh sách addresses của user
+        // Find the selected address in the user's saved addresses
         const selectedAddr = user?.addresses?.find(addr => addr.id === addressId);
         if (selectedAddr) {
-            // Cập nhật state shippingInfo với thông tin địa chỉ đã chọn
-            setShippingInfo(selectedAddr);
-            // Cập nhật state ID địa chỉ đã chọn
-            setSelectedSavedAddressId(addressId);
-            // Ẩn form nhập địa chỉ mới
-            setShowManualAddressForm(false);
+            setShippingInfo(selectedAddr); // Update shippingInfo state
+            setSelectedSavedAddressId(addressId); // Update selected ID state
+            setShowManualAddressForm(false); // Hide manual form
         }
     }, [user]); // Dependency: user context
 
-     // Handler khi người dùng nhập thông tin vào form địa chỉ mới (Input onChange)
+    // Handler when user types into the manual address form inputs
     const handleManualAddressChange = useCallback((e) => {
         const { name, value } = e.target;
-        // Cập nhật state shippingInfo với thông tin nhập từ form mới
-        setShippingInfo(prev => ({ ...prev, [name]: value }));
-        // Bỏ chọn địa chỉ đã lưu (nếu đang chọn)
-        setSelectedSavedAddressId(null);
-        // Đảm bảo form nhập thủ công đang hiển thị
-        // setShowManualAddressForm(true); // Không cần thiết vì state này được quản lý bởi nút chuyển đổi
-    }, []); // Không phụ thuộc vào biến ngoài cần theo dõi
+        setShippingInfo(prev => ({ ...prev, [name]: value })); // Update shippingInfo state
+        setSelectedSavedAddressId(null); // Deselect any saved address
+        // showManualAddressForm state is managed by the toggle button, not directly here
+    }, []); // setShippingInfo and setSelectedSavedAddressId are stable
 
-    // --- Hàm xử lý khi người dùng quyết định đặt hàng ---
-    const handlePlaceOrder = useCallback(() => {
-        // --- Validation trước khi đặt hàng ---
-        // Kiểm tra xem thông tin giao hàng cuối cùng đã đủ chưa
+
+    // --- Handler for placing the order ---
+    const handlePlaceOrder = useCallback((e) => {
+         // Prevent default form submission if attached to a form
+        if (e) e.preventDefault();
+
+        // --- Validation ---
+        // Check if shipping information is complete
         if (!shippingInfo.address || !shippingInfo.name || !shippingInfo.phone) {
             alert("Vui lòng nhập đầy đủ thông tin giao hàng.");
-            return; // Dừng nếu thiếu thông tin
+            return; // Stop if info is missing
         }
-        // Kiểm tra giỏ hàng có trống không (trường hợp hiếm xảy ra nhờ effect nhưng vẫn cần kiểm tra)
-         if (!cart || cart.length === 0) {
-             alert("Giỏ hàng của bạn trống.");
-             // Có thể điều hướng về trang giỏ hàng hoặc trang sản phẩm
-             navigate('/cart');
-             return; // Dừng nếu giỏ hàng trống
-         }
+        // Check if cart is empty (should be prevented by useEffect, but double check)
+        if (!cart || cart.length === 0) {
+            alert("Giỏ hàng của bạn trống.");
+            navigate('/cart'); // Redirect to cart
+            return;
+        }
+        // Check if user is logged in (should be prevented by useEffect)
+        if (!isLoggedIn || !user || !user.username) {
+            alert("Vui lòng đăng nhập để đặt hàng.");
+            navigate('/'); // Redirect to home/login
+            return;
+        }
 
-         // Kiểm tra người dùng đã đăng nhập chưa (trường hợp hiếm xảy ra nhờ effect)
-         if (!isLoggedIn || !user || !user.username) {
-             alert("Vui lòng đăng nhập để đặt hàng.");
-             navigate('/');
-             return;
-         }
-
-
-        // --- Tạo đối tượng đơn hàng ---
+        // --- Create the order object ---
         const newOrder = {
-            id: Date.now(), // ID đơn hàng đơn giản (có thể dùng logic khác phức tạp hơn trong thực tế)
-            username: user.username, // Lưu username của người đặt
-            date: new Date().toISOString(), // Lưu ngày giờ đặt hàng theo chuẩn ISO 8601
-            items: cart, // Lưu danh sách sản phẩm từ giỏ hàng (bao gồm id, name, price, quantity)
-            totalPrice: cart.reduce((sum, item) => sum + item.price * item.quantity, 0), // Tính tổng tiền từ giỏ hàng
-            shippingInfo: shippingInfo, // Lưu thông tin giao hàng cuối cùng đã chọn/nhập
-            status: 'Pending', // Trạng thái đơn hàng ban đầu (ví dụ: Chờ xử lý)
-            // Thêm các thông tin khác nếu cần (phương thức thanh toán, ghi chú, v.v.)
+            id: Date.now(), // Simple ID generation (consider uuid for robustness)
+            username: user.username, // Store username
+            date: new Date().toISOString(), // Store order date/time
+            items: cart, // Store cart items
+            totalPrice: cart.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0), // Calculate total price safely
+            shippingInfo: shippingInfo, // Store final shipping info
+            status: 'Pending', // Initial status
+            // Add other fields like payment method, notes, etc. if needed
         };
 
-        // --- Lưu đơn hàng vào localStorage ---
-        let allOrders = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY)) || []; // Đọc danh sách đơn hàng hiện có
-         if (!Array.isArray(allOrders)) { // Đảm bảo biến đọc được là mảng
-             console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, đặt lại.");
-             localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY); // Xóa dữ liệu lỗi
-             allOrders = []; // Khởi tạo mảng rỗng
-         }
+        // --- Save the order to localStorage ---
+        const storedData = localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY);
+        let allOrders = [];
 
-        allOrders.push(newOrder); // Thêm đơn hàng mới vào danh sách
-        localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(allOrders)); // Lưu lại toàn bộ danh sách đã cập nhật
+        if (storedData) {
+            try {
+                allOrders = JSON.parse(storedData);
+            } catch (parseError) {
+                console.error("Lỗi khi phân tích dữ liệu đơn hàng từ localStorage:", parseError);
+                // If parsing fails, treat existing data as empty, maybe log a warning
+                // localStorage.removeItem(LOCAL_STORAGE_ORDERS_KEY); // Optional: clear bad data
+            }
+        }
 
-        // --- Xóa giỏ hàng sau khi đặt hàng ---
-        clearCart(); // Gọi hàm xóa giỏ hàng từ CartContext (giả định CartContext có hàm này)
+        // Ensure allOrders is an array before pushing
+        if (!Array.isArray(allOrders)) {
+             console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, sử dụng mảng rỗng.");
+             allOrders = [];
+        }
 
-        // --- Thông báo đặt hàng thành công và điều hướng ---
+        allOrders.push(newOrder); // Add new order
+        localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(allOrders)); // Save updated list
+
+        // --- Clear the cart after successful order ---
+        clearCart();
+
+        // --- Success message and navigation ---
         alert("Đặt hàng thành công! Cảm ơn bạn đã mua hàng.");
         console.log("Đã đặt hàng thành công:", newOrder);
 
-        // Điều hướng người dùng đến trang lịch sử đơn hàng hoặc trang xác nhận
-        navigate('/orders'); // Điều hướng đến trang lịch sử đơn hàng
+        // Navigate to order history page
+        navigate('/orders');
 
-    }, [shippingInfo, cart, isLoggedIn, user, clearCart, navigate]); // Dependencies: shippingInfo, cart, isLoggedIn, user, clearCart, navigate
+    }, [shippingInfo, cart, isLoggedIn, user, clearCart, navigate]); // Dependencies
 
 
-     // Hiển thị loading hoặc redirect nếu cần thiết
+     // Render loading or redirect state (mostly handled by useEffect)
+     // These messages provide immediate feedback during the brief check before redirect
      if (!isLoggedIn || !user) {
-         return <p>Đang kiểm tra trạng thái đăng nhập...</p>; // Hoặc render null, redirect đã có trong useEffect
+         return <p>Đang kiểm tra trạng thái đăng nhập...</p>;
      }
 
      if (!cart || cart.length === 0) {
-          return <p>Đang kiểm tra giỏ hàng...</p>; // Hoặc render null, redirect đã có trong useEffect
+          return <p>Đang kiểm tra giỏ hàng...</p>;
      }
 
 
     return (
-        <div className="checkout-container"> {/* Container chính của trang thanh toán */}
+        <div className="checkout-container"> {/* Main container */}
             <h1 className="page-title">Thanh toán</h1>
 
-            {/* --- Phần hiển thị giỏ hàng --- */}
+            {/* --- Order Summary Section --- */}
             <div className="order-summary-section">
                 <h2>📋 Thông tin đơn hàng</h2>
-                {/* Kiểm tra giỏ hàng không rỗng trước khi hiển thị (đã kiểm tra ở useEffect, nhưng thêm kiểm tra ở đây để an toàn) */}
+                {/* Check cart is not empty before rendering (redundant due to useEffect, but safe) */}
                  {cart && cart.length > 0 ? (
                      <>
                          <ul className="checkout-cart-items-list">
-                             {cart.map(item => (
-                                  <li key={item.id} className="checkout-cart-item">
-                                      <span className="item-name">{item.name}</span>
-                                      <span className="item-quantity">x {item.quantity}</span>
-                                      <span className="item-price">{(item.price * item.quantity).toLocaleString("vi-VN")} VNĐ</span>
-                                  </li>
-                              ))}
+                             {/* Ensure cart is an array before mapping */}
+                             {Array.isArray(cart) && cart.map((item, index) => (
+                                  // Using item.id as key, fallback to index if id is missing
+                                 <li key={item.id || index} className="checkout-cart-item">
+                                     <span className="item-name">{item.name || 'Sản phẩm không rõ'}</span>
+                                     <span className="item-quantity">x {item.quantity || 0}</span>
+                                     <span className="item-price">{(item.price || 0) * (item.quantity || 0).toLocaleString("vi-VN")} VNĐ</span> {/* Added optional chaining */}
+                                 </li>
+                             ))}
                          </ul>
                          <p className="checkout-total-price">
-                             <strong>Tổng tiền:</strong> {cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toLocaleString("vi-VN")} VNĐ
+                             <strong>Tổng tiền:</strong> {cart.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0).toLocaleString("vi-VN")} VNĐ {/* Added optional chaining */}
                          </p>
                      </>
                  ) : (
-                      <p>Giỏ hàng trống.</p> // Trường hợp này hiếm xảy ra nhờ useEffect redirect
+                     <p>Giỏ hàng trống.</p>
                  )}
             </div>
 
-
-            {/* --- Phần chọn địa chỉ giao hàng --- */}
+            {/* --- Shipping Information Section --- */}
             <div className="shipping-info-section">
                 <h2>🚚 Thông tin giao hàng</h2>
 
-                {/* Hiển thị địa chỉ đã lưu nếu người dùng đã đăng nhập và có địa chỉ */}
+                {/* Display saved addresses selection if user has saved addresses */}
                 {isLoggedIn && user?.addresses && user.addresses.length > 0 && (
                     <div className="saved-addresses-selection">
                         <h3>Chọn địa chỉ đã lưu:</h3>
-                        <ul className="address-options-list"> {/* Danh sách các tùy chọn địa chỉ */}
+                        <ul className="address-options-list">
                             {user.addresses.map(addr => (
-                                <li key={addr.id}> {/* Sử dụng id địa chỉ làm key */}
+                                <li key={addr.id}>
                                     <input
-                                        type="radio" // Radio button cho phép chọn 1 trong nhiều
-                                        id={`saved-address-${addr.id}`} // ID duy nhất cho input
-                                        name="shippingAddressOption" // Cùng name cho tất cả radio trong nhóm
-                                        checked={selectedSavedAddressId === addr.id} // Checked nếu ID khớp với state selectedSavedAddressId
-                                        onChange={() => handleSelectSavedAddress(addr.id)} // Khi thay đổi, gọi handler với ID địa chỉ
+                                        type="radio"
+                                        id={`saved-address-${addr.id}`}
+                                        name="shippingAddressOption"
+                                        checked={selectedSavedAddressId === addr.id}
+                                        onChange={() => handleSelectSavedAddress(addr.id)}
                                     />
-                                    {/* Label liên kết với input (tăng khả năng tiếp cận), hiển thị thông tin địa chỉ */}
                                     <label htmlFor={`saved-address-${addr.id}`} className="address-option-label">
                                         <strong>{addr.name}</strong> - {addr.phone} - {addr.address}
                                     </label>
                                 </li>
                             ))}
                         </ul>
-                        {/* Nút để chuyển sang chế độ nhập địa chỉ mới */}
                         <button
                             className="toggle-address-form-button"
-                            onClick={() => { setShowManualAddressForm(true); setSelectedSavedAddressId(null); }} // Khi click, hiển thị form nhập mới và bỏ chọn địa chỉ lưu
+                            onClick={() => { setShowManualAddressForm(true); setSelectedSavedAddressId(null); }}
                         >
-                           Nhập địa chỉ mới
+                            Nhập địa chỉ mới
                         </button>
-                         <hr /> {/* Đường phân cách trực quan */}
+                         <hr />
                     </div>
                 )}
 
-
-                {/* Hiển thị form nhập địa chỉ mới:
-                    - Khi showManualAddressForm là true (người dùng click "Nhập địa chỉ mới")
-                    - HOẶC khi không có địa chỉ đã lưu nhưng người dùng đã đăng nhập
-                */}
-                {showManualAddressForm || (user?.addresses?.length === 0 && isLoggedIn) ? (
-                     <div className="manual-address-entry">
+                {/* Display manual address entry form */}
+                {/* Show if showManualAddressForm is true OR if no saved addresses exist */}
+                {(showManualAddressForm || (user?.addresses?.length === 0 && isLoggedIn)) ? (
+                     // Wrapped manual address inputs in a form
+                     <form className="manual-address-entry" onSubmit={handlePlaceOrder}> {/* Attached handler to form submit */}
                          <h3>Nhập địa chỉ mới:</h3>
-                         {/* Nếu có địa chỉ đã lưu, thêm nút để quay lại chọn địa chỉ lưu */}
+                         {/* If saved addresses exist, add button to switch back */}
                          {user?.addresses && user.addresses.length > 0 && (
                              <button
-                                className="toggle-address-form-button"
-                                onClick={() => { setShowManualAddressForm(false); /* Optional: re-select first saved address */ }} // Khi click, ẩn form nhập mới
+                                 type="button" // Set type="button" to prevent form submission
+                                 className="toggle-address-form-button"
+                                 onClick={() => { setShowManualAddressForm(false); /* Optional: re-select first saved address */ }}
                              >
                                  ← Quay lại chọn địa chỉ đã lưu
                              </button>
                          )}
-                         {/* Form nhập liệu địa chỉ mới */}
-                         {/* Không cần thẻ <form> riêng vì nút "Đặt hàng" ở dưới sẽ submit toàn bộ */}
+                         {/* Manual address input fields */}
                          <div className="form-group">
                              <label htmlFor="manual-address-input">Địa chỉ:</label>
                              <input
                                  type="text"
                                  id="manual-address-input"
-                                 name="address" // Name khớp với key trong shippingInfo
+                                 name="address"
                                  placeholder="Nhập địa chỉ chi tiết"
-                                 value={shippingInfo.address} // Value được bind với state shippingInfo
-                                 onChange={handleManualAddressChange} // Handler cập nhật shippingInfo
-                                 required // Yêu cầu nhập
-                                 />
+                                 value={shippingInfo.address}
+                                 onChange={handleManualAddressChange}
+                                 required
+                             />
                          </div>
                           <div className="form-group">
                              <label htmlFor="manual-name-input">Người nhận:</label>
                              <input
                                  type="text"
                                  id="manual-name-input"
-                                 name="name" // Name khớp với key trong shippingInfo
+                                 name="name"
                                  placeholder="Tên người nhận"
-                                 value={shippingInfo.name} // Value được bind với state shippingInfo
+                                 value={shippingInfo.name}
                                  onChange={handleManualAddressChange}
                                  required
-                                 />
+                             />
                          </div>
                           <div className="form-group">
                              <label htmlFor="manual-phone-input">Điện thoại:</label>
                              <input
-                                 type="tel" // type="tel" gợi ý bàn phím số trên mobile
+                                 type="tel"
                                  id="manual-phone-input"
-                                 name="phone" // Name khớp với key trong shippingInfo
+                                 name="phone"
                                  placeholder="Số điện thoại liên hệ"
-                                 value={shippingInfo.phone} // Value được bind với state shippingInfo
+                                 value={shippingInfo.phone}
                                  onChange={handleManualAddressChange}
                                  required
-                                 />
+                             />
                          </div>
-                          {/* Có thể thêm nút "Lưu địa chỉ này vào hồ sơ" tại đây nếu muốn người dùng lưu địa chỉ mới ngay lúc checkout */}
-                         {/* <button onClick={handleSaveManualAddressToProfile}>Lưu địa chỉ này vào hồ sơ</button> */}
-                     </div>
-                ) : null}
+                         {/* Optional: button to save new address to profile */}
+                         {/* <button type="button" onClick={handleSaveManualAddressToProfile}>Lưu địa chỉ này vào hồ sơ</button> */}
+
+                         {/* Place order button is now INSIDE this form */}
+                         <button
+                              type="submit" // Button type is submit
+                              className="place-order-button"
+                              // Disabled logic remains the same
+                              disabled={!shippingInfo.address || !shippingInfo.name || !shippingInfo.phone || !isLoggedIn || !cart || cart.length === 0}
+                          >
+                              ✅ Đặt hàng
+                          </button>
+                     </form>
+                 ) : (
+                    // If manual form is not shown and there are saved addresses,
+                    // the Place Order button needs to be outside the form
+                    isLoggedIn && user?.addresses && user.addresses.length > 0 && (
+                        // Place order button for saved addresses
+                        <button
+                             className="place-order-button"
+                             onClick={handlePlaceOrder} // Attach handler to onClick
+                             // Disabled logic remains the same
+                             disabled={!shippingInfo.address || !shippingInfo.name || !shippingInfo.phone || !isLoggedIn || !cart || cart.length === 0}
+                         >
+                             ✅ Đặt hàng
+                         </button>
+                     )
+                 )}
 
 
-                {/* --- Hiển thị địa chỉ giao hàng cuối cùng sẽ được sử dụng --- */}
-                {/* Phần này hiển thị thông tin địa chỉ hiện đang được chọn hoặc nhập để xác nhận */}
-                <div className="final-shipping-preview">
+                {/* --- Final Shipping Preview --- */}
+                 {/* This section shows the currently selected/entered address details */}
+                 <div className="final-shipping-preview">
                      <h3>Địa chỉ sẽ dùng để giao hàng:</h3>
-                     {/* Kiểm tra state shippingInfo để hiển thị thông tin, chỉ hiển thị khi có đủ 3 trường */}
+                      {/* Display preview if shippingInfo has all fields */}
                      {shippingInfo.address && shippingInfo.name && shippingInfo.phone ? (
                          <p className="shipping-details">
                              <strong>{shippingInfo.name}</strong> - {shippingInfo.phone} <br/>
@@ -300,27 +327,16 @@ const CheckoutPage = () => {
                      ) : (
                          <p className="shipping-placeholder">Vui lòng chọn hoặc nhập địa chỉ giao hàng ở trên.</p>
                      )}
-                </div>
+                 </div>
 
 
             </div> {/* End shipping-info-section */}
 
 
-            {/* --- Nút Đặt hàng --- */}
-            {/* Nút này chỉ khả dụng khi đã đăng nhập, giỏ hàng không trống và thông tin giao hàng đã đầy đủ */}
-            <button
-                className="place-order-button"
-                onClick={handlePlaceOrder} // Gắn handler xử lý đặt hàng
-                // Disabled nếu thiếu thông tin cần thiết
-                disabled={!shippingInfo.address || !shippingInfo.name || !shippingInfo.phone || !isLoggedIn || !cart || cart.length === 0}
-            >
-                ✅ Đặt hàng
-            </button>
-
-             {/* Có thể thêm các phần khác tại đây: tổng tiền cuối cùng (lặp lại), phương thức thanh toán, ghi chú... */}
+            {/* Note: Payment method, notes, etc. sections could go here */}
 
         </div> // End checkout-container
     );
 };
 
-export default CheckoutPage; // Export component Thanh toán
+export default CheckoutPage;
