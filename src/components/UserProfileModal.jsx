@@ -1,161 +1,169 @@
+// src/components/UserProfileModal.js
+
 // Import necessary React hooks: useState, useContext, useCallback
 import React, { useState, useContext, useCallback } from "react";
 // Import AuthContext for user data and logout function
-import { AuthContext } from "../account/AuthContext"; // Assuming AuthContext path is correct
+import { AuthContext } from "../account/AuthContext"; // Giả định đường dẫn AuthContext là đúng
 // Import CSS for styling
 import "./UserProfileModal.css";
 
-// --- Local Constants ---
+// --- Hằng số cục bộ ---
 
-// Key for storing all registered users in localStorage
+// Key để lưu trữ tất cả người dùng đã đăng ký trong localStorage
 const LOCAL_STORAGE_USERS_KEY = "users";
-// Key for storing the currently logged-in user in localStorage (assuming AuthContext uses this)
-const LOCAL_STORAGE_CURRENT_USER_KEY = "currentUser"; // Define constant for consistency
-// Minimum length requirement for the new password
+// Key để lưu trữ người dùng hiện đang đăng nhập trong localStorage (giả định AuthContext sử dụng key này)
+const LOCAL_STORAGE_CURRENT_USER_KEY = "currentUser"; // Định nghĩa hằng số cho tính nhất quán
+// Yêu cầu độ dài tối thiểu cho mật khẩu mới
 const MIN_PASSWORD_LENGTH = 6;
 
-// --- UserProfileModal Component ---
-// Displays user's basic info and a form to change password.
-// Receives onClose prop: Function to call when the modal should close.
+// --- Component UserProfileModal ---
+// Hiển thị thông tin cơ bản của người dùng và form đổi mật khẩu.
+// Nhận prop onClose: Hàm được gọi khi modal cần đóng.
 const UserProfileModal = ({ onClose }) => {
-  // Access user data and logout function from AuthContext
-  const { user, logout } = useContext(AuthContext);
+  // Truy cập dữ liệu người dùng và hàm logout từ AuthContext
+  // Sử dụng optional chaining và giá trị mặc định để an toàn nếu Context chưa sẵn sàng
+  const { user, logout } = useContext(AuthContext) || { user: null, logout: () => {} };
 
-  // --- State for form inputs and feedback message ---
-  const [oldPassword, setOldPassword] = useState(""); // State for old password input
-  const [newPassword, setNewPassword] = useState(""); // State for new password input
-  const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password input
-  const [message, setMessage] = useState(""); // State for success/error message
+  // --- State cho các input form và thông báo phản hồi ---
+  const [oldPassword, setOldPassword] = useState(""); // State cho input mật khẩu cũ
+  const [newPassword, setNewPassword] = useState(""); // State cho input mật khẩu mới
+  const [confirmPassword, setConfirmPassword] = useState(""); // State cho input xác nhận mật khẩu
+  const [message, setMessage] = useState(""); // State cho thông báo thành công/lỗi
 
-  // --- Handler for password change form submission ---
+  // --- Handler cho việc submit form đổi mật khẩu ---
+  // Sử dụng useCallback để hàm này không bị tạo lại không cần thiết
   const handleChangePassword = useCallback((e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault(); // Ngăn chặn hành vi submit form mặc định
 
-    setMessage(""); // Clear previous message
+    setMessage(""); // Xóa thông báo trước đó
 
-    // --- Validation Checks ---
-    // Check if old password matches the current user's password
-    if (oldPassword !== user?.password) { // Use optional chaining
+    // --- Kiểm tra dữ liệu (Validation Checks) ---
+    // Kiểm tra mật khẩu cũ có khớp với mật khẩu của người dùng hiện tại không
+    // Sử dụng optional chaining để truy cập user?.password an toàn
+    if (oldPassword !== user?.password) {
       setMessage("Mật khẩu cũ không đúng!");
-      return;
+      return; // Dừng nếu mật khẩu cũ không khớp
     }
 
-    // Check if new password and confirm password match
+    // Kiểm tra mật khẩu mới và xác nhận mật khẩu có khớp nhau không
     if (newPassword !== confirmPassword) {
       setMessage("Mật khẩu xác nhận không khớp!");
-      return;
+      return; // Dừng nếu mật khẩu xác nhận không khớp
     }
 
-    // Check minimum length of the new password
+    // Kiểm tra độ dài tối thiểu của mật khẩu mới
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
       setMessage(`Mật khẩu mới phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự!`);
-      return;
+      return; // Dừng nếu mật khẩu quá ngắn
     }
 
-    // Check if the new password is the same as the old password
+    // Kiểm tra mật khẩu mới có trùng với mật khẩu cũ không
     if (newPassword === oldPassword) {
         setMessage("Mật khẩu mới không được trùng với mật khẩu cũ!");
-        return;
+        return; // Dừng nếu mật khẩu mới trùng với mật khẩu cũ
     }
 
 
-    // --- Update password in localStorage (Frontend Demo Only - INSECURE) ---
-    // WARNING: Storing passwords in plain text in localStorage is highly insecure.
-    // In a real application, handle password changes via a secure backend API.
+    // --- Cập nhật mật khẩu trong localStorage (Chỉ dành cho Demo Frontend - KHÔNG AN TOÀN) ---
+    // CẢNH BÁO: Lưu trữ mật khẩu dạng văn bản thuần trong localStorage là cực kỳ không an toàn.
+    // Trong ứng dụng thực tế, hãy xử lý việc đổi mật khẩu thông qua một API backend an toàn.
 
-    // Load all users from localStorage
+    // Tải tất cả người dùng từ localStorage
     let storedUsers = [];
     const storedUsersData = localStorage.getItem(LOCAL_STORAGE_USERS_KEY);
     if (storedUsersData) {
         try {
+             // Cố gắng parse dữ liệu JSON
             storedUsers = JSON.parse(storedUsersData);
-            // Ensure it's an array after parsing
+            // Đảm bảo kết quả parse là một mảng
             if (!Array.isArray(storedUsers)) {
                  console.warn("Dữ liệu người dùng trong localStorage không phải là mảng sau parse.");
-                 storedUsers = []; // Use empty array if not an array
+                 storedUsers = []; // Sử dụng mảng rỗng nếu không phải mảng
             }
         } catch (error) {
-            console.error("Lỗi khi đọc danh sách người dùng từ localStorage:", error);
-             // If parsing fails, proceed with empty array
-            storedUsers = [];
-             // Optional: remove corrupted data if parsing fails
-            // localStorage.removeItem(LOCAL_STORAGE_USERS_KEY);
+             console.error("Lỗi khi đọc danh sách người dùng từ localStorage:", error);
+             // Nếu parse thất bại, tiếp tục với mảng rỗng
+             storedUsers = [];
+             // Tùy chọn: xóa dữ liệu bị lỗi nếu parse thất bại
+             // localStorage.removeItem(LOCAL_STORAGE_USERS_KEY);
         }
     }
 
 
-    // Find and update the current user's password in the users list
+    // Tìm và cập nhật mật khẩu của người dùng hiện tại trong danh sách người dùng
     const updatedUsers = storedUsers.map((storedUser) =>
-      storedUser.username === user?.username // Compare username safely
-        ? { ...storedUser, password: newPassword } // Update password
-        : storedUser // Keep other users unchanged
-    );
+      // So sánh username một cách an toàn
+      (storedUser && storedUser.username === user?.username)
+        ? { ...storedUser, password: newPassword } // Cập nhật mật khẩu
+        : storedUser // Giữ nguyên các người dùng khác
+    ).filter(Boolean); // Lọc bỏ các giá trị null/undefined có thể xuất hiện nếu dữ liệu ban đầu bị lỗi
 
-    // Save the updated users list back to localStorage
+
+    // Lưu danh sách người dùng đã cập nhật trở lại localStorage
     try {
-         localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(updatedUsers));
+        localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(updatedUsers));
     } catch (error) {
-         console.error("Lỗi khi lưu danh sách người dùng cập nhật vào localStorage:", error);
-         setMessage("Lỗi hệ thống khi lưu mật khẩu mới."); // Show error message
-         return; // Stop if saving fails
+        console.error("Lỗi khi lưu danh sách người dùng cập nhật vào localStorage:", error);
+        setMessage("Lỗi hệ thống khi lưu mật khẩu mới."); // Hiển thị thông báo lỗi
+        return; // Dừng nếu việc lưu thất bại
     }
 
 
-    // Update the logged-in user's info in localStorage (assuming AuthContext reads this key)
-    // Ensure user object exists before saving
+    // Cập nhật thông tin người dùng đã đăng nhập trong localStorage (giả định AuthContext đọc key này)
+    // Đảm bảo đối tượng user tồn tại trước khi lưu
     if (user) {
         try {
              localStorage.setItem(
-               LOCAL_STORAGE_CURRENT_USER_KEY, // Use the constant key
-               JSON.stringify({ ...user, password: newPassword }) // Update password in current user object
-            );
+                LOCAL_STORAGE_CURRENT_USER_KEY, // Sử dụng hằng số key
+                JSON.stringify({ ...user, password: newPassword }) // Cập nhật mật khẩu trong đối tượng người dùng hiện tại
+             );
         } catch (error) {
              console.error("Lỗi khi lưu thông tin người dùng hiện tại cập nhật vào localStorage:", error);
-             // Continue even if this specific save fails, main user list is updated
+             // Tiếp tục ngay cả khi việc lưu này thất bại, danh sách người dùng chính đã được cập nhật
         }
     }
 
 
-    // --- Handle Successful Password Change ---
-    setMessage(`Đổi mật khẩu thành công! Vui lòng đăng nhập lại.`); // Success message
-    // Clear input fields
+    // --- Xử lý khi đổi mật khẩu thành công ---
+    setMessage(`Đổi mật khẩu thành công! Vui lòng đăng nhập lại.`); // Thông báo thành công
+    // Xóa nội dung các input form
     setOldPassword("");
     setNewPassword("");
     setConfirmPassword("");
 
-    // Logout and close modal after a delay (forces re-login with new password)
+    // Đăng xuất và đóng modal sau một khoảng trễ (buộc người dùng đăng nhập lại với mật khẩu mới)
     setTimeout(() => {
-      logout(); // Call logout function
-      onClose(); // Call onClose prop
-    }, 2000); // 2 seconds delay
-  }, [user, oldPassword, newPassword, confirmPassword, logout, onClose]); // Dependencies
+      logout(); // Gọi hàm logout
+      onClose(); // Gọi prop onClose để đóng modal
+    }, 2000); // Trễ 2 giây
+  }, [user, oldPassword, newPassword, confirmPassword, logout, onClose]); // Dependencies: user, các state input, logout, onClose
 
-  // --- Render Modal UI ---
+  // --- Render UI Modal ---
   return (
-    // Modal overlay for background dimming
-    // Add onClick={onClose} here if you want clicking outside the modal to close it
+    // Lớp phủ modal cho nền mờ
+    // Thêm onClick={onClose} ở đây nếu muốn click bên ngoài modal sẽ đóng nó
     <div className="modal-overlay">
-      {/* Modal content container */}
-      {/* Stop propagation to prevent clicks inside from closing via overlay click */}
+      {/* Container nội dung modal */}
+      {/* Ngăn chặn sự kiện click lan truyền để tránh click bên trong đóng modal nếu overlay có onClick */}
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>Thông tin người dùng</h2> {/* Modal title */}
+        <h2>Thông tin người dùng</h2> {/* Tiêu đề modal */}
 
-        {/* --- Basic User Info Section --- */}
+        {/* --- Phần thông tin cơ bản của người dùng --- */}
         <div className="user-info">
           <p>
             <strong>Tên đăng nhập:</strong>{" "}
-            {/* Display username safely */}
+            {/* Hiển thị username một cách an toàn */}
             {user?.username || "Không có dữ liệu"}
           </p>
-          {/* Add other user info here if available in the 'user' object */}
+          {/* Thêm các thông tin người dùng khác ở đây nếu có trong đối tượng 'user' */}
         </div>
 
-        <h3>Đổi mật khẩu</h3> {/* Password change section title */}
+        <h3>Đổi mật khẩu</h3> {/* Tiêu đề phần đổi mật khẩu */}
 
-        {/* --- Change Password Form --- */}
-        {/* Attach onSubmit handler to the form */}
+        {/* --- Form đổi mật khẩu --- */}
+        {/* Gắn handler onSubmit vào form */}
         <form onSubmit={handleChangePassword}>
-          {/* Old password input */}
+          {/* Input mật khẩu cũ */}
           <input
             type="password"
             placeholder="Mật khẩu cũ"
@@ -163,9 +171,9 @@ const UserProfileModal = ({ onClose }) => {
             onChange={(e) => setOldPassword(e.target.value)}
             required
             aria-label="Nhập mật khẩu cũ"
-            autoComplete="current-password" // Suggest current password for browser autofill
+            autoComplete="current-password" // Gợi ý mật khẩu hiện tại cho trình duyệt
           />
-          {/* New password input */}
+          {/* Input mật khẩu mới */}
           <input
             type="password"
             placeholder="Mật khẩu mới"
@@ -173,10 +181,10 @@ const UserProfileModal = ({ onClose }) => {
             onChange={(e) => setNewPassword(e.target.value)}
             required
             aria-label="Nhập mật khẩu mới"
-            autoComplete="new-password" // Suggest new password for browser autofill
-            minLength={MIN_PASSWORD_LENGTH} // Use constant for min length
+            autoComplete="new-password" // Gợi ý mật khẩu mới cho trình duyệt
+            minLength={MIN_PASSWORD_LENGTH} // Sử dụng hằng số cho độ dài tối thiểu
           />
-          {/* Confirm new password input */}
+          {/* Input xác nhận mật khẩu mới */}
           <input
             type="password"
             placeholder="Xác nhận mật khẩu"
@@ -184,30 +192,30 @@ const UserProfileModal = ({ onClose }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             aria-label="Xác nhận mật khẩu mới"
-            autoComplete="new-password" // Suggest new password for browser autofill
-            minLength={MIN_PASSWORD_LENGTH} // Use constant for min length
+            autoComplete="new-password" // Gợi ý mật khẩu mới cho trình duyệt
+            minLength={MIN_PASSWORD_LENGTH} // Sử dụng hằng số cho độ dài tối thiểu
           />
 
-          {/* --- Display Message --- */}
-          {/* Show message if state is not empty */}
+          {/* --- Hiển thị thông báo --- */}
+          {/* Chỉ hiển thị thông báo nếu state message không rỗng */}
           {message && (
-            // Apply success/error class based on message content
+            // Áp dụng class success/error dựa trên nội dung thông báo
             <p className={message.includes("thành công") ? "success" : "error"}>
               {message}
             </p>
           )}
 
-          {/* --- Modal Action Buttons --- */}
+          {/* --- Các nút hành động của Modal --- */}
           <div className="modal-buttons">
-            {/* Submit button for the form */}
+            {/* Nút submit cho form */}
             <button type="submit" className="confirm-button">
               Đổi mật khẩu
             </button>
-            {/* Close modal button */}
+            {/* Nút đóng modal */}
             <button
-              type="button" // Prevent button from submitting the form
+              type="button" // Đặt type="button" để ngăn nút này submit form
               className="cancel-button"
-              onClick={onClose} // Call onClose prop
+              onClick={onClose} // Gọi prop onClose
               aria-label="Đóng modal"
             >
               Đóng
@@ -219,4 +227,4 @@ const UserProfileModal = ({ onClose }) => {
   );
 };
 
-export default UserProfileModal;
+export default UserProfileModal; // Export component UserProfileModal

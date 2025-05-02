@@ -8,7 +8,6 @@
   background: linear-gradient(135deg, #fff0f5, #ffe4e9);
   min-height: 100vh;
   box-sizing: border-box;
-  
 }
 
 /* Container cho trạng thái loading */
@@ -246,12 +245,10 @@
   margin-top: 2rem;
   padding-top: 0;
   padding-bottom: 0;
-  /* Thêm dòng này để dịch chuyển toàn bộ khối sang phải */
-  /* Thay 10px bằng giá trị bạn muốn dịch chuyển */
-  transform: translateX(10px);
+  /* Đã xóa transform: translateX(10px); để dựa vào margin: auto của product-grid để căn giữa */
 }
 
-/* Giữ nguyên .product-grid vì nó đã có margin: 0 auto để căn giữa lưới bên trong .product-list */
+/* Giữ nguyên .product-grid và sử dụng margin: 0 auto để căn giữa */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -531,10 +528,18 @@
   .slide-image img {
     max-height: 200px;
   }
-
+/* 
   .product-list {
-    grid-template-columns: repeat(4, 1fr); /* 4 cột trên laptop */
-    max-width: 1000px;
+    /* Đã xóa transform: translateX(10px);
+    
+    */
+
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Giữ nguyên 4 cột trên laptop */
+    max-width: 1000px; /* Giới hạn chiều rộng cho lưới */
+    margin: 0 auto; /* Vẫn sử dụng margin auto để căn giữa */
+    padding: 0 1rem;
   }
 
   .product-card {
@@ -622,9 +627,15 @@
     max-height: 150px;
   }
 
-  .product-list {
-    grid-template-columns: repeat(3, 1fr); /* 3 cột trên tablet */
-    max-width: 100%;
+  /* .product-list {
+     /* Đã xóa transform: translateX(10px); */
+
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Điều chỉnh minmax cho tablet */
+    max-width: 100%; /* Sử dụng chiều rộng tối đa */
+    margin: 0 auto; /* Vẫn sử dụng margin auto để căn giữa */
+    padding: 0 1rem;
   }
 
   .product-card {
@@ -730,10 +741,16 @@
     max-height: 100px;
   }
 
-  .product-list {
-    grid-template-columns: repeat(2, 1fr); /* 2 cột trên mobile */
-    max-width: 100%;
+  /* .product-list { */
+     /* Đã xóa transform: translateX(10px); */
+  /* } */
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Điều chỉnh minmax cho mobile */
+    max-width: 100%; /* Sử dụng chiều rộng tối đa */
     gap: 15px;
+    margin: 0 auto; /* Vẫn sử dụng margin auto để căn giữa */
+    padding: 0 0.5rem; /* Giảm padding ngang trên mobile */
   }
 
   .product-card {
@@ -836,9 +853,15 @@
     max-height: 80px;
   }
 
-  .product-list {
+  /* .product-list { */
+     /* Đã xóa transform: translateX(10px); */
+  /* } */
+
+  .product-grid {
     grid-template-columns: repeat(1, 1fr); /* 1 cột trên mobile nhỏ */
     gap: 10px;
+    margin: 0 auto; /* Vẫn sử dụng margin auto để căn giữa */
+    padding: 0 0.5rem; /* Giảm padding ngang trên mobile nhỏ */
   }
 
   .product-card {
