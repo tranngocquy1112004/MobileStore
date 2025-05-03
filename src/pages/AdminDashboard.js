@@ -32,14 +32,12 @@ const AdminDashboard = () => {
                 // Cố gắng parse dữ liệu JSON
                 storedUsers = JSON.parse(storedUsersData);
             } catch (e) {
-                console.error("Lỗi khi parse dữ liệu người dùng từ localStorage:", e);
-                // Nếu parse lỗi, có thể đặt thông báo lỗi hoặc chỉ log và tiếp tục với mảng rỗng
-                // setError("Lỗi khi đọc dữ liệu người dùng.");
+                console.error("Error parsing user data:", e);
             }
         }
         // Đảm bảo dữ liệu đã tải là một mảng, nếu không thì sử dụng mảng rỗng
         if (!Array.isArray(storedUsers)) {
-            console.warn("Dữ liệu người dùng trong localStorage không phải là mảng, sử dụng mảng rỗng.");
+            console.warn("User data is not an array, using empty array");
             storedUsers = [];
         }
 
@@ -51,14 +49,12 @@ const AdminDashboard = () => {
                 // Cố gắng parse dữ liệu JSON
                 storedOrders = JSON.parse(storedOrdersData);
             } catch (e) {
-                console.error("Lỗi khi parse dữ liệu đơn hàng từ localStorage:", e);
-                 // Nếu parse lỗi, có thể đặt thông báo lỗi hoặc chỉ log và tiếp tục với mảng rỗng
-                // setError("Lỗi khi đọc dữ liệu đơn hàng.");
+                console.error("Error parsing order data:", e);
             }
         }
         // Đảm bảo dữ liệu đã tải là một mảng, nếu không thì sử dụng mảng rỗng
         if (!Array.isArray(storedOrders)) {
-            console.warn("Dữ liệu đơn hàng trong localStorage không phải là mảng, sử dụng mảng rỗng.");
+            console.warn("Order data is not an array, using empty array");
             storedOrders = [];
         }
 
@@ -72,8 +68,8 @@ const AdminDashboard = () => {
 
       } catch (err) {
         // Bắt các lỗi khác có thể xảy ra trong quá trình tải
-        console.error("Lỗi chung khi tải dữ liệu admin:", err);
-        setError("Không thể tải dữ liệu quản trị. Vui lòng thử lại sau.");
+        console.error("Error loading admin data:", err);
+        setError("Failed to load admin data. Please try again later.");
         setUsers([]); // Reset state về rỗng khi có lỗi
         setOrders([]);
       } finally {
@@ -93,7 +89,7 @@ const AdminDashboard = () => {
   // Sử dụng useCallback để hàm này không bị tạo lại không cần thiết
   const handleDeleteUser = useCallback((usernameToDelete) => {
     // Dialog xác nhận từ người dùng
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${usernameToDelete}" và tất cả đơn hàng của họ không?`)) {
+    if (!window.confirm(`Are you sure you want to delete user "${usernameToDelete}" and all their orders?`)) {
       return; // Dừng nếu người dùng hủy bỏ
     }
 
@@ -110,11 +106,10 @@ const AdminDashboard = () => {
     try {
         localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(updatedUsers));
         localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updatedOrders));
-        console.log(`Đã xóa người dùng "${usernameToDelete}" và các đơn hàng liên quan.`); // Giữ lại log thành công
     } catch (e) {
-        console.error(`Lỗi khi lưu dữ liệu sau khi xóa người dùng "${usernameToDelete}" vào localStorage:`, e);
+        console.error(`Error saving data after deleting user "${usernameToDelete}":`, e);
         // Thông báo lỗi cho người dùng nếu không lưu được
-        alert("Lỗi khi lưu thay đổi. Dữ liệu có thể không được cập nhật đầy đủ.");
+        alert("Error saving changes. Data may not be fully updated.");
     }
 
 
@@ -126,7 +121,7 @@ const AdminDashboard = () => {
     return (
       <div className="admin-container loading-state">
         <div className="loading-spinner"></div>
-        <p>Đang tải dữ liệu quản trị...</p>
+        <p>Loading admin data...</p>
       </div>
     );
   }
@@ -143,16 +138,16 @@ const AdminDashboard = () => {
   // --- Render chính của Component ---
   return (
     <div className="admin-container">
-      <h1 className="admin-title">📊 Bảng điều khiển Admin</h1>
+      <h1 className="admin-title">📊 Admin Dashboard</h1>
 
       {/* Phần hiển thị danh sách người dùng */}
       <section className="admin-section">
         {/* Hiển thị số lượng người dùng, kiểm tra an toàn users là mảng */}
-        <h2 className="section-title">👥 Danh sách người dùng ({Array.isArray(users) ? users.length : 0})</h2>
+        <h2 className="section-title">👥 Users ({Array.isArray(users) ? users.length : 0})</h2>
 
         {/* Render có điều kiện: Nếu không có người dùng nào */}
         {Array.isArray(users) && users.length === 0 ? ( // Kiểm tra an toàn và số lượng
-            <p className="empty-state">Chưa có người dùng nào đăng ký.</p>
+            <p className="empty-state">No users registered yet.</p>
         ) : (
             // Render danh sách người dùng
             <ul className="user-list">
@@ -160,7 +155,7 @@ const AdminDashboard = () => {
               {Array.isArray(users) && users.map((user) => {
                 // Kiểm tra an toàn cho đối tượng người dùng và username
                 if (!user || !user.username) {
-                    console.warn("Dữ liệu người dùng không hợp lệ trong danh sách:", user);
+                    console.warn("Invalid user data:", user);
                     return null; // Bỏ qua render người dùng không hợp lệ
                 }
                  // Lọc đơn hàng cho người dùng hiện tại (Có thể ảnh hưởng hiệu suất với tập dữ liệu lớn)
@@ -177,19 +172,19 @@ const AdminDashboard = () => {
                       <button
                         className="delete-user-button"
                         onClick={() => handleDeleteUser(user.username)}
-                        aria-label={`Xóa người dùng ${user.username}`}
+                        aria-label={`Delete user ${user.username}`}
                       >
-                        🗑️ Xóa người dùng
+                        🗑️ Delete User
                       </button>
                     </div>
 
                     {/* Phần hiển thị đơn hàng của người dùng này */}
                     <div className="user-orders">
-                      <h4>📦 Đơn hàng của {user.username} ({userOrders.length}):</h4>
+                      <h4>📦 Orders by {user.username} ({userOrders.length}):</h4>
 
                       {/* Render có điều kiện: Nếu người dùng này chưa có đơn hàng */}
                       {userOrders.length === 0 ? (
-                          <p className="empty-state-small">Chưa có đơn hàng nào từ người dùng này.</p>
+                          <p className="empty-state-small">No orders from this user yet.</p>
                       ) : (
                           // Render danh sách đơn hàng của người dùng
                           <ul className="order-list-admin">
@@ -197,46 +192,46 @@ const AdminDashboard = () => {
                             {Array.isArray(userOrders) && userOrders.map(order => {
                                  // Kiểm tra an toàn cho đối tượng đơn hàng và ID (dùng làm key)
                                  if (!order || typeof order.id === 'undefined') {
-                                     console.warn("Dữ liệu đơn hàng không hợp lệ trong danh sách:", order);
+                                     console.warn("Invalid order data:", order);
                                      return null; // Bỏ qua render đơn hàng không hợp lệ
                                  }
                                 return (
                                   // Sử dụng order.id làm key duy nhất
                                   <li key={order.id} className="order-item-admin">
                                      {/* Hiển thị chi tiết đơn hàng với kiểm tra an toàn */}
-                                    <p><strong>ID Đơn hàng:</strong> #{order.id}</p>
+                                    <p><strong>Order ID:</strong> #{order.id}</p>
                                      {/* Định dạng ngày/giờ với kiểm tra an toàn cho order.date */}
-                                    <p><strong>Ngày đặt:</strong> {order.date ? new Date(order.date).toLocaleString('vi-VN') : 'N/A'}</p>
+                                    <p><strong>Date:</strong> {order.date ? new Date(order.date).toLocaleString('vi-VN') : 'N/A'}</p>
                                      {/* Định dạng tổng tiền với kiểm tra an toàn và giá trị mặc định */}
-                                    <p><strong>Tổng tiền:</strong> {(order?.totalPrice || 0).toLocaleString('vi-VN')} VNĐ</p>
+                                    <p><strong>Total:</strong> {(order?.totalPrice || 0).toLocaleString('vi-VN')} VNĐ</p>
                                      {/* Thông tin giao hàng với optional chaining và giá trị mặc định */}
-                                     <p><strong>Người nhận:</strong> {order?.shippingInfo?.name || 'N/A'}</p>
-                                     <p><strong>Địa chỉ:</strong> {order?.shippingInfo?.address || 'N/A'}</p>
-                                     <p><strong>Điện thoại:</strong> {order?.shippingInfo?.phone || 'N/A'}</p>
+                                     <p><strong>Recipient:</strong> {order?.shippingInfo?.name || 'N/A'}</p>
+                                     <p><strong>Address:</strong> {order?.shippingInfo?.address || 'N/A'}</p>
+                                     <p><strong>Phone:</strong> {order?.shippingInfo?.phone || 'N/A'}</p>
 
                                      {/* Các sản phẩm trong đơn hàng */}
-                                    <h5>Chi tiết sản phẩm:</h5>
+                                    <h5>Order Items:</h5>
                                      {/* Đảm bảo order.items là mảng trước khi map */}
                                      {Array.isArray(order?.items) && order.items.map((item, itemIndex) => {
                                           // Kiểm tra an toàn cho đối tượng item (dùng làm key, fallback về index)
                                           if (!item) {
-                                               console.warn("Dữ liệu sản phẩm không hợp lệ trong đơn hàng:", item);
+                                               console.warn("Invalid item data:", item);
                                                return null; // Bỏ qua render item không hợp lệ
                                           }
                                           return (
                                               // Sử dụng item.id làm key, fallback về itemIndex
                                               <li key={item.id || itemIndex}>
                                                   {/* Hiển thị chi tiết item với kiểm tra an toàn */}
-                                                  {item?.name || 'Sản phẩm không rõ'} (x{item?.quantity || 0}) - {((item?.price || 0) * (item?.quantity || 0)).toLocaleString('vi-VN')} VNĐ
+                                                  {item?.name || 'Unknown Product'} (x{item?.quantity || 0}) - {((item?.price || 0) * (item?.quantity || 0)).toLocaleString('vi-VN')} VNĐ
                                               </li>
                                           );
                                       })}
                                        {/* Thông báo nếu danh sách item rỗng hoặc không hợp lệ */}
                                        {Array.isArray(order?.items) && order.items.length === 0 && (
-                                            <p className="empty-state-small">Không có sản phẩm trong đơn hàng này.</p>
+                                            <p className="empty-state-small">No items in this order.</p>
                                         )}
                                         {!Array.isArray(order?.items) && (
-                                             <p className="empty-state-small">Dữ liệu sản phẩm đơn hàng không hợp lệ.</p>
+                                             <p className="empty-state-small">Invalid order items data.</p>
                                          )}
                                   </li>
                                 );

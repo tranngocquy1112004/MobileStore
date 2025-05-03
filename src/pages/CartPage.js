@@ -1,5 +1,3 @@
-// src/pages/CartPage.js
-
 import React, { useContext, useCallback, useMemo } from 'react'; // Import hooks, thêm useMemo
 import { Link, useNavigate } from 'react-router-dom'; // Import navigation components
 

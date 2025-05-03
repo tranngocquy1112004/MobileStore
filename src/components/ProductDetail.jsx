@@ -16,11 +16,11 @@ import "./ProductDetail.css";
 const API_URL = `${process.env.PUBLIC_URL}/db.json`;
 // Các thông báo hiển thị cho người dùng
 const MESSAGES = {
-  LOADING: "⏳ Đang tải chi tiết sản phẩm...", // Thêm chi tiết vào loading message
-  ERROR_FETCH: "❌ Không thể tải dữ liệu sản phẩm!",
-  ERROR_NOT_FOUND: "🚫 Sản phẩm không tồn tại hoặc không tìm thấy!", // Thêm biểu tượng
-  SUCCESS_ADD_TO_CART: "✅ Thêm vào giỏ hàng thành công!",
-  LOGIN_REQUIRED: "⚠️ Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!", // Thêm biểu tượng cảnh báo
+  LOADING: "Loading product details...",
+  ERROR_FETCH: "Failed to load product data!",
+  ERROR_NOT_FOUND: "Product not found!",
+  SUCCESS_ADD_TO_CART: "Added to cart successfully!",
+  LOGIN_REQUIRED: "Please login to add items to cart!",
 };
 // Key để lưu trữ danh sách sản phẩm vào localStorage làm cache
 const LOCAL_STORAGE_PRODUCTS_KEY = "products";
@@ -73,18 +73,13 @@ const ProductDetail = () => {
             // console.log("Sử dụng dữ liệu sản phẩm từ localStorage (cache)."); // Dev log
             // Đảm bảo dữ liệu từ cache là một mảng
             if (!Array.isArray(productList)) {
-              console.warn("Dữ liệu sản phẩm trong localStorage không phải là mảng, sẽ fetch lại từ API.");
-              productList = []; // Coi như cache rỗng nếu dữ liệu không hợp lệ
-               // Tùy chọn: xóa dữ liệu bị lỗi nếu parse thành công nhưng không phải mảng
-               // localStorage.removeItem(LOCAL_STORAGE_PRODUCTS_KEY);
+              console.warn("Cached product data is not an array, fetching from API");
+              productList = [];
             }
           } catch (parseError) {
             // Xử lý lỗi khi parse dữ liệu từ cache
-            console.error("Lỗi khi parse dữ liệu sản phẩm từ localStorage:", parseError);
-            productList = []; // Coi như cache rỗng nếu parse lỗi
-             // Tùy chọn: xóa dữ liệu bị lỗi nếu parse thất bại
-             // localStorage.removeItem(LOCAL_STORAGE_PRODUCTS_KEY);
-             console.log("Xóa dữ liệu lỗi trong localStorage, sẽ fetch lại từ API.");
+            console.error("Error parsing cached product data:", parseError);
+            productList = [];
           }
         }
 
@@ -107,8 +102,7 @@ const ProductDetail = () => {
             try {
               localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(productList));
             } catch (storageError) {
-              console.error("Lỗi khi lưu dữ liệu sản phẩm vào localStorage:", storageError);
-              // Có thể thêm thông báo lỗi nhỏ cho người dùng nếu việc lưu cache thất bại
+              console.error("Error saving product data to localStorage:", storageError);
             }
           }
         }
@@ -166,8 +160,7 @@ const ProductDetail = () => {
     // 2. Kiểm tra xem dữ liệu sản phẩm có sẵn và hợp lệ không
     // Đảm bảo product tồn tại và có thuộc tính id
     if (!product || typeof product.id === 'undefined') {
-      console.warn("Không có dữ liệu sản phẩm hợp lệ để thêm vào giỏ."); // Log cảnh báo
-      // Có thể hiển thị thông báo lỗi cho người dùng nếu cần
+      console.warn("Invalid product data for cart");
       return; // Dừng hàm nếu không có sản phẩm hợp lệ
     }
 
@@ -265,8 +258,8 @@ const ProductDetail = () => {
         <p className="error-message">❌ {error}</p>
         {/* Nút quay lại trang chủ */}
         <div className="button-group">
-          <Link to="/home" className="back-button" aria-label="Quay lại trang chủ">
-            ⬅ Quay lại
+          <Link to="/home" className="back-button" aria-label="Back to home">
+            ⬅ Back
           </Link>
         </div>
       </div>
@@ -280,7 +273,7 @@ const ProductDetail = () => {
        // Nếu đến đây mà product vẫn null, có thể có lỗi logic ở đâu đó.
        // Trả về null hoặc một thông báo lỗi mặc định là an toàn nhất.
        console.error("Lỗi logic: Product state là null sau khi loading hoàn thành mà không có lỗi.");
-       return <div className="product-detail error-state"><p className="error-message">Đã xảy ra lỗi không mong muốn.</p></div>;
+       return <div className="product-detail error-state"><p className="error-message">An unexpected error occurred.</p></div>;
    }
 
 
@@ -289,11 +282,11 @@ const ProductDetail = () => {
     <div className="product-detail">
       {/* Phần nội dung chính của sản phẩm */}
       <section className="product-content">
-        <h2>{product.name || 'Chi tiết sản phẩm'}</h2> {/* Hiển thị tên sản phẩm an toàn */}
+        <h2>{product.name || 'Product Details'}</h2> {/* Hiển thị tên sản phẩm an toàn */}
         {/* Hình ảnh sản phẩm */}
         <img
           src={product.image || ''} // Hiển thị hình ảnh an toàn (dùng chuỗi rỗng nếu thiếu)
-          alt={product.name || 'Sản phẩm'} // Alt text an toàn
+          alt={product.name || 'Product'} // Alt text an toàn
           className="product-image"
           loading="lazy" // Lazy load hình ảnh
         />
@@ -304,28 +297,28 @@ const ProductDetail = () => {
             💰 {(product.price || 0).toLocaleString("vi-VN")} VNĐ
           </p>
         </div>
-        <p className="description">{product.description || 'Không có mô tả.'}</p> {/* Hiển thị mô tả an toàn */}
+        <p className="description">{product.description || 'No description available.'}</p> {/* Hiển thị mô tả an toàn */}
         {/* Phần thông số kỹ thuật */}
         <div className="specs">
-          <h3>⚙️ Thông số kỹ thuật</h3>
+          <h3>⚙️ Specifications</h3>
           <ul>
             {/* Hiển thị thông số kỹ thuật an toàn sử dụng optional chaining và giá trị mặc định */}
-            <li>📱 Màn hình: {product?.screen || "Không có thông tin"}</li>
-            <li>⚡ Chip: {product?.chip || "Không có thông tin"}</li>
-            <li>💾 RAM: {product?.ram || "Không có thông tin"}</li>
-            <li>💽 Bộ nhớ: {product?.storage || "Không có thông tin"}</li>
-            <li>📷 Camera: {product?.camera || "Không có thông tin"}</li>
-            <li>🔋 Pin: {product?.battery || "Không có thông tin"}</li>
+            <li>📱 Screen: {product?.screen || "N/A"}</li>
+            <li>⚡ Chip: {product?.chip || "N/A"}</li>
+            <li>💾 RAM: {product?.ram || "N/A"}</li>
+            <li>💽 Storage: {product?.storage || "N/A"}</li>
+            <li>📷 Camera: {product?.camera || "N/A"}</li>
+            <li>🔋 Battery: {product?.battery || "N/A"}</li>
              {/* Thông báo nếu không có thông số nào được hiển thị */}
              {!(product?.screen || product?.chip || product?.ram || product?.storage || product?.camera || product?.battery) && (
-                 <p className="empty-state-small">Không có thông tin chi tiết nào.</p>
+                 <p className="empty-state-small">No specifications available.</p>
              )}
           </ul>
         </div>
         {/* Hiển thị thông báo thành công/thông tin */}
         {message && (
           // Áp dụng class CSS dựa trên nội dung thông báo (thành công, cảnh báo, lỗi)
-          <p className={`status-message ${message.includes("thành công") ? "success" : message.includes("Vui lòng đăng nhập") ? "warning" : "info"}`}>
+          <p className={`status-message ${message.includes("successfully") ? "success" : message.includes("login") ? "warning" : "info"}`}>
             {message}
           </p>
         )}
@@ -338,13 +331,13 @@ const ProductDetail = () => {
           onClick={handleAddToCart} // Gắn handler
           // Disable nút nếu không có sản phẩm, đang loading, hoặc có lỗi
           disabled={!product || isLoading || error}
-          aria-label={`Thêm ${product?.name || 'sản phẩm này'} vào giỏ hàng`}
+          aria-label={`Add ${product?.name || 'this product'} to cart`}
         >
-          🛒 Thêm vào giỏ
+          🛒 Add to Cart
         </button>
         {/* Nút "Quay lại" */}
-        <Link to="/home" className="back-button" aria-label="Quay lại trang chủ">
-          ⬅ Quay lại
+        <Link to="/home" className="back-button" aria-label="Back to home">
+          ⬅ Back
         </Link>
       </div>
     </div>
