@@ -1,186 +1,165 @@
-// src/context/CartContext.js (Đổi tên file để phản ánh đây là Context)
+import React, { createContext, useState, useEffect, useCallback, useContext, useMemo } from "react";
+import { AuthContext } from "../account/AuthContext";
 
-// Import necessary React hooks:
-import React, { createContext, useState, useEffect, useCallback, useContext, useMemo } from "react"; // Thêm useMemo
-// Import AuthContext to get the logged-in user information.
-import { AuthContext } from "../account/AuthContext"; // Giả định AuthContext nằm trong thư mục 'account'
-
-// --- Định nghĩa Hằng số ---
-// Tiền tố cho key lưu giỏ hàng trong localStorage (ví dụ: "cart_[username]").
+// Hằng số
 const LOCAL_STORAGE_CART_PREFIX = "cart_";
 
-// --- Định nghĩa Giá trị Context Mặc định ---
-// Giá trị này được sử dụng nếu useContext(CartContext) được gọi bên ngoài CartProvider.
+// Giá trị mặc định cho context
 const defaultCartContext = {
-  cart: [], // Mảng rỗng cho giỏ hàng mặc định
-  totalPrice: 0, // Tổng tiền mặc định là 0
-  addToCart: () => {}, // Hàm rỗng mặc định
-  removeFromCart: () => {}, // Hàm rỗng mặc định
-  updateQuantity: () => {}, // Hàm rỗng mặc định
-  clearCart: () => {}, // Hàm rỗng mặc định
+  cart: [],
+  totalPrice: 0,
+  addToCart: () => {},
+  removeFromCart: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
 };
 
-// --- Tạo CartContext ---
-// Export context để các component khác có thể sử dụng useContext(CartContext)
+// Tạo context
 export const CartContext = createContext(defaultCartContext);
 
-// --- Component CartProvider ---
-// Component này quản lý state và logic của giỏ hàng và cung cấp nó thông qua Context.
-export const CartProvider = ({ children }) => {
-  // Truy cập AuthContext để lấy thông tin người dùng hiện tại cho giỏ hàng theo người dùng.
-  // Sử dụng optional chaining và giá trị mặc định để tránh lỗi nếu AuthContext chưa sẵn sàng
-  const { user } = useContext(AuthContext) || { user: null };
+// Hàm tiện ích để lưu giỏ hàng vào localStorage
+const saveCartToStorage = (user, cart) => {
+  if (user && user.username && Array.isArray(cart)) {
+    const userCartKey = `${LOCAL_STORAGE_CART_PREFIX}${user.username}`;
+    try {
+      localStorage.setItem(userCartKey, JSON.stringify(cart));
+    } catch (error) {
+      console.error(`Lỗi khi lưu giỏ hàng cho người dùng ${user.username}:`, error);
+    }
+  }
+};
 
-  // 'cart' state: Lưu trữ danh sách các sản phẩm trong giỏ hàng. Khởi tạo là mảng rỗng.
+// Hàm tiện ích để tải giỏ hàng từ localStorage
+const loadCartFromStorage = (user) => {
+  if (user && user.username) {
+    const userCartKey = `${LOCAL_STORAGE_CART_PREFIX}${user.username}`;
+    const savedCart = localStorage.getItem(userCartKey);
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        if (Array.isArray(parsedCart)) {
+          return parsedCart.filter(item => item && typeof item.id !== 'undefined');
+        }
+      } catch (error) {
+        console.error(`Lỗi khi phân tích giỏ hàng cho người dùng ${user.username}:`, error);
+      }
+    }
+  }
+  return [];
+};
+
+// Component CartProvider
+export const CartProvider = ({ children }) => {
+  const { user } = useContext(AuthContext) || { user: null };
   const [cart, setCart] = useState([]);
 
-  // --- Hook Effect để tải giỏ hàng từ localStorage khi component mount hoặc người dùng thay đổi ---
+  // Tải giỏ hàng khi người dùng thay đổi
   useEffect(() => {
-    if (user && user.username) {
-      const userCartKey = `${LOCAL_STORAGE_CART_PREFIX}${user.username}`;
-      const savedCart = localStorage.getItem(userCartKey);
-
-      if (savedCart) {
-        try {
-          const parsedCart = JSON.parse(savedCart);
-          if (Array.isArray(parsedCart)) {
-            const validCart = parsedCart.filter(item => item && typeof item.id !== 'undefined');
-            setCart(validCart);
-          } else {
-            setCart([]);
-          }
-        } catch (error) {
-          console.error(`Error parsing cart for user ${user.username}:`, error);
-          setCart([]);
-        }
-      } else {
-        setCart([]);
-      }
+    if (user) {
+      const loadedCart = loadCartFromStorage(user);
+      setCart(loadedCart);
     } else {
       setCart([]);
     }
   }, [user]);
 
-  // --- Hook Effect để lưu giỏ hàng vào localStorage khi giỏ hàng thay đổi ---
+  // Lưu giỏ hàng khi cart thay đổi
   useEffect(() => {
-    if (user && user.username && Array.isArray(cart)) {
-      const userCartKey = `${LOCAL_STORAGE_CART_PREFIX}${user.username}`;
-      try {
-        localStorage.setItem(userCartKey, JSON.stringify(cart));
-      } catch (error) {
-        console.error(`Error saving cart for user ${user.username}:`, error);
-      }
+    if (user) {
+      saveCartToStorage(user, cart);
     }
   }, [cart, user]);
 
-  // --- Hàm thêm sản phẩm vào giỏ hàng ---
-  // Sử dụng useCallback để hàm không bị tạo lại không cần thiết
+  // Hàm thêm sản phẩm vào giỏ hàng
   const addToCart = useCallback((product) => {
     if (!user || !user.username) {
-      console.warn("Cannot add to cart: User not logged in");
+      console.warn("Không thể thêm vào giỏ hàng: Người dùng chưa đăng nhập");
       return;
     }
-
     if (!product || typeof product.id === 'undefined') {
-      console.warn("Cannot add to cart: Invalid product data");
+      console.warn("Không thể thêm vào giỏ hàng: Dữ liệu sản phẩm không hợp lệ");
       return;
     }
+    setCart((prevCart) => {
+      const existingItemIndex = prevCart.findIndex((item) => item.id === product.id);
+      if (existingItemIndex > -1) {
+        const newCart = [...prevCart];
+        newCart[existingItemIndex].quantity = (newCart[existingItemIndex].quantity || 0) + 1;
+        return newCart;
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  }, [user]);
 
-    const existingItemIndex = cart.findIndex((item) => item.id === product.id);
-
-    if (existingItemIndex > -1) {
-      const newCart = [...cart];
-      newCart[existingItemIndex].quantity = (newCart[existingItemIndex].quantity || 0) + 1;
-      setCart(newCart);
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-  }, [cart, user]);
-
-  // --- Hàm xóa sản phẩm khỏi giỏ hàng ---
-  // Sử dụng useCallback để hàm không bị tạo lại không cần thiết
+  // Hàm xóa sản phẩm khỏi giỏ hàng
   const removeFromCart = useCallback((productId) => {
     if (!user || !user.username) {
-      console.warn("Cannot remove from cart: User not logged in");
+      console.warn("Không thể xóa khỏi giỏ hàng: Người dùng chưa đăng nhập");
       return;
     }
-
     if (typeof productId === 'undefined' || productId === null) {
-      console.warn("Cannot remove from cart: Invalid product ID");
+      console.warn("Không thể xóa khỏi giỏ hàng: ID sản phẩm không hợp lệ");
       return;
     }
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  }, [user]);
 
-    setCart(cart.filter((item) => item.id !== productId));
-  }, [cart, user]);
-
-  // --- Hàm cập nhật số lượng của một sản phẩm trong giỏ hàng ---
-  // Sử dụng useCallback để hàm không bị tạo lại không cần thiết
+  // Hàm cập nhật số lượng sản phẩm
   const updateQuantity = useCallback((productId, quantity) => {
     if (!user || !user.username) {
-      console.warn("Cannot update quantity: User not logged in");
+      console.warn("Không thể cập nhật số lượng: Người dùng chưa đăng nhập");
       return;
     }
-
     if (typeof productId === 'undefined' || productId === null) {
-      console.warn("Cannot update quantity: Invalid product ID");
+      console.warn("Không thể cập nhật số lượng: ID sản phẩm không hợp lệ");
       return;
     }
-
     const newQuantity = Math.max(0, parseInt(quantity, 10) || 0);
-
     if (newQuantity === 0) {
       removeFromCart(productId);
       return;
     }
-
-    const newCart = cart.map((item) =>
-      (item && typeof item.id !== 'undefined' && item.id === productId) 
-        ? { ...item, quantity: newQuantity } 
-        : item
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      )
     );
-    setCart(newCart);
-  }, [cart, removeFromCart, user]);
+  }, [user, removeFromCart]);
 
-  // --- Hàm xóa toàn bộ giỏ hàng ---
-  // Sử dụng useCallback để hàm không bị tạo lại không cần thiết
+  // Hàm xóa toàn bộ giỏ hàng
   const clearCart = useCallback(() => {
     if (!user || !user.username) {
-      console.warn("Cannot clear cart: User not logged in");
+      console.warn("Không thể xóa giỏ hàng: Người dùng chưa đăng nhập");
       return;
     }
     setCart([]);
   }, [user]);
 
-  // --- Tính toán tổng tiền của giỏ hàng sử dụng useMemo ---
-  // useMemo giúp tính toán lại totalPrice chỉ khi cart thay đổi, tối ưu hiệu suất.
+  // Tính tổng tiền giỏ hàng với useMemo
   const totalPrice = useMemo(() => {
     return Array.isArray(cart)
       ? cart.reduce(
-          (accumulator, item) => accumulator + (item?.price || 0) * (item?.quantity || 0),
+          (sum, item) => sum + (item?.price || 0) * (item?.quantity || 0),
           0
         )
       : 0;
   }, [cart]);
 
-  // --- Đối tượng Giá trị Context ---
-  // Gói state và các hàm để chia sẻ thông qua Context.
+  // Đối tượng giá trị context
   const cartContextValue = {
-    cart, // Cung cấp state giỏ hàng
-    totalPrice, // Cung cấp tổng tiền đã tính
-    addToCart, // Cung cấp hàm thêm
-    removeFromCart, // Cung cấp hàm xóa
-    updateQuantity, // Cung cấp hàm cập nhật số lượng
-    clearCart, // Cung cấp hàm xóa toàn bộ giỏ hàng
+    cart,
+    totalPrice,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
   };
 
   return (
-    // --- Cung cấp Context ---
-    // Bọc các children bằng Provider và truyền giá trị context.
     <CartContext.Provider value={cartContextValue}>
       {children}
     </CartContext.Provider>
   );
 };
 
-// Export component CartProvider.
 export default CartProvider;
