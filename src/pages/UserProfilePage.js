@@ -12,8 +12,8 @@ import "./UserProfilePage.css";
 import OrderHistory from "./OrderHistory";
 
 // Định nghĩa các hằng số sử dụng trong component
-const LOCAL_STORAGE_USERS_KEY = "users"; // Key lưu trữ danh sách người dùng trên localStorage
-const MIN_PASSWORD_LENGTH = 6; // Độ dài tối thiểu mật khẩu mới
+const LOCAL_STORAGE_USERS_KEY = "users"; // Khóa lưu trữ danh sách người dùng trên localStorage
+const MIN_PASSWORD_LENGTH = 6; // Độ dài tối thiểu của mật khẩu mới
 
 // Đối tượng chứa các thông báo hiển thị cho người dùng
 const MESSAGES = {
@@ -37,16 +37,16 @@ const MESSAGES = {
 
 // Component UserProfilePage: Quản lý và hiển thị thông tin người dùng
 const UserProfilePage = () => {
-  // Lấy user, trạng thái đăng nhập và các hàm đăng nhập/đăng xuất từ AuthContext
+  // Lấy thông tin người dùng, trạng thái đăng nhập và các hàm từ AuthContext
   const { user, isLoggedIn, login, logout } = useContext(AuthContext) || {
     user: null,
     isLoggedIn: false,
     login: () => {},
     logout: () => {},
   };
-  const navigate = useNavigate(); // Hook điều hướng trang
+  const navigate = useNavigate(); // Hook để điều hướng trang
 
-  // State quản lý biểu mẫu đổi mật khẩu
+  // State để quản lý form đổi mật khẩu
   const [passwordFormData, setPasswordFormData] = useState({
     oldPassword: "",
     newPassword: "",
@@ -54,7 +54,7 @@ const UserProfilePage = () => {
   });
   const [passwordMessage, setPasswordMessage] = useState("");
 
-  // State quản lý biểu mẫu cập nhật thông tin cá nhân
+  // State để quản lý form cập nhật thông tin cá nhân
   const [profileFormData, setProfileFormData] = useState({
     username: user?.username || "",
     email: user?.email || "",
@@ -62,21 +62,20 @@ const UserProfilePage = () => {
   });
   const [profileMessage, setProfileMessage] = useState("");
 
-  // State quản lý danh sách địa chỉ và form thêm địa chỉ mới
+  // State để quản lý danh sách địa chỉ và form thêm địa chỉ mới
   const [addresses, setAddresses] = useState(user?.addresses || []);
   const [newAddressFormData, setNewAddressFormData] = useState({ address: "", name: "", phone: "" });
   const [addressMessage, setAddressMessage] = useState("");
 
-  // State quản lý phần hiển thị hiện tại của trang
+  // State để quản lý phần hiển thị hiện tại của trang
   const [activeSection, setActiveSection] = useState("profile");
 
-  // Kiểm tra đăng nhập và cập nhật dữ liệu khi người dùng thay đổi
+  // Kiểm tra trạng thái đăng nhập và cập nhật dữ liệu khi người dùng thay đổi
   useEffect(() => {
     if (!isLoggedIn) {
       alert(MESSAGES.LOGIN_REQUIRED);
       navigate("/");
     } else {
-      // Cập nhật lại state từ user khi user thay đổi
       setProfileFormData({
         username: user?.username || "",
         email: user?.email || "",
@@ -86,7 +85,7 @@ const UserProfilePage = () => {
     }
   }, [isLoggedIn, navigate, user]);
 
-  // Xử lý thay đổi input cho các form
+  // Hàm xử lý thay đổi dữ liệu trong các form
   const handleInputChange = useCallback((e, formType) => {
     const { name, value } = e.target;
     if (formType === "password") {
@@ -101,7 +100,7 @@ const UserProfilePage = () => {
     }
   }, []);
 
-  // Đọc danh sách người dùng từ localStorage
+  // Hàm đọc danh sách người dùng từ localStorage
   const readUsersFromStorage = useCallback(() => {
     try {
       const storedUsersData = localStorage.getItem(LOCAL_STORAGE_USERS_KEY);
@@ -117,7 +116,7 @@ const UserProfilePage = () => {
     }
   }, []);
 
-  // Lưu danh sách người dùng vào localStorage
+  // Hàm lưu danh sách người dùng vào localStorage
   const saveUsersToStorage = useCallback((usersToSave) => {
     try {
       localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(usersToSave));
@@ -128,7 +127,7 @@ const UserProfilePage = () => {
     }
   }, []);
 
-  // Cập nhật địa chỉ người dùng trong localStorage và context
+  // Hàm cập nhật địa chỉ người dùng trong localStorage và context
   const updateUserAddressesInStorage = useCallback(
     (updatedAddressesList) => {
       const storedUsers = readUsersFromStorage();
@@ -156,13 +155,12 @@ const UserProfilePage = () => {
     [user, login, readUsersFromStorage, saveUsersToStorage]
   );
 
-  // Xử lý submit đổi mật khẩu
+  // Hàm xử lý submit form đổi mật khẩu
   const handleSubmitPasswordChange = useCallback(
     (e) => {
       e.preventDefault();
       const { oldPassword, newPassword, confirmNewPassword } = passwordFormData;
 
-      // Kiểm tra hợp lệ đầu vào
       if (!oldPassword.trim() || !newPassword.trim() || !confirmNewPassword.trim()) {
         setPasswordMessage(MESSAGES.EMPTY_PASSWORD_FIELDS);
         return;
@@ -180,7 +178,6 @@ const UserProfilePage = () => {
         return;
       }
 
-      // Đọc và cập nhật dữ liệu người dùng
       const storedUsers = readUsersFromStorage();
       if (storedUsers === null) {
         setPasswordMessage(MESSAGES.SYSTEM_ERROR_READING_USERS);
@@ -190,8 +187,7 @@ const UserProfilePage = () => {
         setPasswordMessage(MESSAGES.USER_NOT_FOUND);
         return;
       }
-      
-      // Kiểm tra mật khẩu cũ và cập nhật mật khẩu mới
+
       const userIndex = storedUsers.findIndex((u) => u?.username === user.username);
       if (userIndex === -1 || storedUsers[userIndex].password !== oldPassword) {
         setPasswordMessage(MESSAGES.PASSWORD_CHANGE_FAILED);
@@ -202,14 +198,12 @@ const UserProfilePage = () => {
         setPasswordMessage(MESSAGES.SYSTEM_ERROR_UPDATING_USERS);
         return;
       }
-      
-      // Cập nhật context và hiển thị thông báo
+
       const updatedUserForContext = { ...user, password: newPassword };
       login(updatedUserForContext);
       setPasswordFormData({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
       setPasswordMessage(MESSAGES.PASSWORD_CHANGE_SUCCESS);
 
-      // Đăng xuất tự động sau 2 giây để người dùng đăng nhập lại
       setTimeout(() => {
         logout();
       }, 2000);
@@ -217,12 +211,11 @@ const UserProfilePage = () => {
     [passwordFormData, user, login, logout, readUsersFromStorage, saveUsersToStorage]
   );
 
-  // Xử lý submit cập nhật thông tin cá nhân
+  // Hàm xử lý submit form cập nhật thông tin cá nhân
   const handleSubmitProfileUpdate = useCallback(
     (e) => {
       e.preventDefault();
 
-      // Đọc và cập nhật dữ liệu người dùng
       const storedUsers = readUsersFromStorage();
       if (storedUsers === null) {
         setProfileMessage(MESSAGES.SYSTEM_ERROR_READING_USERS);
@@ -232,8 +225,7 @@ const UserProfilePage = () => {
         setProfileMessage(MESSAGES.USER_NOT_FOUND);
         return;
       }
-      
-      // Cập nhật thông tin người dùng
+
       const userIndex = storedUsers.findIndex((u) => u?.username === user.username);
       if (userIndex > -1) {
         storedUsers[userIndex] = {
@@ -242,11 +234,10 @@ const UserProfilePage = () => {
           phone: profileFormData.phone.trim(),
         };
         if (!saveUsersToStorage(storedUsers)) {
-          setProfileMessage(MESSAGES.SYSTEM_ERROR_UPDATING_USERS);
+          setProfileMessage(MESSAGES.PROFILE_UPDATE_FAILED);
           return;
         }
-        
-        // Cập nhật context và hiển thị thông báo
+
         const updatedUserForContext = {
           ...user,
           email: profileFormData.email.trim(),
@@ -261,19 +252,17 @@ const UserProfilePage = () => {
     [profileFormData, user, login, readUsersFromStorage, saveUsersToStorage]
   );
 
-  // Xử lý thêm địa chỉ mới
+  // Hàm xử lý thêm địa chỉ mới
   const handleAddAddress = useCallback(
     (e) => {
       e.preventDefault();
       const { address, name, phone } = newAddressFormData;
 
-      // Kiểm tra hợp lệ đầu vào
       if (!address.trim() || !name.trim() || !phone.trim()) {
         setAddressMessage(MESSAGES.ADDRESS_EMPTY_FIELDS);
         return;
       }
 
-      // Tạo đối tượng địa chỉ mới và cập nhật danh sách
       const newAddress = {
         id: Date.now(),
         address: address.trim(),
@@ -281,47 +270,42 @@ const UserProfilePage = () => {
         phone: phone.trim(),
       };
       const updatedAddresses = [...addresses, newAddress];
-      
-      // Cập nhật state và hiển thị thông báo
+
       setAddresses(updatedAddresses);
       setNewAddressFormData({ address: "", name: "", phone: "" });
       setAddressMessage(MESSAGES.ADDRESS_SAVE_SUCCESS);
-      
-      // Lưu vào localStorage và cập nhật context
+
       updateUserAddressesInStorage(updatedAddresses);
     },
     [newAddressFormData, addresses, updateUserAddressesInStorage]
   );
 
-  // Xử lý xóa địa chỉ
+  // Hàm xử lý xóa địa chỉ
   const handleDeleteAddress = useCallback(
     (addressIdToDelete) => {
-      // Xác nhận xóa từ người dùng
       if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
 
-      // Cập nhật danh sách địa chỉ
       const updatedAddresses = addresses.filter((addr) => addr?.id !== addressIdToDelete);
       setAddresses(updatedAddresses);
       setAddressMessage(MESSAGES.ADDRESS_DELETE_SUCCESS);
-      
-      // Lưu vào localStorage và cập nhật context
+
       updateUserAddressesInStorage(updatedAddresses);
     },
     [addresses, updateUserAddressesInStorage]
   );
 
-  // Nếu chưa đăng nhập hoặc không có user thì không render gì
+  // Nếu chưa đăng nhập hoặc không có thông tin người dùng thì không hiển thị gì
   if (!isLoggedIn || !user) {
     return null;
   }
 
-  // Render giao diện trang hồ sơ
+  // Giao diện chính của trang hồ sơ người dùng
   return (
     <div className="user-profile-container">
       <h1>Xin chào, {user.username || "Người dùng"}!</h1>
       <p>Quản lý thông tin và đơn hàng của bạn.</p>
 
-      {/* Menu điều hướng */}
+      {/* Menu điều hướng giữa các phần */}
       <div className="profile-sections-menu">
         <button
           className={activeSection === "profile" ? "active" : ""}
@@ -353,7 +337,7 @@ const UserProfilePage = () => {
         </button>
       </div>
 
-      {/* Phần thông tin cá nhân */}
+      {/* Phần hiển thị thông tin cá nhân */}
       {activeSection === "profile" && (
         <section className="profile-info-section">
           <h2>Thông tin cá nhân</h2>
@@ -482,7 +466,7 @@ const UserProfilePage = () => {
         </section>
       )}
 
-      {/* Phần địa chỉ giao hàng */}
+      {/* Phần quản lý địa chỉ giao hàng */}
       {activeSection === "addresses" && (
         <section className="addresses-section">
           <h2>Địa chỉ giao hàng</h2>
@@ -548,20 +532,20 @@ const UserProfilePage = () => {
           ) : (
             <ul className="address-list">
               {addresses.map((addr) => (
-                <li key={addr?.id || addresses.indexOf(addr)} className="address-item">
+                <li key={addr.id} className="address-item">
                   <p>
-                    <strong>Địa chỉ:</strong> {addr?.address || "N/A"}
+                    <strong>Địa chỉ:</strong> {addr.address || "N/A"}
                   </p>
                   <p>
-                    <strong>Người nhận:</strong> {addr?.name || "N/A"}
+                    <strong>Người nhận:</strong> {addr.name || "N/A"}
                   </p>
                   <p>
-                    <strong>Điện thoại:</strong> {addr?.phone || "N/A"}
+                    <strong>Điện thoại:</strong> {addr.phone || "N/A"}
                   </p>
                   <button
                     className="delete-address-button"
-                    onClick={() => handleDeleteAddress(addr?.id)}
-                    aria-label={`Xóa địa chỉ ${addr?.address || ""}`}
+                    onClick={() => handleDeleteAddress(addr.id)}
+                    aria-label={`Xóa địa chỉ ${addr.address || ""}`}
                   >
                     Xóa
                   </button>
@@ -580,7 +564,7 @@ const UserProfilePage = () => {
         </section>
       )}
 
-      {/* Link quay về trang chủ */}
+      {/* Liên kết quay về trang chủ */}
       <div className="back-link">
         <Link to="/home">← Quay lại cửa hàng</Link>
       </div>
