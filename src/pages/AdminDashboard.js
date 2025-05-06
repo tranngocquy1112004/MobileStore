@@ -1,41 +1,135 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./AdminDashboard.css";
 
-// Constants for localStorage keys
+// --- HẰNG SỐ ---
 const LOCAL_STORAGE_USERS_KEY = "users";
 const LOCAL_STORAGE_ORDERS_KEY = "orders";
 
-// Utility function to load data from localStorage
+// --- HÀM TIỆN ÍCH ---
+/**
+ * Tải dữ liệu từ localStorage
+ * @param {string} key - Khóa localStorage
+ * @returns {Array} Dữ liệu đã phân tích hoặc mảng rỗng
+ */
 const loadDataFromStorage = (key) => {
   try {
     const storedData = localStorage.getItem(key);
-    if (!storedData) return [];
-    const parsedData = JSON.parse(storedData);
+    const parsedData = storedData ? JSON.parse(storedData) : [];
     return Array.isArray(parsedData) ? parsedData : [];
   } catch (error) {
-    console.error(`Error loading data from localStorage for key "${key}":`, error);
+    console.error(`Lỗi khi tải dữ liệu từ localStorage cho khóa "${key}":`, error);
     return [];
   }
 };
 
-// Utility function to save data to localStorage
+/**
+ * Lưu dữ liệu vào localStorage
+ * @param {string} key - Khóa localStorage
+ * @param {Array} data - Dữ liệu cần lưu
+ * @returns {boolean} Thành công hay thất bại
+ */
 const saveDataToStorage = (key, data) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
     return true;
   } catch (error) {
-    console.error(`Error saving data to localStorage for key "${key}":`, error);
+    console.error(`Lỗi khi lưu dữ liệu vào localStorage cho khóa "${key}":`, error);
     return false;
   }
 };
 
+// --- THÀNH PHẦN CON ---
+/**
+ * Hiển thị thông tin đơn hàng
+ * @param {Object} props - Props chứa thông tin đơn hàng
+ */
+const OrderItem = React.memo(({ order }) => {
+  if (!order?.id) return null;
+  return (
+    <li className="order-item-admin" aria-label={`Đơn hàng #${order.id}`}>
+      <p>
+        <strong>ID Đơn hàng:</strong> #{order.id}
+      </p>
+      <p>
+        <strong>Ngày:</strong>{" "}
+        {order.date ? new Date(order.date).toLocaleString("vi-VN") : "N/A"}
+      </p>
+      <p>
+        <strong>Tổng cộng:</strong> {(order.totalPrice || 0).toLocaleString("vi-VN")} VNĐ
+      </p>
+      <p>
+        <strong>Người nhận:</strong> {order.shippingInfo?.name || "N/A"}
+      </p>
+      <p>
+        <strong>Địa chỉ:</strong> {order.shippingInfo?.address || "N/A"}
+      </p>
+      <p>
+        <strong>Điện thoại:</strong> {order.shippingInfo?.phone || "N/A"}
+      </p>
+      <h5>Sản phẩm:</h5>
+      {Array.isArray(order.items) && order.items.length > 0 ? (
+        <ul role="list">
+          {order.items.map((item, index) => (
+            <li key={item?.id || index}>
+              {item?.name || "Sản phẩm không rõ"} (x{item?.quantity || 0}) -{" "}
+              {((item?.price || 0) * (item?.quantity || 0)).toLocaleString("vi-VN")} VNĐ
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="empty-state-small">Không có sản phẩm trong đơn hàng này.</p>
+      )}
+    </li>
+  );
+});
+
+/**
+ * Hiển thị thông tin người dùng và đơn hàng của họ
+ * @param {Object} props - Props chứa thông tin người dùng, đơn hàng, và hàm xóa
+ */
+const UserItem = React.memo(({ user, userOrders, onDeleteUser }) => {
+  if (!user?.username) return null;
+  return (
+    <li className="user-item" aria-label={`Người dùng ${user.username}`}>
+      <div className="user-header-admin">
+        <h3 className="user-username">👤 {user.username}</h3>
+        <button
+          className="delete-user-button"
+          onClick={() => onDeleteUser(user.username)}
+          aria-label={`Xóa người dùng ${user.username}`}
+        >
+          🗑️ Xóa Người Dùng
+        </button>
+      </div>
+      <div className="user-orders">
+        <h4>
+          📦 Đơn hàng của {user.username} ({userOrders.length}):
+        </h4>
+        {userOrders.length === 0 ? (
+          <p className="empty-state-small">Người dùng này chưa có đơn hàng.</p>
+        ) : (
+          <ul className="order-list-admin" role="list">
+            {userOrders.map((order) => (
+              <OrderItem key={order.id} order={order} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </li>
+  );
+});
+
+// --- THÀNH PHẦN CHÍNH ---
+/**
+ * Trang quản trị admin
+ */
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load data from localStorage on component mount
+  // Tải dữ liệu từ localStorage khi component mount
   useEffect(() => {
     const loadData = () => {
       setIsLoading(true);
@@ -55,52 +149,50 @@ const AdminDashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle user deletion and their orders
-  const handleDeleteUser = useCallback(
-    (usernameToDelete) => {
-      if (!window.confirm(`Are you sure you want to delete user "${usernameToDelete}" and all their orders?`)) {
-        return;
-      }
+  // Xử lý xóa người dùng và đơn hàng của họ
+  const handleDeleteUser = (usernameToDelete) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa người dùng "${usernameToDelete}" và tất cả đơn hàng của họ?`)) {
+      return;
+    }
 
-      const updatedUsers = users.filter((user) => user?.username !== usernameToDelete);
-      const updatedOrders = orders.filter((order) => order?.username !== usernameToDelete);
+    const updatedUsers = users.filter((user) => user?.username !== usernameToDelete);
+    const updatedOrders = orders.filter((order) => order?.username !== usernameToDelete);
 
-      setUsers(updatedUsers);
-      setOrders(updatedOrders);
+    if (
+      !saveDataToStorage(LOCAL_STORAGE_USERS_KEY, updatedUsers) ||
+      !saveDataToStorage(LOCAL_STORAGE_ORDERS_KEY, updatedOrders)
+    ) {
+      setError("Lỗi khi lưu thay đổi. Dữ liệu có thể chưa được cập nhật đầy đủ.");
+      return;
+    }
 
-      if (
-        !saveDataToStorage(LOCAL_STORAGE_USERS_KEY, updatedUsers) ||
-        !saveDataToStorage(LOCAL_STORAGE_ORDERS_KEY, updatedOrders)
-      ) {
-        alert("Error saving changes. Data may not be fully updated.");
-      }
-    },
-    [users, orders]
-  );
+    setUsers(updatedUsers);
+    setOrders(updatedOrders);
+  };
 
-  // Memoize orders by user for performance optimization
+  // Tính toán đơn hàng theo người dùng
   const userOrdersMap = useMemo(() => {
     const map = {};
     orders.forEach((order) => {
       if (order?.username) {
-        if (!map[order.username]) map[order.username] = [];
+        map[order.username] = map[order.username] || [];
         map[order.username].push(order);
       }
     });
     return map;
   }, [orders]);
 
-  // Render loading state
+  // Trạng thái đang tải
   if (isLoading) {
     return (
       <div className="admin-container loading-state">
         <div className="loading-spinner"></div>
-        <p>Loading admin data...</p>
+        <p>Đang tải dữ liệu quản trị...</p>
       </div>
     );
   }
 
-  // Render error state
+  // Trạng thái lỗi
   if (error) {
     return (
       <div className="admin-container error-state">
@@ -109,70 +201,24 @@ const AdminDashboard = () => {
     );
   }
 
-  // Main render
+  // Hiển thị chính
   return (
     <div className="admin-container">
-      <h1 className="admin-title">📊 Admin Dashboard</h1>
-
+      <h1 className="admin-title">📊 Trang Quản Trị</h1>
       <section className="admin-section">
-        <h2 className="section-title">👥 Users ({users.length})</h2>
-
+        <h2 className="section-title">👥 Người Dùng ({users.length})</h2>
         {users.length === 0 ? (
-          <p className="empty-state">No users registered yet.</p>
+          <p className="empty-state">Chưa có người dùng nào đăng ký.</p>
         ) : (
-          <ul className="user-list">
-            {users.map((user) => {
-              if (!user || !user.username) return null;
-              const userOrders = userOrdersMap[user.username] || [];
-
-              return (
-                <li key={user.username} className="user-item">
-                  <div className="user-header-admin">
-                    <h3 className="user-username">👤 {user.username}</h3>
-                    <button
-                      className="delete-user-button"
-                      onClick={() => handleDeleteUser(user.username)}
-                      aria-label={`Delete user ${user.username}`}
-                    >
-                      🗑️ Delete User
-                    </button>
-                  </div>
-
-                  <div className="user-orders">
-                    <h4>📦 Orders by {user.username} ({userOrders.length}):</h4>
-
-                    {userOrders.length === 0 ? (
-                      <p className="empty-state-small">No orders from this user yet.</p>
-                    ) : (
-                      <ul className="order-list-admin">
-                        {userOrders.map((order) => (
-                          <li key={order.id} className="order-item-admin">
-                            <p><strong>Order ID:</strong> #{order.id}</p>
-                            <p><strong>Date:</strong> {order.date ? new Date(order.date).toLocaleString('vi-VN') : 'N/A'}</p>
-                            <p><strong>Total:</strong> {(order?.totalPrice || 0).toLocaleString('vi-VN')} VNĐ</p>
-                            <p><strong>Recipient:</strong> {order?.shippingInfo?.name || 'N/A'}</p>
-                            <p><strong>Address:</strong> {order?.shippingInfo?.address || 'N/A'}</p>
-                            <p><strong>Phone:</strong> {order?.shippingInfo?.phone || 'N/A'}</p>
-
-                            <h5>Order Items:</h5>
-                            {Array.isArray(order?.items) && order.items.length > 0 ? (
-                              order.items.map((item, itemIndex) => (
-                                <li key={item.id || itemIndex}>
-                                  {item?.name || 'Unknown Product'} (x{item?.quantity || 0}) -{' '}
-                                  {((item?.price || 0) * (item?.quantity || 0)).toLocaleString('vi-VN')} VNĐ
-                                </li>
-                              ))
-                            ) : (
-                              <p className="empty-state-small">No items in this order.</p>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+          <ul className="user-list" role="list">
+            {users.map((user) => (
+              <UserItem
+                key={user.username}
+                user={user}
+                userOrders={userOrdersMap[user.username] || []}
+                onDeleteUser={handleDeleteUser}
+              />
+            ))}
           </ul>
         )}
       </section>

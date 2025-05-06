@@ -18,7 +18,7 @@ const calculateCartTotal = (cart) =>
  * Hiển thị một mục trong giỏ hàng
  * @param {Object} props - Props chứa thông tin sản phẩm và hàm xử lý
  */
-const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove }) => {
+const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   if (!item || !item.id) {
     console.error("Dữ liệu sản phẩm không hợp lệ:", item);
     return null;
