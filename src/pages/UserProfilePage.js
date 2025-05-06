@@ -1,16 +1,12 @@
-// src/pages/UserProfilePage.js
-
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../account/AuthContext";
-import "./UserProfilePage.css";
 import OrderHistory from "./OrderHistory";
-import PropTypes from "prop-types";
+import "./UserProfilePage.css";
 
-// Constants
+// --- HẰNG SỐ ---
 const LOCAL_STORAGE_USERS_KEY = "users";
 const MIN_PASSWORD_LENGTH = 6;
-
 const MESSAGES = {
   PASSWORD_CHANGE_SUCCESS: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
   PASSWORD_CHANGE_FAILED: "Đổi mật khẩu thất bại. Vui lòng kiểm tra mật khẩu cũ.",
@@ -30,7 +26,11 @@ const MESSAGES = {
   LOGIN_REQUIRED: "Vui lòng đăng nhập để xem trang hồ sơ.",
 };
 
-// Utility Functions
+// --- HÀM TIỆN ÍCH ---
+/**
+ * Đọc danh sách người dùng từ localStorage
+ * @returns {Array|null} Danh sách người dùng hoặc null nếu lỗi
+ */
 const readUsersFromStorage = () => {
   try {
     const storedUsersData = localStorage.getItem(LOCAL_STORAGE_USERS_KEY);
@@ -42,6 +42,11 @@ const readUsersFromStorage = () => {
   }
 };
 
+/**
+ * Lưu danh sách người dùng vào localStorage
+ * @param {Array} users - Danh sách người dùng
+ * @returns {boolean} Thành công hay thất bại
+ */
 const saveUsersToStorage = (users) => {
   try {
     localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(users));
@@ -52,7 +57,11 @@ const saveUsersToStorage = (users) => {
   }
 };
 
-// Form Components
+// --- THÀNH PHẦN CON ---
+/**
+ * Form cập nhật thông tin cá nhân
+ * @param {Object} props - Props chứa dữ liệu form, hàm xử lý thay đổi và gửi
+ */
 const ProfileForm = ({ formData, onChange, onSubmit, message }) => (
   <section className="profile-info-section">
     <h2>Thông tin cá nhân</h2>
@@ -78,6 +87,7 @@ const ProfileForm = ({ formData, onChange, onSubmit, message }) => (
           value={formData.email}
           onChange={onChange}
           className="profile-input"
+          aria-label="Nhập email"
         />
       </div>
       <div className="form-group">
@@ -89,6 +99,7 @@ const ProfileForm = ({ formData, onChange, onSubmit, message }) => (
           value={formData.phone}
           onChange={onChange}
           className="profile-input"
+          aria-label="Nhập số điện thoại"
         />
       </div>
       <button type="submit" className="profile-update-button">
@@ -96,17 +107,15 @@ const ProfileForm = ({ formData, onChange, onSubmit, message }) => (
       </button>
     </form>
     {message && (
-      <p
-        className={`message ${
-          message.includes("thành công") ? "success" : "error"
-        }`}
-      >
-        {message}
-      </p>
+      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>{message}</p>
     )}
   </section>
 );
 
+/**
+ * Form đổi mật khẩu
+ * @param {Object} props - Props chứa dữ liệu form, hàm xử lý thay đổi và gửi
+ */
 const PasswordForm = ({ formData, onChange, onSubmit, message }) => (
   <section className="change-password-section">
     <h2>Đổi mật khẩu</h2>
@@ -122,6 +131,7 @@ const PasswordForm = ({ formData, onChange, onSubmit, message }) => (
           className="password-input"
           required
           autoComplete="current-password"
+          aria-label="Nhập mật khẩu cũ"
         />
       </div>
       <div className="form-group">
@@ -136,6 +146,7 @@ const PasswordForm = ({ formData, onChange, onSubmit, message }) => (
           required
           autoComplete="new-password"
           minLength={MIN_PASSWORD_LENGTH}
+          aria-label="Nhập mật khẩu mới"
         />
       </div>
       <div className="form-group">
@@ -150,6 +161,7 @@ const PasswordForm = ({ formData, onChange, onSubmit, message }) => (
           required
           autoComplete="new-password"
           minLength={MIN_PASSWORD_LENGTH}
+          aria-label="Xác nhận mật khẩu mới"
         />
       </div>
       <button type="submit" className="change-password-button">
@@ -157,25 +169,16 @@ const PasswordForm = ({ formData, onChange, onSubmit, message }) => (
       </button>
     </form>
     {message && (
-      <p
-        className={`message ${
-          message.includes("thành công") ? "success" : "error"
-        }`}
-      >
-        {message}
-      </p>
+      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>{message}</p>
     )}
   </section>
 );
 
-const AddressForm = ({
-  addresses,
-  newAddressFormData,
-  onChange,
-  onAddAddress,
-  onDeleteAddress,
-  message,
-}) => (
+/**
+ * Form quản lý địa chỉ giao hàng
+ * @param {Object} props - Props chứa danh sách địa chỉ, dữ liệu form mới, và các hàm xử lý
+ */
+const AddressForm = ({ addresses, newAddressFormData, onChange, onAddAddress, onDeleteAddress, message }) => (
   <section className="addresses-section">
     <h2>Địa chỉ giao hàng</h2>
     <h3>Thêm địa chỉ mới</h3>
@@ -190,6 +193,7 @@ const AddressForm = ({
           value={newAddressFormData.address}
           onChange={onChange}
           required
+          aria-label="Nhập địa chỉ giao hàng"
         />
       </div>
       <div className="form-group">
@@ -202,6 +206,7 @@ const AddressForm = ({
           value={newAddressFormData.name}
           onChange={onChange}
           required
+          aria-label="Nhập tên người nhận"
         />
       </div>
       <div className="form-group">
@@ -214,24 +219,19 @@ const AddressForm = ({
           value={newAddressFormData.phone}
           onChange={onChange}
           required
+          aria-label="Nhập số điện thoại liên hệ"
         />
       </div>
       <button type="submit">Lưu địa chỉ mới</button>
     </form>
     {message && (
-      <p
-        className={`message ${
-          message.includes("thành công") ? "success" : "error"
-        }`}
-      >
-        {message}
-      </p>
+      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>{message}</p>
     )}
     <h3>Danh sách địa chỉ của bạn ({addresses.length})</h3>
     {addresses.length === 0 ? (
       <p className="empty-state">Bạn chưa lưu địa chỉ nào.</p>
     ) : (
-      <ul className="address-list">
+      <ul className="address-list" role="list">
         {addresses.map((addr) => (
           <li key={addr.id} className="address-item">
             <p>
@@ -257,7 +257,10 @@ const AddressForm = ({
   </section>
 );
 
-// Main Component
+// --- THÀNH PHẦN CHÍNH ---
+/**
+ * Trang quản lý hồ sơ người dùng
+ */
 const UserProfilePage = () => {
   const { user, isLoggedIn, login, logout } = useContext(AuthContext) || {
     user: null,
@@ -267,12 +270,11 @@ const UserProfilePage = () => {
   };
   const navigate = useNavigate();
 
-  // State
   const [activeSection, setActiveSection] = useState("profile");
   const [profileFormData, setProfileFormData] = useState({
-    username: user?.username || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
+    username: "",
+    email: "",
+    phone: "",
   });
   const [profileMessage, setProfileMessage] = useState("");
   const [passwordFormData, setPasswordFormData] = useState({
@@ -281,7 +283,7 @@ const UserProfilePage = () => {
     confirmNewPassword: "",
   });
   const [passwordMessage, setPasswordMessage] = useState("");
-  const [addresses, setAddresses] = useState(user?.addresses || []);
+  const [addresses, setAddresses] = useState([]);
   const [newAddressFormData, setNewAddressFormData] = useState({
     address: "",
     name: "",
@@ -289,43 +291,57 @@ const UserProfilePage = () => {
   });
   const [addressMessage, setAddressMessage] = useState("");
 
-  // Redirect if not logged in
+  // Khởi tạo dữ liệu khi đăng nhập
   useEffect(() => {
     if (!isLoggedIn) {
       alert(MESSAGES.LOGIN_REQUIRED);
       navigate("/");
-    } else {
-      setProfileFormData({
-        username: user?.username || "",
-        email: user?.email || "",
-        phone: user?.phone || "",
-      });
-      setAddresses(user?.addresses || []);
+      return;
     }
+    setProfileFormData({
+      username: user?.username || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    });
+    setAddresses(user?.addresses || []);
   }, [isLoggedIn, navigate, user]);
 
-  // Handlers
+  // Xử lý thay đổi input
   const handleInputChange = (e, setFormData, setMessage) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setMessage("");
   };
 
+  // Cập nhật thông tin người dùng trong localStorage
   const updateUserInStorage = (updatedUserData) => {
     const storedUsers = readUsersFromStorage();
-    if (storedUsers === null) return false;
-    if (!user?.username) return false;
+    if (storedUsers === null) {
+      setProfileMessage(MESSAGES.SYSTEM_ERROR_READING_USERS);
+      return false;
+    }
+    if (!user?.username) {
+      setProfileMessage(MESSAGES.USER_NOT_FOUND);
+      return false;
+    }
 
     const userIndex = storedUsers.findIndex((u) => u?.username === user.username);
-    if (userIndex === -1) return false;
+    if (userIndex === -1) {
+      setProfileMessage(MESSAGES.USER_NOT_FOUND);
+      return false;
+    }
 
     storedUsers[userIndex] = { ...storedUsers[userIndex], ...updatedUserData };
-    if (!saveUsersToStorage(storedUsers)) return false;
+    if (!saveUsersToStorage(storedUsers)) {
+      setProfileMessage(MESSAGES.SYSTEM_ERROR_UPDATING_USERS);
+      return false;
+    }
 
     login({ ...user, ...updatedUserData });
     return true;
   };
 
+  // Xử lý cập nhật hồ sơ
   const handleSubmitProfileUpdate = (e) => {
     e.preventDefault();
     const updatedData = {
@@ -333,11 +349,10 @@ const UserProfilePage = () => {
       phone: profileFormData.phone.trim(),
     };
     const success = updateUserInStorage(updatedData);
-    setProfileMessage(
-      success ? MESSAGES.PROFILE_UPDATE_SUCCESS : MESSAGES.PROFILE_UPDATE_FAILED
-    );
+    setProfileMessage(success ? MESSAGES.PROFILE_UPDATE_SUCCESS : MESSAGES.PROFILE_UPDATE_FAILED);
   };
 
+  // Xử lý đổi mật khẩu
   const handleSubmitPasswordChange = (e) => {
     e.preventDefault();
     const { oldPassword, newPassword, confirmNewPassword } = passwordFormData;
@@ -365,21 +380,14 @@ const UserProfilePage = () => {
       return;
     }
     const userIndex = storedUsers.findIndex((u) => u?.username === user.username);
-    if (
-      userIndex === -1 ||
-      storedUsers[userIndex].password !== oldPassword
-    ) {
+    if (userIndex === -1 || storedUsers[userIndex].password !== oldPassword) {
       setPasswordMessage(MESSAGES.PASSWORD_CHANGE_FAILED);
       return;
     }
 
     const success = updateUserInStorage({ password: newPassword });
     if (success) {
-      setPasswordFormData({
-        oldPassword: "",
-        newPassword: "",
-        confirmNewPassword: "",
-      });
+      setPasswordFormData({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
       setPasswordMessage(MESSAGES.PASSWORD_CHANGE_SUCCESS);
       setTimeout(logout, 2000);
     } else {
@@ -387,6 +395,7 @@ const UserProfilePage = () => {
     }
   };
 
+  // Xử lý thêm địa chỉ
   const handleAddAddress = (e) => {
     e.preventDefault();
     const { address, name, phone } = newAddressFormData;
@@ -414,26 +423,23 @@ const UserProfilePage = () => {
     }
   };
 
+  // Xử lý xóa địa chỉ
   const handleDeleteAddress = (addressId) => {
     if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
 
     const updatedAddresses = addresses.filter((addr) => addr?.id !== addressId);
     const success = updateUserInStorage({ addresses: updatedAddresses });
-    if (success) {
-      setAddresses(updatedAddresses);
-      setAddressMessage(MESSAGES.ADDRESS_DELETE_SUCCESS);
-    } else {
-      setAddressMessage(MESSAGES.SYSTEM_ERROR_UPDATING_USERS);
-    }
+    setAddressMessage(success ? MESSAGES.ADDRESS_DELETE_SUCCESS : MESSAGES.SYSTEM_ERROR_UPDATING_USERS);
+    if (success) setAddresses(updatedAddresses);
   };
 
+  // Trạng thái không đăng nhập
   if (!isLoggedIn || !user) return null;
 
   return (
     <div className="user-profile-container">
       <h1>Xin chào, {user.username || "Người dùng"}!</h1>
       <p>Quản lý thông tin và đơn hàng của bạn.</p>
-
       <div className="profile-sections-menu">
         {[
           { id: "profile", label: "Thông tin cá nhân" },
@@ -451,73 +457,43 @@ const UserProfilePage = () => {
           </button>
         ))}
       </div>
-
       {activeSection === "profile" && (
         <ProfileForm
           formData={profileFormData}
-          onChange={(e) =>
-            handleInputChange(e, setProfileFormData, setProfileMessage)
-          }
+          onChange={(e) => handleInputChange(e, setProfileFormData, setProfileMessage)}
           onSubmit={handleSubmitProfileUpdate}
           message={profileMessage}
         />
       )}
-
       {activeSection === "password" && (
         <PasswordForm
           formData={passwordFormData}
-          onChange={(e) =>
-            handleInputChange(e, setPasswordFormData, setPasswordMessage)
-          }
+          onChange={(e) => handleInputChange(e, setPasswordFormData, setPasswordMessage)}
           onSubmit={handleSubmitPasswordChange}
           message={passwordMessage}
         />
       )}
-
       {activeSection === "addresses" && (
         <AddressForm
           addresses={addresses}
           newAddressFormData={newAddressFormData}
-          onChange={(e) =>
-            handleInputChange(e, setNewAddressFormData, setAddressMessage)
-          }
+          onChange={(e) => handleInputChange(e, setNewAddressFormData, setAddressMessage)}
           onAddAddress={handleAddAddress}
           onDeleteAddress={handleDeleteAddress}
           message={addressMessage}
         />
       )}
-
       {activeSection === "orders" && (
         <section className="order-history-section">
           <h2>Lịch sử đơn hàng</h2>
           <OrderHistory />
         </section>
       )}
-
       <div className="back-link">
         <Link to="/home">← Quay lại cửa hàng</Link>
       </div>
     </div>
   );
-};
-
-UserProfilePage.propTypes = {
-  user: PropTypes.shape({
-    username: PropTypes.string,
-    email: PropTypes.string,
-    phone: PropTypes.string,
-    addresses: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.number,
-        address: PropTypes.string,
-        name: PropTypes.string,
-        phone: PropTypes.string,
-      })
-    ),
-  }),
-  isLoggedIn: PropTypes.bool,
-  login: PropTypes.func,
-  logout: PropTypes.func,
 };
 
 export default UserProfilePage;

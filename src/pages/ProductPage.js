@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Slider from "react-slick";
-import PropTypes from "prop-types";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./ProductPage.css";
 
-// --- CONSTANTS ---
+// --- HẰNG SỐ ---
 const API_URL = process.env.PUBLIC_URL + "/db.json";
 const PRODUCTS_PER_PAGE = 6;
 const SEARCH_DEBOUNCE = 500;
@@ -38,7 +37,12 @@ const SLIDES = [
   },
 ];
 
-// --- UTILITY FUNCTIONS ---
+// --- HÀM TIỆN ÍCH ---
+/**
+ * Lấy danh sách sản phẩm từ API
+ * @param {AbortSignal} signal - Tín hiệu để hủy fetch
+ * @returns {Promise<Array>} Danh sách sản phẩm
+ */
 const fetchProducts = async (signal) => {
   const response = await fetch(API_URL, { signal });
   if (!response.ok) throw new Error("Không thể tải sản phẩm!");
@@ -46,7 +50,13 @@ const fetchProducts = async (signal) => {
   return Array.isArray(data) ? data : data.products || [];
 };
 
-// --- CUSTOM HOOKS ---
+// --- HOOK TÙY CHỈNH ---
+/**
+ * Hook để trì hoãn giá trị (debounce)
+ * @param {*} value - Giá trị cần trì hoãn
+ * @param {number} delay - Thời gian trì hoãn (ms)
+ * @returns {*} Giá trị đã trì hoãn
+ */
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -56,7 +66,11 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
-// --- CHILD COMPONENTS ---
+// --- THÀNH PHẦN CON ---
+/**
+ * Hiển thị một sản phẩm
+ * @param {Object} props - Props chứa thông tin sản phẩm
+ */
 const ProductCard = React.memo(({ product }) => {
   if (!product?.id || !product.name || !product.image || typeof product.price !== "number") {
     console.error("Dữ liệu sản phẩm không hợp lệ:", product);
@@ -76,15 +90,10 @@ const ProductCard = React.memo(({ product }) => {
   );
 });
 
-ProductCard.propTypes = {
-  product: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    price: PropTypes.number.isRequired,
-  }).isRequired,
-};
-
+/**
+ * Hiển thị phân trang
+ * @param {Object} props - Props chứa trang hiện tại, tổng số trang, và hàm thay đổi trang
+ */
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
   return (
@@ -110,12 +119,10 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   );
 });
 
-Pagination.propTypes = {
-  currentPage: PropTypes.number.isRequired,
-  totalPages: PropTypes.number.isRequired,
-  onPageChange: PropTypes.func.isRequired,
-};
-
+/**
+ * Hiển thị bộ lọc thương hiệu
+ * @param {Object} props - Props chứa danh sách thương hiệu, thương hiệu đã chọn, và hàm chọn thương hiệu
+ */
 const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
     {brands.map((brand) => (
@@ -131,12 +138,10 @@ const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
   </div>
 ));
 
-BrandFilter.propTypes = {
-  brands: PropTypes.arrayOf(PropTypes.string).isRequired,
-  selectedBrand: PropTypes.string.isRequired,
-  onBrandSelect: PropTypes.func.isRequired,
-};
-
+/**
+ * Hiển thị slide quảng cáo
+ * @param {Object} props - Props chứa thông tin slide
+ */
 const Slide = React.memo(({ slide }) => (
   <div className="slide">
     <div className="slide-content">
@@ -159,25 +164,11 @@ const Slide = React.memo(({ slide }) => (
   </div>
 ));
 
-Slide.propTypes = {
-  slide: PropTypes.shape({
-    image: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    subtitle: PropTypes.string.isRequired,
-    features: PropTypes.arrayOf(PropTypes.string).isRequired,
-    link: PropTypes.string.isRequired,
-    buttonText: PropTypes.string.isRequired,
-  }).isRequired,
-};
-
-const FilterSection = ({
-  filters,
-  onFilterChange,
-  onBrandSelect,
-  onSortLowToHigh,
-  onSortHighToLow,
-  onResetFilters,
-}) => (
+/**
+ * Hiển thị phần bộ lọc
+ * @param {Object} props - Props chứa bộ lọc, các hàm xử lý sự kiện
+ */
+const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSortLowToHigh, onSortHighToLow, onResetFilters }) => (
   <div className="filter-section">
     <input
       type="text"
@@ -203,18 +194,10 @@ const FilterSection = ({
   </div>
 );
 
-FilterSection.propTypes = {
-  filters: PropTypes.shape({
-    brand: PropTypes.string.isRequired,
-    search: PropTypes.string.isRequired,
-  }).isRequired,
-  onFilterChange: PropTypes.func.isRequired,
-  onBrandSelect: PropTypes.func.isRequired,
-  onSortLowToHigh: PropTypes.func.isRequired,
-  onSortHighToLow: PropTypes.func.isRequired,
-  onResetFilters: PropTypes.func.isRequired,
-};
-
+/**
+ * Hiển thị danh sách sản phẩm
+ * @param {Object} props - Props chứa trạng thái tải, tìm kiếm, kết quả, và danh sách sản phẩm
+ */
 const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts }) => (
   <div className="product-list">
     {isSearching && !isLoading ? (
@@ -236,21 +219,10 @@ const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts })
   </div>
 );
 
-ProductList.propTypes = {
-  isLoading: PropTypes.bool.isRequired,
-  isSearching: PropTypes.bool.isRequired,
-  showNoResults: PropTypes.bool.isRequired,
-  currentProducts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      image: PropTypes.string.isRequired,
-      price: PropTypes.number.isRequired,
-    })
-  ).isRequired,
-};
-
-// --- MAIN COMPONENT ---
+// --- THÀNH PHẦN CHÍNH ---
+/**
+ * Trang danh sách sản phẩm
+ */
 const ProductPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -274,7 +246,7 @@ const ProductPage = () => {
     arrows: true,
   };
 
-  // Fetch products on mount
+  // Lấy sản phẩm khi mount
   useEffect(() => {
     const controller = new AbortController();
     const loadProducts = async () => {
@@ -299,15 +271,15 @@ const ProductPage = () => {
     return () => controller.abort();
   }, []);
 
-  // Filter and sort logic
+  // Lọc và sắp xếp sản phẩm
   useEffect(() => {
     if (isLoading) return;
     setIsSearching(true);
     const filtered = products
-      .filter((p) => (filters.brand === "Tất cả" ? true : p.brand === filters.brand))
+      .filter((p) => (debouncedFilters.brand === "Tất cả" ? true : p.brand === debouncedFilters.brand))
       .filter((p) =>
-        filters.search.trim()
-          ? p.name.toLowerCase().includes(filters.search.toLowerCase().trim())
+        debouncedFilters.search.trim()
+          ? p.name.toLowerCase().includes(debouncedFilters.search.toLowerCase().trim())
           : true
       );
     setFilteredProducts(filtered);
@@ -316,7 +288,7 @@ const ProductPage = () => {
     setCurrentPage(1);
   }, [debouncedFilters, products, isLoading]);
 
-  // Event handlers
+  // Xử lý sự kiện
   const handlePageChange = (page) => {
     const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
     setCurrentPage(Math.min(Math.max(page, 1), totalPages));
@@ -343,12 +315,12 @@ const ProductPage = () => {
     setFilters({ brand: "Tất cả", search: "" });
   };
 
-  // Pagination
+  // Phân trang
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const currentProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
 
-  // Render states
+  // Trạng thái hiển thị
   if (isLoading && filteredProducts.length === 0 && !error) {
     return (
       <div className="loading-container">
