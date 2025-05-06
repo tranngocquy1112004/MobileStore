@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Slider from "react-slick";
+import PropTypes from "prop-types";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./ProductPage.css";
@@ -8,8 +9,8 @@ import "./ProductPage.css";
 // --- CONSTANTS ---
 const API_URL = process.env.PUBLIC_URL + "/db.json";
 const PRODUCTS_PER_PAGE = 6;
-const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"];
 const SEARCH_DEBOUNCE = 500;
+const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"];
 const SLIDES = [
   {
     image: "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg",
@@ -45,6 +46,16 @@ const fetchProducts = async (signal) => {
   return Array.isArray(data) ? data : data.products || [];
 };
 
+// --- CUSTOM HOOKS ---
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+};
+
 // --- CHILD COMPONENTS ---
 const ProductCard = React.memo(({ product }) => {
   if (!product?.id || !product.name || !product.image || typeof product.price !== "number") {
@@ -64,6 +75,15 @@ const ProductCard = React.memo(({ product }) => {
     </div>
   );
 });
+
+ProductCard.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    image: PropTypes.string.isRequired,
+    price: PropTypes.number.isRequired,
+  }).isRequired,
+};
 
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
@@ -90,6 +110,12 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   );
 });
 
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+};
+
 const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
     {brands.map((brand) => (
@@ -104,6 +130,12 @@ const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
     ))}
   </div>
 ));
+
+BrandFilter.propTypes = {
+  brands: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selectedBrand: PropTypes.string.isRequired,
+  onBrandSelect: PropTypes.func.isRequired,
+};
 
 const Slide = React.memo(({ slide }) => (
   <div className="slide">
@@ -127,7 +159,25 @@ const Slide = React.memo(({ slide }) => (
   </div>
 ));
 
-const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSortLowToHigh, onSortHighToLow, onResetFilters }) => (
+Slide.propTypes = {
+  slide: PropTypes.shape({
+    image: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    subtitle: PropTypes.string.isRequired,
+    features: PropTypes.arrayOf(PropTypes.string).isRequired,
+    link: PropTypes.string.isRequired,
+    buttonText: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
+const FilterSection = ({
+  filters,
+  onFilterChange,
+  onBrandSelect,
+  onSortLowToHigh,
+  onSortHighToLow,
+  onResetFilters,
+}) => (
   <div className="filter-section">
     <input
       type="text"
@@ -153,6 +203,18 @@ const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSortLowToHigh
   </div>
 );
 
+FilterSection.propTypes = {
+  filters: PropTypes.shape({
+    brand: PropTypes.string.isRequired,
+    search: PropTypes.string.isRequired,
+  }).isRequired,
+  onFilterChange: PropTypes.func.isRequired,
+  onBrandSelect: PropTypes.func.isRequired,
+  onSortLowToHigh: PropTypes.func.isRequired,
+  onSortHighToLow: PropTypes.func.isRequired,
+  onResetFilters: PropTypes.func.isRequired,
+};
+
 const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts }) => (
   <div className="product-list">
     {isSearching && !isLoading ? (
@@ -174,6 +236,20 @@ const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts })
   </div>
 );
 
+ProductList.propTypes = {
+  isLoading: PropTypes.bool.isRequired,
+  isSearching: PropTypes.bool.isRequired,
+  showNoResults: PropTypes.bool.isRequired,
+  currentProducts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+      image: PropTypes.string.isRequired,
+      price: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+};
+
 // --- MAIN COMPONENT ---
 const ProductPage = () => {
   const [products, setProducts] = useState([]);
@@ -184,6 +260,8 @@ const ProductPage = () => {
   const [filters, setFilters] = useState({ brand: "Tất cả", search: "" });
   const [isSearching, setIsSearching] = useState(false);
   const [showNoResults, setShowNoResults] = useState(false);
+
+  const debouncedFilters = useDebounce(filters, SEARCH_DEBOUNCE);
 
   const sliderSettings = {
     dots: true,
@@ -222,76 +300,50 @@ const ProductPage = () => {
   }, []);
 
   // Filter and sort logic
-  const filterProducts = useCallback(() => {
-    let filtered = [...products];
-    if (filters.brand !== "Tất cả") {
-      filtered = filtered.filter((p) => p.brand === filters.brand);
-    }
-    if (filters.search.trim()) {
-      const searchTerm = filters.search.toLowerCase().trim();
-      filtered = filtered.filter((p) => p.name.toLowerCase().includes(searchTerm));
-    }
-    return filtered;
-  }, [filters, products]);
-
-  const sortProducts = useCallback((productsToSort, sortType) => {
-    if (sortType === "lowToHigh") {
-      return [...productsToSort].sort((a, b) => a.price - b.price);
-    } else if (sortType === "highToLow") {
-      return [...productsToSort].sort((a, b) => b.price - a.price);
-    }
-    return productsToSort;
-  }, []);
-
   useEffect(() => {
     if (isLoading) return;
     setIsSearching(true);
-    setShowNoResults(false);
-    const debounceTimer = setTimeout(() => {
-      const filtered = filterProducts();
-      setFilteredProducts(filtered);
-      setIsSearching(false);
-      setShowNoResults(filtered.length === 0);
-      setCurrentPage(1);
-    }, SEARCH_DEBOUNCE);
-    return () => clearTimeout(debounceTimer);
-  }, [filters, products, isLoading, filterProducts]);
+    const filtered = products
+      .filter((p) => (filters.brand === "Tất cả" ? true : p.brand === filters.brand))
+      .filter((p) =>
+        filters.search.trim()
+          ? p.name.toLowerCase().includes(filters.search.toLowerCase().trim())
+          : true
+      );
+    setFilteredProducts(filtered);
+    setIsSearching(false);
+    setShowNoResults(filtered.length === 0);
+    setCurrentPage(1);
+  }, [debouncedFilters, products, isLoading]);
 
   // Event handlers
-  const handlePageChange = useCallback(
-    (page) => {
-      const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-      setCurrentPage(Math.min(Math.max(page, 1), totalPages));
-    },
-    [filteredProducts]
-  );
+  const handlePageChange = (page) => {
+    const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
 
-  const handleFilterChange = useCallback((e) => {
+  const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-  }, []);
+  };
 
-  const handleBrandSelect = useCallback((brand) => {
+  const handleBrandSelect = (brand) => {
     setFilters((prev) => ({ ...prev, brand }));
-  }, []);
+  };
 
-  const sortLowToHigh = useCallback(() => {
-    const sorted = sortProducts(filteredProducts, "lowToHigh");
+  const sortProducts = (sortType) => {
+    const sorted = [...filteredProducts].sort((a, b) =>
+      sortType === "lowToHigh" ? a.price - b.price : b.price - a.price
+    );
     setFilteredProducts(sorted);
     setCurrentPage(1);
-  }, [filteredProducts, sortProducts]);
+  };
 
-  const sortHighToLow = useCallback(() => {
-    const sorted = sortProducts(filteredProducts, "highToLow");
-    setFilteredProducts(sorted);
-    setCurrentPage(1);
-  }, [filteredProducts, sortProducts]);
-
-  const resetFilters = useCallback(() => {
+  const resetFilters = () => {
     setFilters({ brand: "Tất cả", search: "" });
-  }, []);
+  };
 
-  // Pagination calculation
+  // Pagination
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const currentProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
@@ -331,8 +383,8 @@ const ProductPage = () => {
         filters={filters}
         onFilterChange={handleFilterChange}
         onBrandSelect={handleBrandSelect}
-        onSortLowToHigh={sortLowToHigh}
-        onSortHighToLow={sortHighToLow}
+        onSortLowToHigh={() => sortProducts("lowToHigh")}
+        onSortHighToLow={() => sortProducts("highToLow")}
         onResetFilters={resetFilters}
       />
       <ProductList
