@@ -4,25 +4,17 @@ import { CartContext } from "./CartContext";
 import { AuthContext } from "../account/AuthContext";
 import "./CartPage.css";
 
-// --- HÀM TIỆN ÍCH ---
-/**
- * Tính tổng tiền giỏ hàng
- * @param {Array} cart - Danh sách sản phẩm trong giỏ hàng
- * @returns {number} Tổng tiền
- */
+// --- Utilities ---
 const calculateCartTotal = (cart) =>
   Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item?.price || 0) * (item?.quantity || 0), 0) : 0;
 
-// --- THÀNH PHẦN CON ---
-/**
- * Hiển thị một mục trong giỏ hàng
- * @param {Object} props - Props chứa thông tin sản phẩm và hàm xử lý
- */
+// --- Child Components ---
 const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   if (!item || !item.id) {
     console.error("Dữ liệu sản phẩm không hợp lệ:", item);
     return null;
   }
+
   return (
     <li className="cart-item" aria-label={`Sản phẩm ${item.name || "không rõ"} trong giỏ hàng`}>
       <img src={item.image} alt={item.name || "Sản phẩm"} className="item-image" loading="lazy" />
@@ -56,10 +48,6 @@ const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   );
 });
 
-/**
- * Hiển thị tóm tắt giỏ hàng
- * @param {Object} props - Props chứa tổng tiền, trạng thái đăng nhập, và hàm xử lý thanh toán
- */
 const CartSummary = React.memo(({ cartTotal, isLoggedIn, onProceedToCheckout }) => (
   <div className="cart-summary">
     <p className="total-price">
@@ -77,21 +65,16 @@ const CartSummary = React.memo(({ cartTotal, isLoggedIn, onProceedToCheckout }) 
   </div>
 ));
 
-// --- THÀNH PHẦN CHÍNH ---
-/**
- * Trang giỏ hàng
- */
+// --- Main Component ---
 const CartPage = () => {
   const { cart = [], removeFromCart = () => {}, updateQuantity = () => {} } = useContext(CartContext) || {};
   const { isLoggedIn = false } = useContext(AuthContext) || {};
   const navigate = useNavigate();
 
-  // Tính tổng tiền giỏ hàng
   const cartTotal = useMemo(() => calculateCartTotal(cart), [cart]);
 
-  // Xử lý tiến hành thanh toán
   const handleProceedToCheckout = () => {
-    if (!cart || cart.length === 0) {
+    if (!cart?.length) {
       alert("Giỏ hàng của bạn trống. Vui lòng thêm sản phẩm trước khi thanh toán.");
       return;
     }
@@ -103,33 +86,26 @@ const CartPage = () => {
     navigate("/checkout");
   };
 
-  // Hiển thị danh sách sản phẩm
-  const renderCartItems = () => {
-    if (!Array.isArray(cart) || cart.length === 0) {
-      return (
-        <div className="empty-cart-message">
-          <p>Giỏ hàng của bạn đang trống.</p>
-          <Link to="/home" className="back-to-home" aria-label="Quay lại cửa hàng">
-            Quay lại cửa hàng
-          </Link>
-        </div>
-      );
-    }
-
-    return (
+  const renderCartItems = () =>
+    !Array.isArray(cart) || cart.length === 0 ? (
+      <div className="empty-cart-message">
+        <p>Giỏ hàng của bạn đang trống.</p>
+        <Link to="/home" className="back-to-home" aria-label="Quay lại cửa hàng">
+          Quay lại cửa hàng
+        </Link>
+      </div>
+    ) : (
       <ul className="cart-items-list" role="list">
         {cart.map((item, index) => (
           <CartItem
             key={item?.id || index}
             item={item}
-            index={index}
             onUpdateQuantity={updateQuantity}
             onRemove={removeFromCart}
           />
         ))}
       </ul>
     );
-  };
 
   return (
     <div className="cart-container">

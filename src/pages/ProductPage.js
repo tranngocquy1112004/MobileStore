@@ -5,7 +5,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./ProductPage.css";
 
-// --- HẰNG SỐ ---
+// --- Constants ---
 const API_URL = process.env.PUBLIC_URL + "/db.json";
 const PRODUCTS_PER_PAGE = 6;
 const SEARCH_DEBOUNCE = 500;
@@ -37,26 +37,20 @@ const SLIDES = [
   },
 ];
 
-// --- HÀM TIỆN ÍCH ---
-/**
- * Lấy danh sách sản phẩm từ API
- * @param {AbortSignal} signal - Tín hiệu để hủy fetch
- * @returns {Promise<Array>} Danh sách sản phẩm
- */
+// --- Utilities ---
 const fetchProducts = async (signal) => {
-  const response = await fetch(API_URL, { signal });
-  if (!response.ok) throw new Error("Không thể tải sản phẩm!");
-  const data = await response.json();
-  return Array.isArray(data) ? data : data.products || [];
+  try {
+    const response = await fetch(API_URL, { signal });
+    if (!response.ok) throw new Error("Không thể tải sản phẩm!");
+    const data = await response.json();
+    return Array.isArray(data) ? data : data.products || [];
+  } catch (error) {
+    if (error.name !== "AbortError") throw error;
+    return [];
+  }
 };
 
-// --- HOOK TÙY CHỈNH ---
-/**
- * Hook để trì hoãn giá trị (debounce)
- * @param {*} value - Giá trị cần trì hoãn
- * @param {number} delay - Thời gian trì hoãn (ms)
- * @returns {*} Giá trị đã trì hoãn
- */
+// --- Custom Hooks ---
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -66,16 +60,13 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
-// --- THÀNH PHẦN CON ---
-/**
- * Hiển thị một sản phẩm
- * @param {Object} props - Props chứa thông tin sản phẩm
- */
+// --- Child Components ---
 const ProductCard = React.memo(({ product }) => {
   if (!product?.id || !product.name || !product.image || typeof product.price !== "number") {
     console.error("Dữ liệu sản phẩm không hợp lệ:", product);
     return null;
   }
+
   return (
     <div className="product-card">
       <Link to={`/products/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
@@ -90,42 +81,37 @@ const ProductCard = React.memo(({ product }) => {
   );
 });
 
-/**
- * Hiển thị phân trang
- * @param {Object} props - Props chứa trang hiện tại, tổng số trang, và hàm thay đổi trang
- */
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
+
   return (
-    <div className="pagination" role="navigation">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="pagination-button"
-        aria-label="Trang trước"
-      >
-        Trang trước
-      </button>
-      <span className="pagination-current">Trang {currentPage}</span>
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="pagination-button"
-        aria-label="Trang sau"
-      >
-        Trang sau
-      </button>
-    </div>
+    <nav className="pagination" aria-label="Phân trang">
+  <div>
+    <button
+      onClick={() => onPageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="pagination-button"
+      aria-label="Trang trước"
+    >
+      Trang trước
+    </button>
+    <span className="pagination-current">Trang {currentPage}</span>
+    <button
+      onClick={() => onPageChange(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="pagination-button"
+      aria-label="Trang sau"
+    >
+      Trang sau
+    </button>
+  </div>
+</nav>
   );
 });
 
-/**
- * Hiển thị bộ lọc thương hiệu
- * @param {Object} props - Props chứa danh sách thương hiệu, thương hiệu đã chọn, và hàm chọn thương hiệu
- */
-const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
+const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
-    {brands.map((brand) => (
+    {BRANDS.map((brand) => (
       <button
         key={brand}
         className={`brand-button ${selectedBrand === brand ? "active" : ""}`}
@@ -138,10 +124,6 @@ const BrandFilter = React.memo(({ brands, selectedBrand, onBrandSelect }) => (
   </div>
 ));
 
-/**
- * Hiển thị slide quảng cáo
- * @param {Object} props - Props chứa thông tin slide
- */
 const Slide = React.memo(({ slide }) => (
   <div className="slide">
     <div className="slide-content">
@@ -149,8 +131,8 @@ const Slide = React.memo(({ slide }) => (
         <h2>{slide.title}</h2>
         <h3>{slide.subtitle}</h3>
         <ul>
-          {slide.features.map((feature, i) => (
-            <li key={i}>{feature}</li>
+          {slide.features.map((feature, index) => (
+            <li key={index}>{feature}</li>
           ))}
         </ul>
       </div>
@@ -164,41 +146,45 @@ const Slide = React.memo(({ slide }) => (
   </div>
 ));
 
-/**
- * Hiển thị phần bộ lọc
- * @param {Object} props - Props chứa bộ lọc, các hàm xử lý sự kiện
- */
-const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSortLowToHigh, onSortHighToLow, onResetFilters }) => (
-  <div className="filter-section">
-    <input
-      type="text"
-      name="search"
-      value={filters.search}
-      onChange={onFilterChange}
-      className="search-input"
-      placeholder="Tìm kiếm sản phẩm..."
-      aria-label="Tìm kiếm sản phẩm theo tên"
-    />
-    <BrandFilter brands={BRANDS} selectedBrand={filters.brand} onBrandSelect={onBrandSelect} />
-    <button className="sort-button" onClick={onSortLowToHigh} aria-label="Sắp xếp giá từ thấp tới cao">
-      Giá từ thấp tới cao
-    </button>
-    <button className="sort-button" onClick={onSortHighToLow} aria-label="Sắp xếp giá từ cao tới thấp">
-      Giá từ cao tới thấp
-    </button>
-    {(filters.brand !== "Tất cả" || filters.search.trim()) && (
-      <button onClick={onResetFilters} className="reset-filters-button" aria-label="Xóa tất cả bộ lọc">
-        <span className="reset-icon">✕</span> Xóa bộ lọc
-      </button>
-    )}
-  </div>
-);
+const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSort, onResetFilters }) => {
+  const hasActiveFilters = filters.brand !== "Tất cả" || filters.search.trim();
 
-/**
- * Hiển thị danh sách sản phẩm
- * @param {Object} props - Props chứa trạng thái tải, tìm kiếm, kết quả, và danh sách sản phẩm
- */
-const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts }) => (
+  return (
+    <div className="filter-section">
+      <input
+        type="text"
+        name="search"
+        value={filters.search}
+        onChange={onFilterChange}
+        className="search-input"
+        placeholder="Tìm kiếm sản phẩm..."
+        aria-label="Tìm kiếm sản phẩm theo tên"
+      />
+      <BrandFilter selectedBrand={filters.brand} onBrandSelect={onBrandSelect} />
+      <button
+        className="sort-button"
+        onClick={() => onSort("lowToHigh")}
+        aria-label="Sắp xếp giá từ thấp tới cao"
+      >
+        Giá từ thấp tới cao
+      </button>
+      <button
+        className="sort-button"
+        onClick={() => onSort("highToLow")}
+        aria-label="Sắp xếp giá từ cao tới thấp"
+      >
+        Giá từ cao tới thấp
+      </button>
+      {hasActiveFilters && (
+        <button onClick={onResetFilters} className="reset-filters-button" aria-label="Xóa tất cả bộ lọc">
+          <span className="reset-icon">✕</span> Xóa bộ lọc
+        </button>
+      )}
+    </div>
+  );
+};
+
+const ProductList = ({ isLoading, isSearching, showNoResults, products }) => (
   <div className="product-list">
     {isSearching && !isLoading ? (
       <div className="loading-container">
@@ -211,7 +197,7 @@ const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts })
       </div>
     ) : (
       <div className="product-grid">
-        {currentProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
@@ -219,20 +205,20 @@ const ProductList = ({ isLoading, isSearching, showNoResults, currentProducts })
   </div>
 );
 
-// --- THÀNH PHẦN CHÍNH ---
-/**
- * Trang danh sách sản phẩm
- */
+// --- Main Component ---
 const ProductPage = () => {
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({ brand: "Tất cả", search: "" });
-  const [isSearching, setIsSearching] = useState(false);
-  const [showNoResults, setShowNoResults] = useState(false);
+  const [state, setState] = useState({
+    products: [],
+    filteredProducts: [],
+    isLoading: true,
+    error: null,
+    currentPage: 1,
+    filters: { brand: "Tất cả", search: "" },
+    isSearching: false,
+    showNoResults: false,
+  });
 
+  const { products, filteredProducts, isLoading, error, currentPage, filters, isSearching, showNoResults } = state;
   const debouncedFilters = useDebounce(filters, SEARCH_DEBOUNCE);
 
   const sliderSettings = {
@@ -246,82 +232,91 @@ const ProductPage = () => {
     arrows: true,
   };
 
-  // Lấy sản phẩm khi mount
+  // Fetch products on mount
   useEffect(() => {
     const controller = new AbortController();
     const loadProducts = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
+        setState((prev) => ({ ...prev, isLoading: true, error: null }));
         const data = await fetchProducts(controller.signal);
-        setProducts(data);
-        setFilteredProducts(data);
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setError(err.message || "Lỗi khi tải dữ liệu.");
-          setProducts([]);
-          setFilteredProducts([]);
-          setShowNoResults(true);
-        }
-      } finally {
-        setIsLoading(false);
+        setState((prev) => ({
+          ...prev,
+          products: data,
+          filteredProducts: data,
+          isLoading: false,
+        }));
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          error: error.message || "Lỗi khi tải dữ liệu.",
+          products: [],
+          filteredProducts: [],
+          isLoading: false,
+          showNoResults: true,
+        }));
       }
     };
     loadProducts();
     return () => controller.abort();
   }, []);
 
-  // Lọc và sắp xếp sản phẩm
+  // Filter and sort products
   useEffect(() => {
     if (isLoading) return;
-    setIsSearching(true);
+
     const filtered = products
       .filter((p) => (debouncedFilters.brand === "Tất cả" ? true : p.brand === debouncedFilters.brand))
       .filter((p) =>
         debouncedFilters.search.trim()
-          ? p.name.toLowerCase().includes(debouncedFilters.search.toLowerCase().trim())
+          ? p.name.toLowerCase().includes(debouncedFilters.search.trim().toLowerCase())
           : true
       );
-    setFilteredProducts(filtered);
-    setIsSearching(false);
-    setShowNoResults(filtered.length === 0);
-    setCurrentPage(1);
+
+    setState((prev) => ({
+      ...prev,
+      filteredProducts: filtered,
+      isSearching: false,
+      showNoResults: filtered.length === 0,
+      currentPage: 1,
+    }));
   }, [debouncedFilters, products, isLoading]);
 
-  // Xử lý sự kiện
+  // Event handlers
   const handlePageChange = (page) => {
     const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+    setState((prev) => ({ ...prev, currentPage: Math.min(Math.max(page, 1), totalPages) }));
   };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setState((prev) => ({ ...prev, filters: { ...prev.filters, [name]: value }, isSearching: true }));
   };
 
   const handleBrandSelect = (brand) => {
-    setFilters((prev) => ({ ...prev, brand }));
+    setState((prev) => ({ ...prev, filters: { ...prev.filters, brand }, isSearching: true }));
   };
 
-  const sortProducts = (sortType) => {
-    const sorted = [...filteredProducts].sort((a, b) =>
-      sortType === "lowToHigh" ? a.price - b.price : b.price - a.price
-    );
-    setFilteredProducts(sorted);
-    setCurrentPage(1);
+  const handleSort = (sortType) => {
+    setState((prev) => ({
+      ...prev,
+      filteredProducts: [...prev.filteredProducts].sort((a, b) =>
+        sortType === "lowToHigh" ? a.price - b.price : b.price - a.price
+      ),
+      currentPage: 1,
+    }));
   };
 
   const resetFilters = () => {
-    setFilters({ brand: "Tất cả", search: "" });
+    setState((prev) => ({ ...prev, filters: { brand: "Tất cả", search: "" }, isSearching: true }));
   };
 
-  // Phân trang
+  // Pagination
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const currentProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
 
-  // Trạng thái hiển thị
-  if (isLoading && filteredProducts.length === 0 && !error) {
+  // Render states
+  if (isLoading && !filteredProducts.length && !error) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -330,11 +325,11 @@ const ProductPage = () => {
     );
   }
 
-  if (error && filteredProducts.length === 0) {
+  if (error && !filteredProducts.length) {
     return (
       <div className="status error">
         <p>❌ {error}</p>
-        <button onClick={() => window.location.reload()} className="retry-button" aria-label="Thử lại tải lại trang">
+        <button onClick={() => window.location.reload()} className="retry-button" aria-label="Thử lại tải trang">
           Thử lại
         </button>
       </div>
@@ -345,8 +340,8 @@ const ProductPage = () => {
     <main className="product-page">
       <div className="carousel-section">
         <Slider {...sliderSettings}>
-          {SLIDES.map((slide, i) => (
-            <Slide key={i} slide={slide} />
+          {SLIDES.map((slide, index) => (
+            <Slide key={index} slide={slide} />
           ))}
         </Slider>
       </div>
@@ -355,15 +350,14 @@ const ProductPage = () => {
         filters={filters}
         onFilterChange={handleFilterChange}
         onBrandSelect={handleBrandSelect}
-        onSortLowToHigh={() => sortProducts("lowToHigh")}
-        onSortHighToLow={() => sortProducts("highToLow")}
+        onSort={handleSort}
         onResetFilters={resetFilters}
       />
       <ProductList
         isLoading={isLoading}
         isSearching={isSearching}
         showNoResults={showNoResults}
-        currentProducts={currentProducts}
+        products={currentProducts}
       />
       {filteredProducts.length > 0 && totalPages > 1 && (
         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
