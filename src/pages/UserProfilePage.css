@@ -1,85 +1,364 @@
-.profile-container {
+.user-profile-container {
     max-width: 800px;
-    margin: 0 auto;
+    margin: 20px auto;
     padding: 20px;
-  }
-  
-  .profile-nav {
-    display: flex;
-    gap: 10px;
+    background-color: #fff0f5; /* hồng rất nhạt */
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(220, 120, 160, 0.1);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.user-profile-container h1 {
+    color: #b35b8e;
+    text-align: center;
     margin-bottom: 20px;
-  }
-  
-  .profile-nav button {
-    padding: 10px;
+}
+
+.user-profile-container p {
+    text-align: center;
+    color: #a0788f;
+    margin-bottom: 30px;
+}
+
+.profile-sections-menu {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-sections-menu button {
+    padding: 10px 15px;
+    margin: 0 5px;
     border: none;
-    background: #f0f0f0;
+    border-bottom: 2px solid transparent;
+    background-color: transparent;
     cursor: pointer;
-  }
-  
-  .profile-nav button.active {
-    background: #007bff;
-    color: white;
-  }
-  
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .form-input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .form-button {
+    font-size: 1rem;
+    color: #a0788f;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+
+.profile-sections-menu button:hover {
+    color: #d17ca2;
+}
+
+.profile-sections-menu button.active {
+    color: #d17ca2;
+    border-bottom-color: #d17ca2;
+}
+
+/* Sections */
+.profile-info-section,
+.change-password-section,
+.order-history-section,
+.addresses-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f3d9e1;
+}
+
+.profile-info-section h2,
+.change-password-section h2,
+.order-history-section h2,
+.addresses-section h2 {
+    color: #b35b8e;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Form Groups */
+.profile-form .form-group,
+.password-form .form-group {
+    margin-bottom: 15px;
+}
+
+.profile-form label,
+.password-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #8b5d73;
+}
+
+.profile-form input[type="text"],
+.profile-form input[type="email"],
+.password-form input[type="password"],
+.profile-input,
+.password-input {
+    width: calc(100% - 22px);
     padding: 10px;
-    background: #007bff;
+    border: 1px solid #e8c2d4;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #fff;
+}
+
+.profile-form input[disabled] {
+    background-color: #f9edf1;
+    cursor: not-allowed;
+}
+
+/* Buttons */
+.profile-update-button,
+.change-password-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #e07a9b;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-  }
-  
-  .form-button.delete {
-    background: #dc3545;
-  }
-  
-  .form-message {
-    margin-top: 10px;
-  }
-  
-  .form-message.success {
-    color: green;
-  }
-  
-  .form-message.error {
-    color: red;
-  }
-  
-  .address-list {
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.profile-update-button:hover,
+.change-password-button:hover {
+    background-color: #c56289;
+}
+
+.profile-update-button:disabled {
+    background-color: #eac6d3;
+    cursor: not-allowed;
+}
+
+/* Messages */
+.user-profile-container .message {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.user-profile-container .message.success {
+    background-color: #f3e6ec;
+    color: #7e415a;
+    border: 1px solid #e5b2c2;
+}
+
+.user-profile-container .message.error {
+    background-color: #fae0e8;
+    color: #b0003a;
+    border: 1px solid #eaa3b6;
+}
+
+/* Back Link */
+.back-link {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.back-link a {
+    color: #d17ca2;
+    text-decoration: none;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+
+/* Order Section Links */
+.order-history-section p a {
+    color: #d17ca2;
+    text-decoration: none;
+}
+
+.order-history-section p a:hover {
+    text-decoration: underline;
+}
+
+/* Address Form */
+.address-form {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #f3d9e1;
+    border-radius: 8px;
+    background-color: #fffafc;
+}
+
+.address-form .form-group {
+    margin-bottom: 10px;
+}
+
+.address-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #8b5d73;
+}
+
+.address-form input {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #e8c2d4;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.address-form button[type="submit"] {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d17ca2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.address-form button[type="submit"]:hover {
+    background-color: #b35b8e;
+}
+
+/* Address List */
+.address-list {
     list-style: none;
     padding: 0;
-  }
-  
-  .address-item {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-  
-  .empty-state {
-    color: #666;
-  }
-  
-  .back-link a {
-    color: #007bff;
-    text-decoration: none;
-  }
+}
+
+.address-item {
+    border: 1px solid #f3d9e1;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+    position: relative;
+}
+
+.address-item p {
+    margin-bottom: 5px;
+    color: #4b2f3b;
+}
+
+.address-item p:last-child {
+    margin-bottom: 0;
+}
+
+/* Delete Button */
+.delete-address-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #e75c7c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.delete-address-button:hover {
+    background-color: #c94765;
+}
+
+/* Empty Address State */
+.addresses-section .empty-state {
+    text-align: center;
+    color: #aa7d90;
+    font-style: italic;
+    margin-top: 20px;
+}
+
+/* Order Status */
+.order-history-section .order-history-status {
+    text-align: center;
+    margin-top: 20px;
+    color: #7e415a;
+}
+
+.order-history-section .order-history-status.error {
+    color: #e75c7c;
+}
+@media (max-width: 768px) {
+    .user-profile-container {
+        padding: 15px;
+        margin: 15px 10px;
+    }
+
+    .profile-sections-menu button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .profile-update-button,
+    .change-password-button {
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    .address-form {
+        padding: 10px;
+    }
+
+    .address-form input {
+        font-size: 0.95rem;
+    }
+
+    .address-form button[type="submit"] {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .address-item {
+        padding: 12px;
+    }
+
+    .delete-address-button {
+        top: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive styles for mobile phones */
+@media (max-width: 480px) {
+    .user-profile-container h1 {
+        font-size: 1.4rem;
+    }
+
+    .user-profile-container p {
+        font-size: 0.95rem;
+    }
+
+    .profile-form input[type="text"],
+    .profile-form input[type="email"],
+    .password-form input[type="password"],
+    .profile-input,
+    .password-input {
+        width: 100%;
+    }
+
+    .profile-sections-menu {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .profile-sections-menu button {
+        font-size: 0.95rem;
+        padding: 8px;
+    }
+
+    .profile-update-button,
+    .change-password-button {
+        font-size: 1rem;
+    }
+
+    .address-form input {
+        width: 100%;
+    }
+
+    .back-link {
+        font-size: 0.95rem;
+    }
+
+    .order-history-section .order-history-status {
+        font-size: 0.95rem;
+    }
+}
