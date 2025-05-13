@@ -10,6 +10,7 @@ const API_URL = process.env.PUBLIC_URL + "/db.json";
 const PRODUCTS_PER_PAGE = 6;
 const SEARCH_DEBOUNCE = 500;
 const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"];
+
 const SLIDES = [
   {
     image: "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg",
@@ -86,26 +87,26 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
 
   return (
     <nav className="pagination" aria-label="Phân trang">
-  <div>
-    <button
-      onClick={() => onPageChange(currentPage - 1)}
-      disabled={currentPage === 1}
-      className="pagination-button"
-      aria-label="Trang trước"
-    >
-      Trang trước
-    </button>
-    <span className="pagination-current">Trang {currentPage}</span>
-    <button
-      onClick={() => onPageChange(currentPage + 1)}
-      disabled={currentPage === totalPages}
-      className="pagination-button"
-      aria-label="Trang sau"
-    >
-      Trang sau
-    </button>
-  </div>
-</nav>
+      <div>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-button"
+          aria-label="Trang trước"
+        >
+          Trang trước
+        </button>
+        <span className="pagination-current">Trang {currentPage}</span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-button"
+          aria-label="Trang sau"
+        >
+          Trang sau
+        </button>
+      </div>
+    </nav>
   );
 });
 
@@ -121,28 +122,6 @@ const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
         {brand}
       </button>
     ))}
-  </div>
-));
-
-const Slide = React.memo(({ slide }) => (
-  <div className="slide">
-    <div className="slide-content">
-      <div className="slide-text">
-        <h2>{slide.title}</h2>
-        <h3>{slide.subtitle}</h3>
-        <ul>
-          {slide.features.map((feature, index) => (
-            <li key={index}>{feature}</li>
-          ))}
-        </ul>
-      </div>
-      <div className="slide-image">
-        <img src={slide.image} alt={slide.title} loading="lazy" />
-      </div>
-      <Link to={slide.link} className="slide-button">
-        {slide.buttonText}
-      </Link>
-    </div>
   </div>
 ));
 
@@ -204,6 +183,28 @@ const ProductList = ({ isLoading, isSearching, showNoResults, products }) => (
     )}
   </div>
 );
+
+const Slide = React.memo(({ slide }) => (
+  <div className="slide">
+    <div className="slide-content">
+      <div className="slide-text">
+        <h2>{slide.title}</h2>
+        <h3>{slide.subtitle}</h3>
+        <ul>
+          {slide.features.map((feature, index) => (
+            <li key={index}>{feature}</li>
+          ))}
+        </ul>
+      </div>
+      <div className="slide-image">
+        <img src={slide.image} alt={slide.title} loading="lazy" />
+      </div>
+      <Link to={slide.link} className="slide-button">
+        {slide.buttonText}
+      </Link>
+    </div>
+  </div>
+));
 
 // --- Main Component ---
 const ProductPage = () => {
