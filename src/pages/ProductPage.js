@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -10,7 +10,6 @@ const API_URL = process.env.PUBLIC_URL + "/db.json";
 const PRODUCTS_PER_PAGE = 6;
 const SEARCH_DEBOUNCE = 500;
 const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"];
-
 const SLIDES = [
   {
     image: "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg",
@@ -38,7 +37,23 @@ const SLIDES = [
   },
 ];
 
+const sliderSettings = {
+  dots: true,
+  infinite: true,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  autoplay: true,
+  autoplaySpeed: 3000,
+  arrows: true,
+};
+
 // --- Utilities ---
+/**
+ * Fetches product data from the API.
+ * @param {AbortSignal} signal - Abort signal for canceling the request.
+ * @returns {Promise<Array>} - Array of products.
+ */
 const fetchProducts = async (signal) => {
   try {
     const response = await fetch(API_URL, { signal });
@@ -51,7 +66,12 @@ const fetchProducts = async (signal) => {
   }
 };
 
-// --- Custom Hooks ---
+/**
+ * Custom hook to debounce a value.
+ * @param {any} value - Value to debounce.
+ * @param {number} delay - Debounce delay in milliseconds.
+ * @returns {any} - Debounced value.
+ */
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -61,7 +81,110 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
+/**
+ * Custom hook to manage product fetching, filtering, and pagination.
+ * @param {Object} initialFilters - Initial filter values.
+ * @returns {Object} - Products, filters, and handlers.
+ */
+const useProducts = (initialFilters) => {
+  const [products, setProducts] = useState([]);
+  const [filters, setFilters] = useState(initialFilters);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch products on mount
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchProducts(controller.signal);
+        setProducts(data);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err.message || "Lỗi khi tải dữ liệu.");
+        setProducts([]);
+        setIsLoading(false);
+      }
+    };
+    loadProducts();
+    return () => controller.abort();
+  }, []);
+
+  // Filter products
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => (filters.brand === "Tất cả" ? true : p.brand === filters.brand))
+      .filter((p) =>
+        filters.search.trim()
+          ? p.name.toLowerCase().includes(filters.search.trim().toLowerCase())
+          : true
+      );
+  }, [products, filters]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  // Handlers
+  const handleFilterChange = (e) => {
+    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setIsSearching(true);
+    setCurrentPage(1);
+  };
+
+  const handleBrandSelect = (brand) => {
+    setFilters((prev) => ({ ...prev, brand }));
+    setIsSearching(true);
+    setCurrentPage(1);
+  };
+
+  const handleSort = (sortType) => {
+    setProducts((prev) =>
+      [...prev].sort((a, b) => (sortType === "lowToHigh" ? a.price - b.price : b.price - a.price))
+    );
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
+
+  const resetFilters = () => {
+    setFilters(initialFilters);
+    setIsSearching(true);
+    setCurrentPage(1);
+  };
+
+  return {
+    products: paginatedProducts,
+    filteredProducts,
+    isLoading,
+    isSearching,
+    setIsSearching,
+    error,
+    filters,
+    currentPage,
+    totalPages,
+    handleFilterChange,
+    handleBrandSelect,
+    handleSort,
+    handlePageChange,
+    resetFilters,
+    showNoResults: filteredProducts.length === 0,
+  };
+};
+
 // --- Child Components ---
+/**
+ * Displays a single product card.
+ */
 const ProductCard = React.memo(({ product }) => {
   if (!product?.id || !product.name || !product.image || typeof product.price !== "number") {
     console.error("Dữ liệu sản phẩm không hợp lệ:", product);
@@ -82,6 +205,9 @@ const ProductCard = React.memo(({ product }) => {
   );
 });
 
+/**
+ * Renders pagination controls.
+ */
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
 
@@ -110,6 +236,9 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   );
 });
 
+/**
+ * Renders brand filter buttons.
+ */
 const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
     {BRANDS.map((brand) => (
@@ -125,6 +254,9 @@ const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
   </div>
 ));
 
+/**
+ * Renders the filter and sort controls.
+ */
 const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSort, onResetFilters }) => {
   const hasActiveFilters = filters.brand !== "Tất cả" || filters.search.trim();
 
@@ -163,6 +295,9 @@ const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSort, onReset
   );
 };
 
+/**
+ * Renders the product list or loading/no-results states.
+ */
 const ProductList = ({ isLoading, isSearching, showNoResults, products }) => (
   <div className="product-list">
     {isSearching && !isLoading ? (
@@ -184,6 +319,9 @@ const ProductList = ({ isLoading, isSearching, showNoResults, products }) => (
   </div>
 );
 
+/**
+ * Renders a single carousel slide.
+ */
 const Slide = React.memo(({ slide }) => (
   <div className="slide">
     <div className="slide-content">
@@ -207,117 +345,36 @@ const Slide = React.memo(({ slide }) => (
 ));
 
 // --- Main Component ---
+/**
+ * Product page component displaying a carousel, filters, and product list.
+ */
 const ProductPage = () => {
-  const [state, setState] = useState({
-    products: [],
-    filteredProducts: [],
-    isLoading: true,
-    error: null,
-    currentPage: 1,
-    filters: { brand: "Tất cả", search: "" },
-    isSearching: false,
-    showNoResults: false,
-  });
+  const initialFilters = { brand: BRANDS[0], search: "" };
+  const {
+    products,
+    isLoading,
+    isSearching,
+    setIsSearching,
+    error,
+    filters,
+    currentPage,
+    totalPages,
+    handleFilterChange,
+    handleBrandSelect,
+    handleSort,
+    handlePageChange,
+    resetFilters,
+    showNoResults,
+  } = useProducts(initialFilters);
 
-  const { products, filteredProducts, isLoading, error, currentPage, filters, isSearching, showNoResults } = state;
   const debouncedFilters = useDebounce(filters, SEARCH_DEBOUNCE);
 
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: true,
-  };
-
-  // Fetch products on mount
+  // Update searching state after debounce
   useEffect(() => {
-    const controller = new AbortController();
-    const loadProducts = async () => {
-      try {
-        setState((prev) => ({ ...prev, isLoading: true, error: null }));
-        const data = await fetchProducts(controller.signal);
-        setState((prev) => ({
-          ...prev,
-          products: data,
-          filteredProducts: data,
-          isLoading: false,
-        }));
-      } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error.message || "Lỗi khi tải dữ liệu.",
-          products: [],
-          filteredProducts: [],
-          isLoading: false,
-          showNoResults: true,
-        }));
-      }
-    };
-    loadProducts();
-    return () => controller.abort();
-  }, []);
+    setIsSearching(false);
+  }, [debouncedFilters, setIsSearching]);
 
-  // Filter and sort products
-  useEffect(() => {
-    if (isLoading) return;
-
-    const filtered = products
-      .filter((p) => (debouncedFilters.brand === "Tất cả" ? true : p.brand === debouncedFilters.brand))
-      .filter((p) =>
-        debouncedFilters.search.trim()
-          ? p.name.toLowerCase().includes(debouncedFilters.search.trim().toLowerCase())
-          : true
-      );
-
-    setState((prev) => ({
-      ...prev,
-      filteredProducts: filtered,
-      isSearching: false,
-      showNoResults: filtered.length === 0,
-      currentPage: 1,
-    }));
-  }, [debouncedFilters, products, isLoading]);
-
-  // Event handlers
-  const handlePageChange = (page) => {
-    const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-    setState((prev) => ({ ...prev, currentPage: Math.min(Math.max(page, 1), totalPages) }));
-  };
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setState((prev) => ({ ...prev, filters: { ...prev.filters, [name]: value }, isSearching: true }));
-  };
-
-  const handleBrandSelect = (brand) => {
-    setState((prev) => ({ ...prev, filters: { ...prev.filters, brand }, isSearching: true }));
-  };
-
-  const handleSort = (sortType) => {
-    setState((prev) => ({
-      ...prev,
-      filteredProducts: [...prev.filteredProducts].sort((a, b) =>
-        sortType === "lowToHigh" ? a.price - b.price : b.price - a.price
-      ),
-      currentPage: 1,
-    }));
-  };
-
-  const resetFilters = () => {
-    setState((prev) => ({ ...prev, filters: { brand: "Tất cả", search: "" }, isSearching: true }));
-  };
-
-  // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const currentProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
-
-  // Render states
-  if (isLoading && !filteredProducts.length && !error) {
+  if (isLoading && !products.length && !error) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -326,7 +383,7 @@ const ProductPage = () => {
     );
   }
 
-  if (error && !filteredProducts.length) {
+  if (error && !products.length) {
     return (
       <div className="status error">
         <p>❌ {error}</p>
@@ -358,10 +415,14 @@ const ProductPage = () => {
         isLoading={isLoading}
         isSearching={isSearching}
         showNoResults={showNoResults}
-        products={currentProducts}
+        products={products}
       />
-      {filteredProducts.length > 0 && totalPages > 1 && (
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+      {products.length > 0 && totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       )}
     </main>
   );
