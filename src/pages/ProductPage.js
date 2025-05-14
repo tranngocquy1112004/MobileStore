@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useReducer } from "react";
 import { Link } from "react-router-dom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -8,8 +8,10 @@ import "./ProductPage.css";
 // --- Constants ---
 const API_URL = process.env.PUBLIC_URL + "/db.json";
 const PRODUCTS_PER_PAGE = 6;
-const SEARCH_DEBOUNCE = 500;
+const SEARCH_DEBOUNCE = 500; // milliseconds
 const BRANDS = ["Tất cả", "Xiaomi", "Apple", "Samsung"];
+
+// Simplified slide data (assuming image paths are correct)
 const SLIDES = [
   {
     image: "https://cdn.tgdd.vn/Products/Images/42/329149/iphone-16-pro-max-sa-mac-thumb-1-600x600.jpg",
@@ -48,6 +50,43 @@ const sliderSettings = {
   arrows: true,
 };
 
+// --- Reducer and Initial State for Product Hook ---
+const productReducerInitialState = {
+    allProducts: [], // Store all fetched products
+    filters: { brand: BRANDS[0], search: "" },
+    currentPage: 1,
+    isLoading: true,
+    isSearching: false, // Indicates if search/filter is actively being applied (e.g., while debouncing)
+    error: null,
+};
+
+function productReducer(state, action) {
+    switch (action.type) {
+        case "FETCH_START":
+            return { ...state, isLoading: true, error: null };
+        case "FETCH_SUCCESS":
+            return { ...state, isLoading: false, allProducts: action.payload, error: null };
+        case "FETCH_ERROR":
+            return { ...state, isLoading: false, allProducts: [], error: action.payload };
+        case "SET_FILTER":
+            return { ...state, filters: { ...state.filters, ...action.payload }, currentPage: 1, isSearching: true };
+        case "SET_SEARCHING":
+            return { ...state, isSearching: action.payload };
+        case "SET_PAGE":
+            return { ...state, currentPage: action.payload };
+        case "SORT_PRODUCTS":
+             // Sort 'allProducts' to maintain the sorted order for subsequent filtering/pagination
+            const sortedProducts = [...state.allProducts].sort((a, b) =>
+                action.payload === "lowToHigh" ? a.price - b.price : b.price - a.price
+            );
+            return { ...state, allProducts: sortedProducts, currentPage: 1 };
+        case "RESET_FILTERS":
+            return { ...state, filters: productReducerInitialState.filters, currentPage: 1, isSearching: true };
+        default:
+            return state;
+    }
+}
+
 // --- Utilities ---
 /**
  * Fetches product data from the API.
@@ -57,12 +96,24 @@ const sliderSettings = {
 const fetchProducts = async (signal) => {
   try {
     const response = await fetch(API_URL, { signal });
-    if (!response.ok) throw new Error("Không thể tải sản phẩm!");
+    if (!response.ok) {
+        // Improved error handling: include status
+        const errorDetail = `Status: ${response.status}`;
+        throw new Error(`Không thể tải sản phẩm. ${errorDetail}`);
+    }
     const data = await response.json();
-    return Array.isArray(data) ? data : data.products || [];
+     // Ensure the fetched data is an array or contains a products array
+    if (!Array.isArray(data) && !Array.isArray(data.products)) {
+        throw new Error("Dữ liệu sản phẩm không đúng định dạng.");
+    }
+    return Array.isArray(data) ? data : data.products;
   } catch (error) {
-    if (error.name !== "AbortError") throw error;
-    return [];
+    if (error.name === "AbortError") {
+        console.log("Fetch aborted");
+        return []; // Return empty array on abort
+    }
+     // Re-throw other errors
+    throw error;
   }
 };
 
@@ -82,113 +133,82 @@ const useDebounce = (value, delay) => {
 };
 
 /**
- * Custom hook to manage product fetching, filtering, and pagination.
- * @param {Object} initialFilters - Initial filter values.
- * @returns {Object} - Products, filters, and handlers.
+ * Custom hook to manage product fetching, filtering, sorting, and pagination using useReducer.
+ * @returns {Object} - State and dispatch function.
  */
-const useProducts = (initialFilters) => {
-  const [products, setProducts] = useState([]);
-  const [filters, setFilters] = useState(initialFilters);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState(null);
+const useProductsReducer = () => {
+    const [state, dispatch] = useReducer(productReducer, productReducerInitialState);
 
-  // Fetch products on mount
-  useEffect(() => {
-    const controller = new AbortController();
-    const loadProducts = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await fetchProducts(controller.signal);
-        setProducts(data);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err.message || "Lỗi khi tải dữ liệu.");
-        setProducts([]);
-        setIsLoading(false);
-      }
+    // Fetch products on mount
+    useEffect(() => {
+      const controller = new AbortController();
+      const loadProducts = async () => {
+        dispatch({ type: "FETCH_START" });
+        try {
+          const data = await fetchProducts(controller.signal);
+          dispatch({ type: "FETCH_SUCCESS", payload: data });
+        } catch (err) {
+          dispatch({ type: "FETCH_ERROR", payload: err.message || "Lỗi khi tải dữ liệu." });
+        }
+      };
+      loadProducts();
+      return () => controller.abort();
+    }, []);
+
+    // Debounce the search filter
+    const debouncedSearch = useDebounce(state.filters.search, SEARCH_DEBOUNCE);
+
+    // Effect to stop searching indication after debounce completes
+    useEffect(() => {
+        // Only set isSearching to false if the debounced search matches the current search
+        // This prevents flickering if a new search starts before the debounce finishes
+        if (debouncedSearch === state.filters.search && state.isSearching) {
+            dispatch({ type: "SET_SEARCHING", payload: false });
+        }
+    }, [debouncedSearch, state.filters.search, state.isSearching]); // Depend on debouncedSearch and original search
+
+
+    // Memoized filtering logic based on debounced search and current brand filter
+    const filteredProducts = useMemo(() => {
+      const { allProducts, filters } = state;
+      return allProducts
+        .filter((p) => (filters.brand === "Tất cả" ? true : p.brand === filters.brand))
+        .filter((p) =>
+          debouncedSearch.trim() // Use the debounced search term
+            ? p.name.toLowerCase().includes(debouncedSearch.trim().toLowerCase())
+            : true
+        );
+    }, [state.allProducts, state.filters.brand, debouncedSearch]); // Depend on allProducts, brand, and debouncedSearch
+
+    // Memoized pagination logic
+    const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+    const paginatedProducts = useMemo(() => {
+      const startIndex = (state.currentPage - 1) * PRODUCTS_PER_PAGE;
+      return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+    }, [filteredProducts, state.currentPage]);
+
+    return {
+      state: {
+        ...state, // Spread all state properties
+        filteredProducts, // Add computed filtered products
+        paginatedProducts, // Add computed paginated products
+        totalPages, // Add computed total pages
+        showNoResults: filteredProducts.length === 0 && !state.isLoading && !state.isSearching, // Refined no results check
+      },
+      dispatch, // Return the dispatch function
     };
-    loadProducts();
-    return () => controller.abort();
-  }, []);
-
-  // Filter products
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => (filters.brand === "Tất cả" ? true : p.brand === filters.brand))
-      .filter((p) =>
-        filters.search.trim()
-          ? p.name.toLowerCase().includes(filters.search.trim().toLowerCase())
-          : true
-      );
-  }, [products, filters]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-    return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
-
-  // Handlers
-  const handleFilterChange = (e) => {
-    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setIsSearching(true);
-    setCurrentPage(1);
-  };
-
-  const handleBrandSelect = (brand) => {
-    setFilters((prev) => ({ ...prev, brand }));
-    setIsSearching(true);
-    setCurrentPage(1);
-  };
-
-  const handleSort = (sortType) => {
-    setProducts((prev) =>
-      [...prev].sort((a, b) => (sortType === "lowToHigh" ? a.price - b.price : b.price - a.price))
-    );
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
-  };
-
-  const resetFilters = () => {
-    setFilters(initialFilters);
-    setIsSearching(true);
-    setCurrentPage(1);
-  };
-
-  return {
-    products: paginatedProducts,
-    filteredProducts,
-    isLoading,
-    isSearching,
-    setIsSearching,
-    error,
-    filters,
-    currentPage,
-    totalPages,
-    handleFilterChange,
-    handleBrandSelect,
-    handleSort,
-    handlePageChange,
-    resetFilters,
-    showNoResults: filteredProducts.length === 0,
-  };
 };
+
 
 // --- Child Components ---
 /**
  * Displays a single product card.
  */
 const ProductCard = React.memo(({ product }) => {
-  if (!product?.id || !product.name || !product.image || typeof product.price !== "number") {
-    console.error("Dữ liệu sản phẩm không hợp lệ:", product);
-    return null;
+  // More robust data validation
+  if (!product || typeof product.id === 'undefined' || !product.name || !product.image || typeof product.price !== "number") {
+    console.error("Invalid product data:", product);
+    return null; // Don't render invalid cards
   }
 
   return (
@@ -197,6 +217,7 @@ const ProductCard = React.memo(({ product }) => {
         <img src={product.image} alt={product.name} className="product-image" loading="lazy" />
       </Link>
       <h3>{product.name}</h3>
+      {/* Use toLocaleString for better currency formatting */}
       <p className="price">💰 {product.price.toLocaleString("vi-VN")} VNĐ</p>
       <Link to={`/products/${product.id}`} className="view-details-button" aria-label={`Xem chi tiết ${product.name}`}>
         Xem chi tiết
@@ -212,7 +233,7 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
 
   return (
-    <nav className="pagination" aria-label="Phân trang">
+    <nav className="pagination" aria-label="Phân trang sản phẩm">
       <div>
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -222,7 +243,7 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
         >
           Trang trước
         </button>
-        <span className="pagination-current">Trang {currentPage}</span>
+        <span className="pagination-current">Trang {currentPage} / {totalPages}</span> {/* Show total pages */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -257,7 +278,7 @@ const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
 /**
  * Renders the filter and sort controls.
  */
-const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSort, onResetFilters }) => {
+const FilterSection = React.memo(({ filters, onFilterChange, onBrandSelect, onSort, onResetFilters, isSearching }) => {
   const hasActiveFilters = filters.brand !== "Tất cả" || filters.search.trim();
 
   return (
@@ -270,12 +291,14 @@ const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSort, onReset
         className="search-input"
         placeholder="Tìm kiếm sản phẩm..."
         aria-label="Tìm kiếm sản phẩm theo tên"
+        disabled={isSearching} // Disable input while searching/debouncing
       />
       <BrandFilter selectedBrand={filters.brand} onBrandSelect={onBrandSelect} />
       <button
         className="sort-button"
         onClick={() => onSort("lowToHigh")}
         aria-label="Sắp xếp giá từ thấp tới cao"
+        disabled={isSearching} // Disable button while searching/debouncing
       >
         Giá từ thấp tới cao
       </button>
@@ -283,41 +306,78 @@ const FilterSection = ({ filters, onFilterChange, onBrandSelect, onSort, onReset
         className="sort-button"
         onClick={() => onSort("highToLow")}
         aria-label="Sắp xếp giá từ cao tới thấp"
+         disabled={isSearching} // Disable button while searching/debouncing
       >
         Giá từ cao tới thấp
       </button>
       {hasActiveFilters && (
-        <button onClick={onResetFilters} className="reset-filters-button" aria-label="Xóa tất cả bộ lọc">
+        <button
+            onClick={onResetFilters}
+            className="reset-filters-button"
+            aria-label="Xóa tất cả bộ lọc"
+            disabled={isSearching} // Disable button while searching/debouncing
+        >
           <span className="reset-icon">✕</span> Xóa bộ lọc
         </button>
       )}
     </div>
   );
-};
+});
 
 /**
  * Renders the product list or loading/no-results states.
  */
-const ProductList = ({ isLoading, isSearching, showNoResults, products }) => (
-  <div className="product-list">
-    {isSearching && !isLoading ? (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Đang xử lý...</p>
-      </div>
-    ) : showNoResults ? (
-      <div className="no-products-container">
-        <p className="no-products-message">Không có sản phẩm nào phù hợp</p>
-      </div>
-    ) : (
+const ProductList = React.memo(({ isLoading, isSearching, showNoResults, products, error }) => {
+     if (isLoading && products.length === 0 && !error) {
+        return (
+            <div className="status loading">
+                <div className="loading-spinner"></div>
+                <p className="loading-text">Đang tải sản phẩm...</p>
+            </div>
+        );
+    }
+
+    if (error && products.length === 0) {
+        return (
+            <div className="status error">
+                <p>❌ {error}</p>
+                {/* Consider a more sophisticated retry mechanism if needed */}
+                <button onClick={() => window.location.reload()} className="retry-button" aria-label="Thử lại tải trang">
+                    Thử lại
+                </button>
+            </div>
+        );
+    }
+
+    if (isSearching && products.length === 0 && !showNoResults) { // Show processing spinner *before* no results if search is active
+        return (
+            <div className="status loading">
+                <div className="loading-spinner"></div>
+                <p className="loading-text">Đang xử lý tìm kiếm...</p>
+            </div>
+        );
+    }
+
+
+    if (showNoResults) {
+        return (
+            <div className="status no-products">
+                <p className="no-products-message">Không có sản phẩm nào phù hợp</p>
+            </div>
+        );
+    }
+
+
+  return (
+    <div className="product-list">
       <div className="product-grid">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-    )}
-  </div>
-);
+    </div>
+  );
+});
 
 /**
  * Renders a single carousel slide.
@@ -349,50 +409,42 @@ const Slide = React.memo(({ slide }) => (
  * Product page component displaying a carousel, filters, and product list.
  */
 const ProductPage = () => {
-  const initialFilters = { brand: BRANDS[0], search: "" };
+  const { state, dispatch } = useProductsReducer();
   const {
-    products,
-    isLoading,
-    isSearching,
-    setIsSearching,
-    error,
-    filters,
-    currentPage,
-    totalPages,
-    handleFilterChange,
-    handleBrandSelect,
-    handleSort,
-    handlePageChange,
-    resetFilters,
-    showNoResults,
-  } = useProducts(initialFilters);
+      isLoading,
+      isSearching,
+      error,
+      filters,
+      paginatedProducts,
+      currentPage,
+      totalPages,
+      showNoResults,
+  } = state; // Destructure state directly
 
-  const debouncedFilters = useDebounce(filters, SEARCH_DEBOUNCE);
+  // Handlers using dispatch
+  const handleFilterChange = useCallback((e) => {
+    dispatch({ type: "SET_FILTER", payload: { [e.target.name]: e.target.value } });
+  }, [dispatch]); // dispatch is stable, but good practice to include
 
-  // Update searching state after debounce
-  useEffect(() => {
-    setIsSearching(false);
-  }, [debouncedFilters, setIsSearching]);
+  const handleBrandSelect = useCallback((brand) => {
+    dispatch({ type: "SET_FILTER", payload: { brand } });
+  }, [dispatch]);
 
-  if (isLoading && !products.length && !error) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Đang tải sản phẩm...</p>
-      </div>
-    );
-  }
+  const handleSort = useCallback((sortType) => {
+    dispatch({ type: "SORT_PRODUCTS", payload: sortType });
+  }, [dispatch]);
 
-  if (error && !products.length) {
-    return (
-      <div className="status error">
-        <p>❌ {error}</p>
-        <button onClick={() => window.location.reload()} className="retry-button" aria-label="Thử lại tải trang">
-          Thử lại
-        </button>
-      </div>
-    );
-  }
+  const handlePageChange = useCallback((page) => {
+    // Basic bounds checking before dispatching
+    if (page >= 1 && page <= totalPages) {
+         dispatch({ type: "SET_PAGE", payload: page });
+    }
+  }, [dispatch, totalPages]); // Depend on totalPages as it can change
+
+  const resetFilters = useCallback(() => {
+    dispatch({ type: "RESET_FILTERS" });
+  }, [dispatch]);
+
 
   return (
     <main className="product-page">
@@ -410,14 +462,16 @@ const ProductPage = () => {
         onBrandSelect={handleBrandSelect}
         onSort={handleSort}
         onResetFilters={resetFilters}
+        isSearching={isSearching} // Pass down isSearching to disable controls
       />
       <ProductList
         isLoading={isLoading}
-        isSearching={isSearching}
+        isSearching={isSearching} // Pass down for handling processing state
         showNoResults={showNoResults}
-        products={products}
+        products={paginatedProducts}
+        error={error} // Pass down error for display in ProductList
       />
-      {products.length > 0 && totalPages > 1 && (
+      {paginatedProducts.length > 0 && totalPages > 1 && ( // Only show pagination if there are products to display and more than one page
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
