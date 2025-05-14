@@ -243,7 +243,7 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
         >
           Trang trước
         </button>
-        <span className="pagination-current">Trang {currentPage} / {totalPages}</span> {/* Show total pages */}
+        <span className="pagination-current">Trang {currentPage}</span> {/* Show total pages */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
