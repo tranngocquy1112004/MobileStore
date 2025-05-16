@@ -1,53 +1,51 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "./CartContext";
 import { AuthContext } from "../account/AuthContext";
 import "./CartPage.css";
 
-// --- Utilities ---
-/**
- * Calculates the total price of items in the cart.
- * @param {Array} cart - Array of cart items.
- * @returns {number} - Total price in VND.
- */
+// --- Hằng số ---
+const MESSAGES = {
+  EMPTY_CART: "Giỏ hàng của bạn đang trống.",
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để thanh toán.",
+  CONTEXT_ERROR: "Lỗi hệ thống: Không thể truy cập giỏ hàng hoặc thông tin đăng nhập.",
+  BACK_TO_SHOP: "Quay lại cửa hàng",
+  PROCEED_TO_CHECKOUT: "Tiến hành Thanh toán",
+  TOTAL_LABEL: "Tổng cộng:",
+};
+
+// --- Hàm tiện ích ---
 const calculateCartTotal = (cart) =>
   Array.isArray(cart)
     ? cart.reduce((sum, item) => sum + (item?.price || 0) * (item?.quantity || 0), 0)
     : 0;
 
 // --- Custom Hook ---
-/**
- * Custom hook to manage cart-related logic and navigation.
- * @returns {Object} - Cart data, handlers, and state.
- */
 const useCart = () => {
   const cartContext = useContext(CartContext);
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
-  // Validate context availability
+  // Kiểm tra context
   if (!cartContext || !authContext) {
-    console.error("CartContext or AuthContext is not provided.");
+    setError(MESSAGES.CONTEXT_ERROR);
+    return { error };
   }
 
-  const {
-    cart = [],
-    removeFromCart = () => console.warn("removeFromCart not implemented"),
-    updateQuantity = () => console.warn("updateQuantity not implemented"),
-  } = cartContext || {};
-  const { isLoggedIn = false } = authContext || {};
+  const { cart = [], removeFromCart, updateQuantity } = cartContext;
+  const { isLoggedIn = false } = authContext;
 
-  // Memoize cart total
+  // Tính tổng giỏ hàng
   const cartTotal = useMemo(() => calculateCartTotal(cart), [cart]);
 
-  // Handle checkout navigation
   const handleProceedToCheckout = () => {
     if (!Array.isArray(cart) || cart.length === 0) {
-      alert("Giỏ hàng của bạn trống. Vui lòng thêm sản phẩm trước khi thanh toán.");
+      alert(MESSAGES.EMPTY_CART);
       return;
     }
     if (!isLoggedIn) {
-      alert("Vui lòng đăng nhập để tiến hành thanh toán.");
+      alert(MESSAGES.LOGIN_REQUIRED);
       navigate("/");
       return;
     }
@@ -58,20 +56,14 @@ const useCart = () => {
     cart,
     cartTotal,
     isLoggedIn,
-    removeFromCart,
-    updateQuantity,
+    removeFromCart: removeFromCart || (() => console.warn("removeFromCart not implemented")),
+    updateQuantity: updateQuantity || (() => console.warn("updateQuantity not implemented")),
     handleProceedToCheckout,
+    error,
   };
 };
 
-// --- Child Components ---
-/**
- * Displays a single cart item with quantity controls and remove button.
- * @param {Object} props - Component props.
- * @param {Object} props.item - Cart item data.
- * @param {Function} props.onUpdateQuantity - Updates item quantity.
- * @param {Function} props.onRemove - Removes item from cart.
- */
+// --- Thành phần con ---
 const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   if (!item?.id || !item.name || !item.image || typeof item.price !== "number") {
     console.error("Dữ liệu sản phẩm không hợp lệ:", item);
@@ -115,17 +107,10 @@ const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   );
 });
 
-/**
- * Displays cart summary with total price and checkout button.
- * @param {Object} props - Component props.
- * @param {number} props.cartTotal - Total cart price.
- * @param {boolean} props.isLoggedIn - User authentication status.
- * @param {Function} props.onProceedToCheckout - Handles checkout navigation.
- */
 const CartSummary = React.memo(({ cartTotal, isLoggedIn, onProceedToCheckout }) => (
   <div className="cart-summary">
     <p className="total-price">
-      <strong>Tổng cộng:</strong> {cartTotal.toLocaleString("vi-VN")} VNĐ
+      <strong>{MESSAGES.TOTAL_LABEL}</strong> {cartTotal.toLocaleString("vi-VN")} VNĐ
     </p>
     <button
       className="proceed-to-checkout-button"
@@ -133,18 +118,24 @@ const CartSummary = React.memo(({ cartTotal, isLoggedIn, onProceedToCheckout }) 
       disabled={!isLoggedIn}
       aria-label="Tiến hành thanh toán"
     >
-      Tiến hành Thanh toán
+      {MESSAGES.PROCEED_TO_CHECKOUT}
     </button>
     {!isLoggedIn && (
-      <p className="login-required-message">Vui lòng đăng nhập để thanh toán.</p>
+      <p className="login-required-message">{MESSAGES.LOGIN_REQUIRED}</p>
     )}
   </div>
 ));
 
-// --- Main Component ---
-/**
- * Cart page displaying cart items, summary, and checkout option.
- */
+const EmptyCartMessage = () => (
+  <div className="empty-cart-message">
+    <p>{MESSAGES.EMPTY_CART}</p>
+    <Link to="/home" className="back-to-home" aria-label="Quay lại cửa hàng">
+      {MESSAGES.BACK_TO_SHOP}
+    </Link>
+  </div>
+);
+
+// --- Thành phần chính ---
 const CartPage = () => {
   const {
     cart,
@@ -153,40 +144,38 @@ const CartPage = () => {
     removeFromCart,
     updateQuantity,
     handleProceedToCheckout,
+    error,
   } = useCart();
 
-  // Render cart items or empty state
-  const renderCartItems = () =>
-    !Array.isArray(cart) || cart.length === 0 ? (
-      <div className="empty-cart-message">
-        <p>Giỏ hàng của bạn đang trống.</p>
-        <Link to="/home" className="back-to-home" aria-label="Quay lại cửa hàng">
-          Quay lại cửa hàng
-        </Link>
-      </div>
-    ) : (
-      <ul className="cart-items-list" role="list">
-        {cart.map((item) => (
-          <CartItem
-            key={item.id}
-            item={item}
-            onUpdateQuantity={updateQuantity}
-            onRemove={removeFromCart}
-          />
-        ))}
-      </ul>
-    );
+  if (error) {
+    return <div className="cart-error-message">{error}</div>;
+  }
+
+  const hasItems = Array.isArray(cart) && cart.length > 0;
 
   return (
     <div className="cart-container">
       <h1 className="page-title">Giỏ hàng của bạn</h1>
-      {renderCartItems()}
-      {cart.length > 0 && (
-        <CartSummary
-          cartTotal={cartTotal}
-          isLoggedIn={isLoggedIn}
-          onProceedToCheckout={handleProceedToCheckout}
-        />
+      {hasItems ? (
+        <>
+          <ul className="cart-items-list" role="list">
+            {cart.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                onUpdateQuantity={updateQuantity}
+                onRemove={removeFromCart}
+              />
+            ))}
+          </ul>
+          <CartSummary
+            cartTotal={cartTotal}
+            isLoggedIn={isLoggedIn}
+            onProceedToCheckout={handleProceedToCheckout}
+          />
+        </>
+      ) : (
+        <EmptyCartMessage />
       )}
     </div>
   );
