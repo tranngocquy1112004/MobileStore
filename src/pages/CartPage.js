@@ -4,7 +4,7 @@ import { CartContext } from "./CartContext";
 import { AuthContext } from "../account/AuthContext";
 import "./CartPage.css";
 
-// --- Hằng số ---
+// --- Constants ---
 const MESSAGES = {
   EMPTY_CART: "Giỏ hàng của bạn đang trống.",
   LOGIN_REQUIRED: "Vui lòng đăng nhập để thanh toán.",
@@ -14,11 +14,9 @@ const MESSAGES = {
   TOTAL_LABEL: "Tổng cộng:",
 };
 
-// --- Hàm tiện ích ---
+// --- Helpers ---
 const calculateCartTotal = (cart) =>
-  Array.isArray(cart)
-    ? cart.reduce((sum, item) => sum + (item?.price || 0) * (item?.quantity || 0), 0)
-    : 0;
+  cart.reduce((sum, item) => sum + (item?.price || 0) * (item?.quantity || 0), 0);
 
 // --- Custom Hook ---
 const useCart = () => {
@@ -27,7 +25,6 @@ const useCart = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
 
-  // Kiểm tra context
   if (!cartContext || !authContext) {
     setError(MESSAGES.CONTEXT_ERROR);
     return { error };
@@ -36,11 +33,10 @@ const useCart = () => {
   const { cart = [], removeFromCart, updateQuantity } = cartContext;
   const { isLoggedIn = false } = authContext;
 
-  // Tính tổng giỏ hàng
   const cartTotal = useMemo(() => calculateCartTotal(cart), [cart]);
 
   const handleProceedToCheckout = () => {
-    if (!Array.isArray(cart) || cart.length === 0) {
+    if (!cart.length) {
       alert(MESSAGES.EMPTY_CART);
       return;
     }
@@ -63,44 +59,35 @@ const useCart = () => {
   };
 };
 
-// --- Thành phần con ---
+// --- Child Components ---
 const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   if (!item?.id || !item.name || !item.image || typeof item.price !== "number") {
     console.error("Dữ liệu sản phẩm không hợp lệ:", item);
     return null;
   }
 
+  const handleDecrease = () => onUpdateQuantity(item.id, item.quantity - 1);
+  const handleIncrease = () => onUpdateQuantity(item.id, item.quantity + 1);
+  const handleRemove = () => onRemove(item.id);
+
   return (
     <li className="cart-item" aria-label={`Sản phẩm ${item.name} trong giỏ hàng`}>
       <img src={item.image} alt={item.name} className="item-image" loading="lazy" />
       <div className="item-details">
         <span className="item-name">{item.name}</span>
-        <span className="item-price">{item.price.toLocaleString("vi-VN")} VNĐ</span>
+        <span className="item-price">
+          {item.price.toLocaleString("vi-VN")} VNĐ
+        </span>
         <div className="quantity-control">
-          <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-            disabled={item.quantity <= 1}
-            aria-label="Giảm số lượng"
-          >
-            -
-          </button>
+          <button onClick={handleDecrease} disabled={item.quantity <= 1} aria-label="Giảm số lượng">-</button>
           <span>{item.quantity}</span>
-          <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-            aria-label="Tăng số lượng"
-          >
-            +
-          </button>
+          <button onClick={handleIncrease} aria-label="Tăng số lượng">+</button>
         </div>
         <span className="item-subtotal">
           Tổng: {(item.price * item.quantity).toLocaleString("vi-VN")} VNĐ
         </span>
       </div>
-      <button
-        onClick={() => onRemove(item.id)}
-        className="remove-item-button"
-        aria-label="Xóa sản phẩm"
-      >
+      <button onClick={handleRemove} className="remove-item-button" aria-label="Xóa sản phẩm">
         Xóa
       </button>
     </li>
@@ -135,7 +122,7 @@ const EmptyCartMessage = () => (
   </div>
 );
 
-// --- Thành phần chính ---
+// --- Main Component ---
 const CartPage = () => {
   const {
     cart,
@@ -147,11 +134,9 @@ const CartPage = () => {
     error,
   } = useCart();
 
-  if (error) {
-    return <div className="cart-error-message">{error}</div>;
-  }
+  if (error) return <div className="cart-error-message">{error}</div>;
 
-  const hasItems = Array.isArray(cart) && cart.length > 0;
+  const hasItems = cart.length > 0;
 
   return (
     <div className="cart-container">
