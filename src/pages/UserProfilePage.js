@@ -7,7 +7,7 @@ import PasswordForm from "../components/profile/PasswordForm";
 import AddressForm from "../components/profile/AddressForm";
 import "./UserProfilePage.css";
 
-// Hằng số
+// Constants for messages, form types, action types, and sections
 const MESSAGES = {
   LOGIN_REQUIRED: "Vui lòng đăng nhập để truy cập trang này.",
   PROFILE_UPDATE_SUCCESS: "Cập nhật thông tin thành công!",
@@ -45,9 +45,9 @@ const SECTIONS = [
   { id: "orders", label: "Lịch sử đơn hàng" },
 ];
 
-const LOGOUT_DELAY = 2000; // ms
+const LOGOUT_DELAY = 2000; // milliseconds
 
-// Trạng thái ban đầu
+// Initial state for the reducer
 const initialState = {
   activeSection: FORM_TYPES.PROFILE,
   profile: { username: "", email: "", phone: "", message: "" },
@@ -55,7 +55,7 @@ const initialState = {
   address: { addresses: [], newAddress: { address: "", name: "", phone: "" }, message: "" },
 };
 
-// Reducer quản lý trạng thái
+// Reducer function to manage state transitions
 const profileReducer = (state, action) => {
   switch (action.type) {
     case ACTION_TYPES.SET_ACTIVE_SECTION:
@@ -77,7 +77,7 @@ const profileReducer = (state, action) => {
   }
 };
 
-// Hàm tiện ích
+// Utility functions for local storage operations and validations
 const readUsersFromStorage = () => {
   try {
     return JSON.parse(localStorage.getItem("users") || "[]");
@@ -109,16 +109,20 @@ const validateAddress = ({ address, name, phone }) => {
   return null;
 };
 
-// Thành phần chính
+// Main UserProfilePage component
 const UserProfilePage = () => {
   const authContext = useContext(AuthContext);
-  if (!authContext) throw new Error("AuthContext must be provided");
+  if (!authContext) {
+    // This error should ideally be caught by a proper error boundary or handled gracefully
+    console.error("AuthContext must be provided. Ensure UserProfilePage is wrapped in AuthProvider.");
+    return null; // Or render an error message
+  }
   const { user, isLoggedIn, login, logout } = authContext;
 
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(profileReducer, initialState);
 
-  // Cập nhật dữ liệu người dùng
+  // Memoized function to update user data in storage and context
   const updateUserAndContext = useCallback(
     (updatedUserData) => {
       const storedUsers = readUsersFromStorage();
@@ -133,7 +137,7 @@ const UserProfilePage = () => {
 
       const saveSuccess = saveUsersToStorage(storedUsers);
       if (saveSuccess) {
-        login(updatedUser);
+        login(updatedUser); // Update AuthContext with new user data
         return { success: true, message: "" };
       }
       return { success: false, message: MESSAGES.SYSTEM_ERROR_UPDATING_USERS };
@@ -141,7 +145,7 @@ const UserProfilePage = () => {
     [user, login]
   );
 
-  // Khởi tạo dữ liệu người dùng
+  // Effect to initialize user data on component mount or user change
   useEffect(() => {
     if (!isLoggedIn || !user?.username) {
       alert(MESSAGES.LOGIN_REQUIRED);
@@ -161,9 +165,9 @@ const UserProfilePage = () => {
       type: ACTION_TYPES.UPDATE_FORM_STATE,
       payload: { formType: FORM_TYPES.ADDRESS, data: { addresses: user.addresses || [] } },
     });
-  }, [isLoggedIn, navigate, user]);
+  }, [isLoggedIn, navigate, user]); // Dependencies for useEffect
 
-  // Xử lý thay đổi input
+  // Handles input changes for all forms
   const handleInputChange = useCallback(
     (e, formType) => {
       const { name, value } = e.target;
@@ -173,10 +177,10 @@ const UserProfilePage = () => {
           : { [name]: value };
       dispatch({ type: ACTION_TYPES.UPDATE_FORM_STATE, payload: { formType, data } });
     },
-    [state.address.newAddress]
+    [state.address.newAddress] // Dependency for useCallback
   );
 
-  // Xử lý cập nhật hồ sơ
+  // Handles profile update submission
   const handleSubmitProfileUpdate = (e) => {
     e.preventDefault();
     const updatedData = {
@@ -191,7 +195,7 @@ const UserProfilePage = () => {
     });
   };
 
-  // Xử lý đổi mật khẩu
+  // Handles password change submission
   const handleSubmitPasswordChange = (e) => {
     e.preventDefault();
     const storedUsers = readUsersFromStorage();
@@ -231,7 +235,7 @@ const UserProfilePage = () => {
           message: MESSAGES.PASSWORD_CHANGE_SUCCESS,
         },
       });
-      setTimeout(logout, LOGOUT_DELAY);
+      setTimeout(logout, LOGOUT_DELAY); // Log out after a delay
     } else {
       dispatch({
         type: ACTION_TYPES.SET_MESSAGE,
@@ -240,7 +244,7 @@ const UserProfilePage = () => {
     }
   };
 
-  // Xử lý thêm địa chỉ
+  // Handles adding a new address
   const handleAddAddress = (e) => {
     e.preventDefault();
     const validationError = validateAddress(state.address.newAddress);
@@ -253,7 +257,7 @@ const UserProfilePage = () => {
     }
 
     const newAddress = {
-      id: Date.now(),
+      id: Date.now(), // Simple unique ID
       ...state.address.newAddress,
       address: state.address.newAddress.address.trim(),
       name: state.address.newAddress.name.trim(),
@@ -282,7 +286,7 @@ const UserProfilePage = () => {
     }
   };
 
-  // Xử lý xóa địa chỉ
+  // Handles deleting an address
   const handleDeleteAddress = (addressId) => {
     if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
 
@@ -292,13 +296,18 @@ const UserProfilePage = () => {
       type: ACTION_TYPES.UPDATE_FORM_STATE,
       payload: {
         formType: FORM_TYPES.ADDRESS,
-        data: { addresses: success ? updatedAddresses : state.address.addresses, message: success ? MESSAGES.ADDRESS_DELETE_SUCCESS : message },
+        data: {
+          addresses: success ? updatedAddresses : state.address.addresses,
+          message: success ? MESSAGES.ADDRESS_DELETE_SUCCESS : message,
+        },
       },
     });
   };
 
-  // Không hiển thị nếu chưa đăng nhập
-  if (!isLoggedIn || !user?.username) return null;
+  // Render nothing if not logged in or no user
+  if (!isLoggedIn || !user?.username) {
+    return null;
+  }
 
   return (
     <div className="user-profile-container">
