@@ -33,7 +33,7 @@
 .order-card {
   border: 1px solid #ddd; /* Viền nhẹ */
   padding: 15px; /* Khoảng cách bên trong */
-  margin-bottom: 20px; /* Khoảng cách giữa các card */
+  margin-bottom: 5px; /* Khoảng cách giữa các card (Giảm thêm) */
   border-radius: 8px; /* Bo góc */
   background-color: #fff5f7; /* Màu nền nhẹ */
 }
@@ -83,10 +83,6 @@
 }
 
 /* Phần chi tiết đơn hàng */
-.order-details {
-  margin-top: 10px; /* Khoảng cách trên */
-}
-
 .item-list {
   list-style: none; /* Bỏ dấu đầu dòng */
   padding: 0; /* Bỏ padding mặc định */
@@ -239,9 +235,14 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); } /* Bắt đầu từ 0 độ */
-  100% { transform: rotate(360deg); } /* Kết thúc 360 độ */
+  0% {
+    transform: rotate(0deg);
+  } /* Bắt đầu từ 0 độ */
+  100% {
+    transform: rotate(360deg);
+  } /* Kết thúc 360 độ */
 }
+
 @media (max-width: 768px) {
   .order-history-container {
     padding: 15px;
@@ -334,4 +335,18 @@
     height: 30px;
     border-width: 3px;
   }
+}
+
+.order-item {
+  border: 2px solid #ff80ab; /* Border rõ ràng, màu hồng nổi bật */
+  border-radius: 8px; /* Bo góc nhẹ */
+  background: #fff; /* Nền trắng */
+  margin-bottom: 5px; /* Giảm thêm khoảng cách giữa các đơn hàng */
+  padding: 16px 20px; /* Padding vừa phải */
+  box-shadow: 0 2px 6px rgba(255, 128, 171, 0.08); /* Đổ bóng nhẹ nếu muốn */
+  transition: box-shadow 0.2s;
+}
+
+.order-item:last-child {
+  margin-bottom: 0; /* Không margin dưới cho đơn cuối */
 }
