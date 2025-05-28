@@ -193,32 +193,6 @@ const ProductCard = React.memo(({ product }) => {
   );
 });
 
-const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
-  if (totalPages <= 1) return null;
-
-  return (
-    <nav className="pagination" aria-label="Phân trang sản phẩm">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="pagination-button"
-        aria-label="Trang trước"
-      >
-        Trang trước
-      </button>
-      <span className="pagination-current">Trang {currentPage}</span>
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="pagination-button"
-        aria-label="Trang sau"
-      >
-        Trang sau
-      </button>
-    </nav>
-  );
-});
-
 const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
   <div className="brand-buttons">
     {BRANDS.map((brand) => (
@@ -234,126 +208,92 @@ const BrandFilter = React.memo(({ selectedBrand, onBrandSelect }) => (
   </div>
 ));
 
-// Thành phần riêng cho input tìm kiếm
-const SearchInput = React.memo(({ value, onChange }) => {
-  const inputRef = useRef(null);
-
-  // Giữ focus nếu input bị render lại
-  useEffect(() => {
-    if (inputRef.current && document.activeElement === inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [value]);
+const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
 
   return (
-    <div className="search-input-wrapper">
+    <nav className="pagination" aria-label="Phân trang">
+      <div>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-button"
+          aria-label="Trang trước"
+        >
+          Trang trước
+        </button>
+        <span className="pagination-current">Trang {currentPage}</span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-button"
+          aria-label="Trang sau"
+        >
+          Trang sau
+        </button>
+      </div>
+    </nav>
+  );
+});
+
+const FilterSection = React.memo(({ filters, onFilterChange, onBrandSelect, onSort, onResetFilters }) => {
+  const hasActiveFilters = filters.brand !== "Tất cả" || filters.search.trim();
+
+  return (
+    <div className="filter-section">
       <input
-        ref={inputRef}
         type="text"
         name="search"
-        value={value}
-        onChange={onChange}
+        value={filters.search}
+        onChange={onFilterChange}
         className="search-input"
         placeholder="Tìm kiếm sản phẩm..."
         aria-label="Tìm kiếm sản phẩm theo tên"
       />
-      {/* {value && (
-        <button
-          onClick={() => onChange({ target: { name: "search", value: "" } })}
-          className="clear-search"
-          aria-label="Xóa tìm kiếm"
-        >
-          ✕
+      <BrandFilter selectedBrand={filters.brand} onBrandSelect={onBrandSelect} />
+      <button
+        className="sort-button"
+        onClick={() => onSort("lowToHigh")}
+        aria-label="Sắp xếp giá từ thấp tới cao"
+      >
+        Giá từ thấp tới cao
+      </button>
+      <button
+        className="sort-button"
+        onClick={() => onSort("highToLow")}
+        aria-label="Sắp xếp giá từ cao tới thấp"
+      >
+        Giá từ cao tới thấp
+      </button>
+      {hasActiveFilters && (
+        <button onClick={onResetFilters} className="reset-filters-button" aria-label="Xóa tất cả bộ lọc">
+          <span className="reset-icon">✕</span> Xóa bộ lọc
         </button>
-      )} */}
+      )}
     </div>
   );
 });
 
-const FilterSection = React.memo(({ searchValue, onFilterChange, brand, onBrandSelect, onSort, onResetFilters, isSearching, hasActiveFilters }) => (
-  <div className="filter-section">
-    <div className="search-container">
-      <SearchInput value={searchValue} onChange={onFilterChange} />
-      {/* {isSearching && <span className="search-spinner">⌛</span>} */}
-    </div>
-    <BrandFilter selectedBrand={brand} onBrandSelect={onBrandSelect} />
-    <button
-      className="sort-button"
-      onClick={() => onSort(SORT_TYPES.LOW_TO_HIGH)}
-      aria-label="Sắp xếp giá từ thấp tới cao"
-      disabled={isSearching}
-    >
-      Giá thấp → cao
-    </button>
-    <button
-      className="sort-button"
-      onClick={() => onSort(SORT_TYPES.HIGH_TO_LOW)}
-      aria-label="Sắp xếp giá từ cao tới thấp"
-      disabled={isSearching}
-    >
-      Giá cao → thấp
-    </button>
-    {hasActiveFilters && (
-      <button
-        onClick={onResetFilters}
-        className="reset-filters-button"
-        aria-label="Xóa tất cả bộ lọc"
-        disabled={isSearching}
-      >
-        <span className="reset-icon">✕</span> Xóa bộ lọc
-      </button>
-    )}
-  </div>
-));
-
-const ProductList = React.memo(({ isLoading, isSearching, showNoResults, products, error }) => {
-  if (isLoading && products.length === 0 && !error) {
-    return (
-      <div className="status loading">
+const ProductList = React.memo(({ isLoading, isSearching, showNoResults, products }) => (
+  <div className="product-list">
+    {isSearching && !isLoading ? (
+      <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p className="loading-text">Đang tải sản phẩm...</p>
+        <p className="loading-text">Đang xử lý...</p>
       </div>
-    );
-  }
-
-  if (error && products.length === 0) {
-    return (
-      <div className="status error">
-        <p>❌ {error}</p>
-        <button onClick={() => window.location.reload()} className="retry-button" aria-label="Thử lại tải trang">
-          Thử lại
-        </button>
+    ) : showNoResults ? (
+      <div className="no-products-container">
+        <p className="no-products-message">Không có sản phẩm nào phù hợp</p>
       </div>
-    );
-  }
-
-  if (isSearching && products.length === 0 && !showNoResults) {
-    return (
-      <div className="status loading">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Đang tìm kiếm...</p>
-      </div>
-    );
-  }
-
-  if (showNoResults) {
-    return (
-      <div className="status no-products">
-        <p className="no-products-message">Không tìm thấy sản phẩm nào</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="product-list">
+    ) : (
       <div className="product-grid">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-    </div>
-  );
-});
+    )}
+  </div>
+));
 
 const Slide = React.memo(({ slide }) => (
   <div className="slide">
@@ -420,8 +360,6 @@ const ProductPage = () => {
     []
   );
 
-  const hasActiveFilters = filters.brand !== BRANDS[0] || filters.search.trim();
-
   return (
     <main className="product-page">
       <div className="carousel-section">
@@ -433,21 +371,17 @@ const ProductPage = () => {
       </div>
       <h1 className="page-title">Danh sách sản phẩm</h1>
       <FilterSection
-        searchValue={filters.search}
+        filters={filters}
         onFilterChange={handleFilterChange}
-        brand={filters.brand}
         onBrandSelect={handleBrandSelect}
         onSort={handleSort}
         onResetFilters={resetFilters}
-        isSearching={isSearching}
-        hasActiveFilters={hasActiveFilters}
       />
       <ProductList
         isLoading={isLoading}
         isSearching={isSearching}
         showNoResults={showNoResults}
         products={paginatedProducts}
-        error={error}
       />
       {paginatedProducts.length > 0 && totalPages > 1 && (
         <Pagination

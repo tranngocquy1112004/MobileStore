@@ -2,27 +2,30 @@ import React, { useReducer, useContext, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../account/AuthContext";
 import OrderHistory from "./OrderHistory";
-import ProfileForm from "../components/profile/ProfileForm";
-import PasswordForm from "../components/profile/PasswordForm";
-import AddressForm from "../components/profile/AddressForm";
+import PropTypes from 'prop-types';
 import "./UserProfilePage.css";
 
-// Constants for messages, form types, action types, and sections
+// --- Gộp constants/profile.js ---
+const LOCAL_STORAGE_USERS_KEY = "users";
+const MIN_PASSWORD_LENGTH = 6;
 const MESSAGES = {
-  LOGIN_REQUIRED: "Vui lòng đăng nhập để truy cập trang này.",
+  PASSWORD_CHANGE_SUCCESS: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
+  PASSWORD_CHANGE_FAILED: "Đổi mật khẩu thất bại. Vui lòng kiểm tra mật khẩu cũ.",
+  PASSWORDS_NOT_MATCH: "Mật khẩu mới và xác nhận mật khẩu không khớp.",
+  EMPTY_PASSWORD_FIELDS: "Vui lòng điền đầy đủ các trường mật khẩu.",
+  PASSWORD_SAME_AS_OLD: "Mật khẩu mới không được trùng với mật khẩu cũ!",
+  PASSWORD_TOO_SHORT: `Mật khẩu mới phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự!`,
   PROFILE_UPDATE_SUCCESS: "Cập nhật thông tin thành công!",
-  PASSWORD_CHANGE_SUCCESS: "Đổi mật khẩu thành công! Bạn sẽ được đăng xuất sau giây lát.",
-  ADDRESS_SAVE_SUCCESS: "Thêm địa chỉ thành công!",
+  PROFILE_UPDATE_FAILED: "Cập nhật thông tin thất bại. Vui lòng thử lại.",
+  ADDRESS_SAVE_SUCCESS: "Lưu địa chỉ thành công!",
+  ADDRESS_SAVE_FAILED: "Lưu địa chỉ thất bại. Vui lòng thử lại.",
   ADDRESS_DELETE_SUCCESS: "Xóa địa chỉ thành công!",
-  SYSTEM_ERROR_READING_USERS: "Lỗi hệ thống khi đọc dữ liệu người dùng.",
-  SYSTEM_ERROR_UPDATING_USERS: "Lỗi hệ thống khi cập nhật dữ liệu người dùng.",
-  USER_NOT_FOUND: "Không tìm thấy người dùng.",
-  INVALID_OLD_PASSWORD: "Mật khẩu cũ không đúng.",
-  PASSWORD_TOO_SHORT: "Mật khẩu mới phải có ít nhất 6 ký tự.",
-  PASSWORD_MISMATCH: "Mật khẩu xác nhận không khớp.",
-  ADDRESS_REQUIRED: "Địa chỉ không được để trống.",
-  NAME_REQUIRED: "Tên người nhận không được để trống.",
-  INVALID_PHONE: "Số điện thoại không hợp lệ.",
+  ADDRESS_EMPTY_FIELDS: "Vui lòng điền đủ thông tin địa chỉ, tên và số điện thoại.",
+  SYSTEM_ERROR_READING_USERS: "Lỗi hệ thống, không thể đọc dữ liệu người dùng.",
+  SYSTEM_ERROR_UPDATING_USERS: "Lỗi hệ thống, không thể lưu dữ liệu người dùng.",
+  USER_NOT_FOUND: "Không tìm thấy thông tin người dùng hiện tại.",
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để xem trang hồ sơ.",
+  INVALID_PROPS: "Dữ liệu đầu vào không hợp lệ.",
 };
 
 const FORM_TYPES = {
@@ -108,6 +111,233 @@ const validateAddress = ({ address, name, phone }) => {
   if (!phone.trim() || !/^\d{10,11}$/.test(phone)) return MESSAGES.INVALID_PHONE;
   return null;
 };
+
+// --- ProfileForm ---
+const ProfileForm = React.memo(({ formData, onChange, onSubmit, message }) => (
+  <section className="profile-info-section">
+    <h2>Thông tin cá nhân</h2>
+    <form onSubmit={onSubmit} className="profile-form">
+      <div className="form-group">
+        <label htmlFor="profile-username">Tên đăng nhập:</label>
+        <input
+          type="text"
+          id="profile-username"
+          name="username"
+          value={formData.username}
+          className="profile-input"
+          disabled
+          readOnly
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="profile-email">Email:</label>
+        <input
+          type="email"
+          id="profile-email"
+          name="email"
+          value={formData.email}
+          onChange={onChange}
+          className="profile-input"
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="profile-phone">Số điện thoại:</label>
+        <input
+          type="tel"
+          id="profile-phone"
+          name="phone"
+          value={formData.phone}
+          onChange={onChange}
+          className="profile-input"
+        />
+      </div>
+      <button type="submit" className="profile-update-button">
+        Cập nhật thông tin
+      </button>
+    </form>
+    {message && (
+      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
+        {message}
+      </p>
+    )}
+  </section>
+));
+ProfileForm.propTypes = {
+  formData: PropTypes.shape({
+    username: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    phone: PropTypes.string.isRequired,
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  message: PropTypes.string,
+};
+ProfileForm.displayName = 'ProfileForm';
+
+// --- PasswordForm ---
+const PasswordForm = React.memo(({ formData, onChange, onSubmit, message }) => (
+  <section className="change-password-section">
+    <h2>Đổi mật khẩu</h2>
+    <form onSubmit={onSubmit} className="password-form">
+      <div className="form-group">
+        <label htmlFor="oldPassword">Mật khẩu cũ:</label>
+        <input
+          type="password"
+          id="oldPassword"
+          name="oldPassword"
+          value={formData.oldPassword}
+          onChange={onChange}
+          className="password-input"
+          required
+          autoComplete="current-password"
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="newPassword">Mật khẩu mới:</label>
+        <input
+          type="password"
+          id="newPassword"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={onChange}
+          className="password-input"
+          required
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD_LENGTH}
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="confirmNewPassword">Xác nhận mật khẩu mới:</label>
+        <input
+          type="password"
+          id="confirmNewPassword"
+          name="confirmNewPassword"
+          value={formData.confirmNewPassword}
+          onChange={onChange}
+          className="password-input"
+          required
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD_LENGTH}
+        />
+      </div>
+      <button type="submit" className="change-password-button">
+        Đổi mật khẩu
+      </button>
+    </form>
+    {message && (
+      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
+        {message}
+      </p>
+    )}
+  </section>
+));
+PasswordForm.propTypes = {
+  formData: PropTypes.shape({
+    oldPassword: PropTypes.string.isRequired,
+    newPassword: PropTypes.string.isRequired,
+    confirmNewPassword: PropTypes.string.isRequired,
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  message: PropTypes.string,
+};
+PasswordForm.displayName = 'PasswordForm';
+
+// --- AddressForm ---
+const AddressForm = React.memo(({ 
+  addresses, 
+  newAddressFormData, 
+  onChange, 
+  onAddAddress, 
+  onDeleteAddress, 
+  message 
+}) => (
+  <section className="addresses-section">
+    <h2>Địa chỉ giao hàng</h2>
+    <h3>Thêm địa chỉ mới</h3>
+    <form onSubmit={onAddAddress} className="address-form">
+      <div className="form-group">
+        <label htmlFor="new-address-address">Địa chỉ:</label>
+        <input
+          type="text"
+          id="new-address-address"
+          name="address"
+          value={newAddressFormData.address}
+          onChange={onChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="new-address-name">Người nhận:</label>
+        <input
+          type="text"
+          id="new-address-name"
+          name="name"
+          value={newAddressFormData.name}
+          onChange={onChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="new-address-phone">Điện thoại:</label>
+        <input
+          type="tel"
+          id="new-address-phone"
+          name="phone"
+          value={newAddressFormData.phone}
+          onChange={onChange}
+          required
+        />
+      </div>
+      <button type="submit">Lưu địa chỉ mới</button>
+    </form>
+    {message && (
+      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
+        {message}
+      </p>
+    )}
+    <h3>Danh sách địa chỉ của bạn ({addresses.length})</h3>
+    {addresses.length === 0 ? (
+      <p className="empty-state">Bạn chưa lưu địa chỉ nào.</p>
+    ) : (
+      <ul className="address-list">
+        {addresses.map((addr) => (
+          <li key={addr.id} className="address-item">
+            <p><strong>Địa chỉ:</strong> {addr.address}</p>
+            <p><strong>Người nhận:</strong> {addr.name}</p>
+            <p><strong>Điện thoại:</strong> {addr.phone}</p>
+            <button
+              className="delete-address-button"
+              onClick={() => onDeleteAddress(addr.id)}
+            >
+              Xóa
+            </button>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+));
+AddressForm.propTypes = {
+  addresses: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      address: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      phone: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  newAddressFormData: PropTypes.shape({
+    address: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    phone: PropTypes.string.isRequired,
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
+  onAddAddress: PropTypes.func.isRequired,
+  onDeleteAddress: PropTypes.func.isRequired,
+  message: PropTypes.string,
+};
+AddressForm.displayName = 'AddressForm';
 
 // Main UserProfilePage component
 const UserProfilePage = () => {

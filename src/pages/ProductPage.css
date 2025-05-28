@@ -391,7 +391,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 24px; /* Tăng khoảng cách giữa các nút */
   margin-top: 20px;
 }
 
@@ -424,7 +424,7 @@
 .pagination-current {
   font-size: 16px;
   font-weight: 700;
-  color: #c0939b;
+  color: #fff; /* Đổi màu chữ thành trắng */
   padding: 10px 15px;
   background: #ff80ab;
   border-radius: 20px;
