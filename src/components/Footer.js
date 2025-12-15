@@ -1,5 +1,5 @@
 import React from "react";
-import "./Footer.css";
+import "../styles/Footer.css";
 
 /**
  * Component Footer - Hiển thị phần chân trang của website

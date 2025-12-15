@@ -1,398 +1,17 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
-import { AuthContext } from "../account/AuthContext";
-import "./Account.css";
+import { AuthContext } from "../context/AuthContext";
+import { LOCAL_STORAGE_KEYS, MESSAGES, ADMIN_CREDENTIALS } from "./models/constants";
+import { getStoredUsers, saveUsersToStorage } from "./services/userService";
+import { generateVerificationCode, sendVerificationEmail } from "./services/verificationService";
+import AuthForm from "./components/AuthForm";
+import ForgotPasswordUsernameForm from "./components/ForgotPasswordUsernameForm";
+import ForgotPasswordResetForm from "./components/ForgotPasswordResetForm";
+import VerificationForm from "./components/VerificationForm";
+import LoggedInSection from "./components/LoggedInSection";
+import "../styles/Account.css";
 
-// --- HẰNG SỐ ---
-
-// Khóa lưu trữ trong localStorage
-const LOCAL_STORAGE_KEYS = {
-  USERS: "users",
-  CURRENT_USER: "currentUser",
-};
-
-// Thông báo trạng thái
-const MESSAGES = {
-  EMPTY_FIELDS: "Vui lòng nhập đầy đủ thông tin!",
-  USER_EXISTS: "Tên đăng nhập đã tồn tại!",
-  REGISTER_SUCCESS: "Đăng ký thành công! Hãy đăng nhập.",
-  LOGIN_SUCCESS: "Đăng nhập thành công!",
-  LOGIN_FAILED: "Sai thông tin đăng nhập!",
-  LOGOUT_SUCCESS: "Đăng xuất thành công!",
-  CODE_SENT: "Đã gửi mã xác nhận về email của bạn, vui lòng kiểm tra email.",
-  INVALID_CODE: "Mã xác nhận không đúng!",
-  EMPTY_CODE: "Vui lòng nhập mã xác nhận!",
-  MISSING_TEMPLATE_ID: "Lỗi cấu hình: Thiếu Template ID cho email xác nhận! Vui lòng kiểm tra file .env.",
-  EMPTY_EMAIL: "Vui lòng nhập địa chỉ email hợp lệ!",
-  PASSWORD_MISMATCH: "Mật khẩu mới và xác nhận mật khẩu không khớp!",
-  RESET_SUCCESS: "Mật khẩu đã được đổi thành công! Hãy đăng nhập lại.",
-  USER_NOT_FOUND: "Không tìm thấy người dùng với tên tài khoản này hoặc email chưa được đăng ký!",
-  INVALID_USERNAME: "Tên tài khoản không hợp lệ!",
-};
-
-// Thông tin tài khoản admin
-const ADMIN_CREDENTIALS = {
-  USERNAME: "admin",
-  PASSWORD: "123",
-};
-
-// --- HÀM TIỆN ÍCH ---
-
-/**
- * Lấy danh sách người dùng từ localStorage
- * @returns {Array} Danh sách người dùng hoặc mảng rỗng nếu lỗi
- */
-const getStoredUsers = () => {
-  try {
-    const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.USERS)) || [];
-    return Array.isArray(storedUsers) ? storedUsers : [];
-  } catch (error) {
-    console.error("Lỗi khi đọc dữ liệu người dùng từ localStorage:", error);
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.USERS);
-    return [];
-  }
-};
-
-/**
- * Lưu danh sách người dùng vào localStorage
- * @param {Array} users - Danh sách người dùng
- */
-const saveUsersToStorage = (users) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.USERS, JSON.stringify(users));
-  } catch (error) {
-    console.error("Lỗi khi lưu dữ liệu người dùng vào localStorage:", error);
-  }
-};
-
-/**
- * Tạo mã xác nhận ngẫu nhiên 6 chữ số
- * @returns {string} Mã xác nhận
- */
-const generateVerificationCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-/**
- * Gửi email chứa mã xác nhận qua EmailJS
- * @param {Object} userData - Thông tin người dùng (username, email)
- * @param {string} code - Mã xác nhận
- * @param {Function} setMessage - Hàm cập nhật thông báo
- */
-const sendVerificationEmail = (userData, code, setMessage) => {
-  const templateParams = {
-    user_name: userData.username || "Người dùng",
-    to_email: userData.email,
-    verification_code: code,
-  };
-
-  console.log("EmailJS Config:", {
-    serviceId: process.env.REACT_APP_EMAILJS_SERVICE_ID,
-    templateId: process.env.REACT_APP_EMAILJS_VERIFICATION_TEMPLATE_ID,
-    publicKey: process.env.REACT_APP_EMAILJS_PUBLIC_KEY,
-  });
-  console.log("Template Params:", templateParams);
-
-  if (!templateParams.to_email || !templateParams.to_email.trim()) {
-    setMessage(MESSAGES.EMPTY_EMAIL);
-    return;
-  }
-
-  if (!process.env.REACT_APP_EMAILJS_VERIFICATION_TEMPLATE_ID) {
-    setMessage(MESSAGES.MISSING_TEMPLATE_ID);
-    return;
-  }
-
-  emailjs
-    .send(
-      process.env.REACT_APP_EMAILJS_SERVICE_ID,
-      process.env.REACT_APP_EMAILJS_VERIFICATION_TEMPLATE_ID,
-      templateParams,
-      process.env.REACT_APP_EMAILJS_PUBLIC_KEY
-    )
-    .then(
-      (response) => {
-        console.log("Email xác nhận gửi thành công:", response.status, response.text);
-        setMessage(MESSAGES.CODE_SENT);
-      },
-      (error) => {
-        console.error("Lỗi gửi email xác nhận:", error);
-        setMessage(`Gửi mã xác nhận thất bại: ${error.message || "Lỗi không xác định"}`);
-      }
-    );
-};
-
-// --- THÀNH PHẦN CON ---
-
-/**
- * Form đăng nhập hoặc đăng ký
- * @param {Object} props - Props chứa thông tin form và các hàm xử lý
- * @returns {JSX.Element} JSX hiển thị form
- */
-const AuthForm = React.memo(
-  ({ formData, isRegistering, onChange, onSubmit, onToggle, message }) => (
-    <div className="auth-form">
-      <input
-        type="text"
-        name="username"
-        placeholder="Tên đăng nhập"
-        className="account-input"
-        value={formData.username}
-        onChange={onChange}
-        aria-label="Nhập tên đăng nhập"
-        autoComplete={isRegistering ? "new-username" : "username"}
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Mật khẩu"
-        className="account-input"
-        value={formData.password}
-        onChange={onChange}
-        aria-label="Nhập mật khẩu"
-        autoComplete={isRegistering ? "new-password" : "current-password"}
-      />
-      {isRegistering && (
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="account-input"
-          value={formData.email}
-          onChange={onChange}
-          aria-label="Nhập email"
-          required
-        />
-      )}
-      {message && (
-        <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
-          {message}
-        </p>
-      )}
-      <div className="account-buttons">
-        {isRegistering ? (
-          <>
-            <button
-              className="account-button register-btn"
-              onClick={onSubmit}
-              aria-label="Đăng ký tài khoản"
-            >
-              Đăng ký
-            </button>
-            <button
-              className="link-button"
-              onClick={onToggle}
-              aria-label="Quay lại đăng nhập"
-            >
-              Quay lại đăng nhập
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              className="account-button login-btn"
-              onClick={onSubmit}
-              aria-label="Đăng nhập"
-            >
-              Đăng nhập
-            </button>
-            <button
-              className="link-button"
-              onClick={() => onToggle(false, true)}
-              aria-label="Quên mật khẩu"
-            >
-              Quên mật khẩu?
-            </button>
-            <button
-              className="link-button"
-              onClick={() => onToggle(true)}
-              aria-label="Chuyển sang đăng ký"
-            >
-              Chưa có tài khoản? Đăng ký
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  )
-);
-
-/**
- * Form nhập username để quên mật khẩu
- * @param {Object} props - Props chứa thông tin form và các hàm xử lý
- * @returns {JSX.Element} JSX hiển thị form nhập username
- */
-const ForgotPasswordUsernameForm = React.memo(
-  ({ username, onChange, onSubmit, onCancel, message }) => (
-    <div className="auth-form">
-      <h2>Quên mật khẩu</h2>
-      <p>Vui lòng nhập tên tài khoản của bạn</p>
-      <input
-        type="text"
-        name="username"
-        placeholder="Tên tài khoản"
-        className="account-input"
-        value={username}
-        onChange={onChange}
-        aria-label="Nhập tên tài khoản"
-      />
-      {message && (
-        <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
-          {message}
-        </p>
-      )}
-      <div className="account-buttons">
-        <button
-          className="account-button verify-btn"
-          onClick={onSubmit}
-          aria-label="Gửi mã xác nhận"
-        >
-          Gửi mã xác nhận
-        </button>
-        <button
-          className="link-button"
-          onClick={onCancel}
-          aria-label="Hủy quên mật khẩu"
-        >
-          Hủy
-        </button>
-      </div>
-    </div>
-  )
-);
-
-/**
- * Form nhập mã xác nhận và đổi mật khẩu
- * @param {Object} props - Props chứa thông tin mã, mật khẩu và các hàm xử lý
- * @returns {JSX.Element} JSX hiển thị form quên mật khẩu
- */
-const ForgotPasswordResetForm = React.memo(
-  ({ email, verificationCode, newPassword, confirmPassword, onCodeChange, onPasswordChange, onConfirmChange, onSubmit, onCancel, message }) => (
-    <div className="auth-form">
-      <h2>Quên mật khẩu</h2>
-      <p>Mã xác nhận đã được gửi đến {email}</p>
-      <input
-        type="text"
-        placeholder="Nhập mã xác nhận"
-        className="account-input"
-        value={verificationCode}
-        onChange={onCodeChange}
-        aria-label="Nhập mã xác nhận"
-      />
-      <input
-        type="password"
-        placeholder="Mật khẩu mới"
-        className="account-input"
-        value={newPassword}
-        onChange={onPasswordChange}
-        aria-label="Nhập mật khẩu mới"
-      />
-      <input
-        type="password"
-        placeholder="Xác nhận mật khẩu mới"
-        className="account-input"
-        value={confirmPassword}
-        onChange={onConfirmChange}
-        aria-label="Xác nhận mật khẩu mới"
-      />
-      {message && (
-        <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
-          {message}
-        </p>
-      )}
-      <div className="account-buttons">
-        <button
-          className="account-button verify-btn"
-          onClick={onSubmit}
-          aria-label="Xác nhận và đổi mật khẩu"
-        >
-          Xác nhận
-        </button>
-        <button
-          className="link-button"
-          onClick={onCancel}
-          aria-label="Hủy quên mật khẩu"
-        >
-          Hủy
-        </button>
-      </div>
-    </div>
-  )
-);
-
-/**
- * Form nhập mã xác nhận (đăng ký)
- * @param {Object} props - Props chứa thông tin mã và các hàm xử lý
- * @returns {JSX.Element} JSX hiển thị form xác nhận
- */
-const VerificationForm = React.memo(
-  ({ email, verificationCode, onCodeChange, onVerify, onCancel, message }) => (
-    <div className="auth-form">
-      <h2>Xác nhận mã</h2>
-      <p>Vui lòng nhập mã xác nhận đã được gửi đến {email}</p>
-      <input
-        type="text"
-        placeholder="Nhập mã xác nhận"
-        className="account-input"
-        value={verificationCode}
-        onChange={onCodeChange}
-        aria-label="Nhập mã xác nhận"
-      />
-      {message && (
-        <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
-          {message}
-        </p>
-      )}
-      <div className="account-buttons">
-        <button
-          className="account-button verify-btn"
-          onClick={onVerify}
-          aria-label="Xác nhận mã"
-        >
-          Xác nhận
-        </button>
-        <button
-          className="link-button"
-          onClick={onCancel}
-          aria-label="Hủy xác nhận"
-        >
-          Hủy
-        </button>
-      </div>
-    </div>
-  )
-);
-
-/**
- * Giao diện khi đã đăng nhập
- * @param {Object} props - Props chứa hàm đăng xuất và thông báo
- * @returns {JSX.Element} JSX hiển thị section đã đăng nhập
- */
-const LoggedInSection = React.memo(({ onLogout, message }) => (
-  <div className="logged-in-section">
-    <p>Bạn đã đăng nhập thành công!</p>
-    <button
-      className="account-button logout-btn"
-      onClick={onLogout}
-      aria-label="Đăng xuất"
-    >
-      Đăng xuất
-    </button>
-    {message && (
-      <p className={`message ${message.includes("thành công") ? "success" : "error"}`}>
-        {message}
-      </p>
-    )}
-  </div>
-));
-
-// --- THÀNH PHẦN CHÍNH ---
-
-/**
- * Trang quản lý tài khoản (đăng nhập, đăng ký, quên mật khẩu)
- * @returns {JSX.Element} JSX hiển thị trang tài khoản
- */
 const Account = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, login, logout } = useContext(AuthContext) || {
@@ -415,51 +34,43 @@ const Account = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  // Điều hướng về trang chủ nếu đã đăng nhập
   useEffect(() => {
     if (isLoggedIn) {
       navigate("/home");
     }
   }, [isLoggedIn, navigate]);
 
-  // Khởi tạo EmailJS
   useEffect(() => {
     emailjs.init(process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
-    console.log("EmailJS khởi tạo trong Account.js");
+    console.log("EmailJS initialized in Account.js");
   }, []);
 
-  // Xử lý thay đổi giá trị trong form đăng nhập/đăng ký
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setMessage("");
   }, []);
 
-  // Xử lý thay đổi username khi quên mật khẩu
   const handleForgotUsernameChange = useCallback((e) => {
     setForgotUsername(e.target.value);
     setMessage("");
   }, []);
 
-  // Xử lý thay đổi mã xác nhận
   const handleCodeChange = useCallback((e) => {
     setVerificationCode(e.target.value);
     setMessage("");
   }, []);
 
-  // Xử lý thay đổi mật khẩu mới
   const handlePasswordChange = useCallback((e) => {
     setNewPassword(e.target.value);
     setMessage("");
   }, []);
 
-  // Xử lý thay đổi xác nhận mật khẩu
   const handleConfirmChange = useCallback((e) => {
     setConfirmPassword(e.target.value);
     setMessage("");
   }, []);
 
-  // Xử lý đăng ký (gửi mã xác nhận)
   const handleRegister = useCallback(() => {
     const { username, password, email } = formData;
 
@@ -481,7 +92,6 @@ const Account = () => {
     setIsVerifying(true);
   }, [formData]);
 
-  // Xử lý xác nhận mã (đăng ký)
   const handleVerifyCode = useCallback(() => {
     if (!verificationCode.trim()) {
       setMessage(MESSAGES.EMPTY_CODE);
@@ -504,7 +114,6 @@ const Account = () => {
     }
   }, [verificationCode, generatedCode, pendingUser]);
 
-  // Xử lý nhập username và gửi mã xác nhận khi quên mật khẩu
   const handleForgotPasswordUsername = useCallback(() => {
     if (!forgotUsername.trim()) {
       setMessage(MESSAGES.INVALID_USERNAME);
@@ -525,7 +134,6 @@ const Account = () => {
     setIsForgotUsernameStep(false);
   }, [forgotUsername]);
 
-  // Xử lý xác nhận mã và đổi mật khẩu
   const handleResetPassword = useCallback(() => {
     if (!verificationCode.trim()) {
       setMessage(MESSAGES.EMPTY_CODE);
@@ -547,7 +155,6 @@ const Account = () => {
       return;
     }
 
-    // Cập nhật mật khẩu trong danh sách người dùng
     const storedUsers = getStoredUsers();
     const userIndex = storedUsers.findIndex((u) => u.username === pendingUser.username && u.email === pendingUser.email);
     if (userIndex === -1) {
@@ -555,11 +162,9 @@ const Account = () => {
       return;
     }
 
-    // Cập nhật mật khẩu mới
     storedUsers[userIndex].password = newPassword;
     saveUsersToStorage(storedUsers);
 
-    // Reset trạng thái sau khi đổi mật khẩu thành công
     setMessage(MESSAGES.RESET_SUCCESS);
     setForgotUsername("");
     setVerificationCode("");
@@ -572,7 +177,6 @@ const Account = () => {
     setTimeout(() => navigate("/"), 1000);
   }, [verificationCode, generatedCode, newPassword, confirmPassword, pendingUser, navigate]);
 
-  // Xử lý đăng nhập
   const handleLogin = useCallback(() => {
     const { username, password } = formData;
 
@@ -589,9 +193,7 @@ const Account = () => {
     }
 
     const storedUsers = getStoredUsers();
-    const foundUser = storedUsers.find(
-      (u) => u.username === username && u.password === password
-    );
+    const foundUser = storedUsers.find((u) => u.username === username && u.password === password);
 
     if (foundUser) {
       login(foundUser);
@@ -601,7 +203,6 @@ const Account = () => {
     }
   }, [formData, login, navigate]);
 
-  // Xử lý đăng xuất
   const handleLogout = useCallback(() => {
     logout();
     setMessage(MESSAGES.LOGOUT_SUCCESS);
@@ -609,7 +210,6 @@ const Account = () => {
     setTimeout(() => navigate("/"), 1000);
   }, [logout, navigate]);
 
-  // Xử lý chuyển đổi giữa các chế độ
   const handleToggle = useCallback((register = false, forgot = false) => {
     setIsRegistering(register);
     setIsForgotPassword(forgot);
@@ -622,7 +222,6 @@ const Account = () => {
     setConfirmPassword("");
   }, []);
 
-  // Hủy xác nhận mã hoặc quên mật khẩu
   const handleCancel = useCallback(() => {
     setIsVerifying(false);
     setIsForgotPassword(false);
@@ -634,7 +233,6 @@ const Account = () => {
     setForgotUsername("");
   }, []);
 
-  // Tiêu đề trang
   const pageTitle = isLoggedIn
     ? `Xin chào, ${user?.username || "Người dùng"}!`
     : isRegistering

@@ -1,91 +1,49 @@
-import React, { useEffect, useReducer, useMemo, useContext } from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../account/AuthContext";
 import { formatCurrency } from "../utils/formatters";
-import "./OrderHistory.css";
+import { AuthContext } from "../context/AuthContext";
+import { useUserOrders } from "../hooks/useUserOrders";
+import "../styles/OrderHistory.css";
 
-// --- Hằng số ---
-const LOCAL_STORAGE_ORDERS_KEY = "orders";
 const ERROR_MESSAGES = {
-  LOGIN_REQUIRED: "Vui l?ng ??ng nh?p ?? xem ??n h?ng.",
-  STORAGE_ERROR: "Không thể lấy dữ liệu đơn hàng từ bộ nhớ. Vui lòng thử lại.",
-  LOAD_ERROR: "Không thể tải lịch sử đơn hàng. Vui lòng thử lại.",
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để xem đơn hàng.",
   NO_ORDERS: "Bạn chưa có đơn hàng nào",
   LOADING: "Đang tải lịch sử đơn hàng...",
 };
 
-// --- Reducer và trạng thái ban đầu ---
-const initialState = {
-  userOrders: [],
-  isLoading: true,
-  error: null,
-};
-
-const orderReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCH_START":
-      return { ...state, isLoading: true, error: null };
-    case "FETCH_SUCCESS":
-      return { ...state, userOrders: action.payload, isLoading: false, error: null };
-    case "FETCH_ERROR":
-      return { ...state, userOrders: [], isLoading: false, error: action.payload };
-    default:
-      return state;
+const OrderItemsList = React.memo(({ items }) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    return <li>Không có sản phẩm nào</li>;
   }
-};
 
-// --- Hàm tiện ích ---
-const getOrdersFromStorage = () => {
-  try {
-    const storedData = localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY);
-    return storedData ? JSON.parse(storedData) : [];
-  } catch (error) {
-    throw new Error(ERROR_MESSAGES.STORAGE_ERROR);
-  }
-};
+  return items.map((item, index) => (
+    <li key={item.id || index}>
+      {item.name || "Sản phẩm không rõ"} (x{item.quantity || 0}) -{" "}
+      {formatCurrency((item.price || 0) * (item.quantity || 0))}
+    </li>
+  ));
+});
 
-const filterOrdersByUsername = (orders, username) =>
-  Array.isArray(orders) && username ? orders.filter((order) => order.username === username) : [];
-
-const sortOrdersByDate = (orders) =>
-  Array.isArray(orders) ? [...orders].sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
-
-// --- Custom Hook ---
-const useUserOrders = () => {
-  const { user, isLoggedIn } = useContext(AuthContext) || { user: null, isLoggedIn: false };
-  const [state, dispatch] = useReducer(orderReducer, initialState);
-
-  useEffect(() => {
-    if (!isLoggedIn || !user?.username) {
-      dispatch({ type: "FETCH_SUCCESS", payload: [] });
-      return;
-    }
-
-    dispatch({ type: "FETCH_START" });
-    try {
-      const allOrders = getOrdersFromStorage();
-      const filteredOrders = filterOrdersByUsername(allOrders, user.username);
-      const sortedOrders = sortOrdersByDate(filteredOrders);
-      dispatch({ type: "FETCH_SUCCESS", payload: sortedOrders });
-    } catch (error) {
-      dispatch({ type: "FETCH_ERROR", payload: error.message || ERROR_MESSAGES.LOAD_ERROR });
-    }
-  }, [user, isLoggedIn]);
-
-  return state;
-};
-
-// --- Thành phần con ---
 const OrderItem = React.memo(({ order }) => {
   if (!order?.id) return null;
 
   return (
     <li className="order-item" aria-label={`Đơn hàng #${order.id}`}>
-      <p><strong>ID Đơn hàng:</strong> #{order.id}</p>
-      <p><strong>Ngày đặt:</strong> {new Date(order.date).toLocaleString("vi-VN")}</p>
-      <p><strong>T?ng ti?n:</strong> {formatCurrency(order.totalPrice || 0)}</p>
-      <p><strong>Địa chỉ:</strong> {order.shippingInfo?.address || "N/A"}</p>
-      <p><strong>Điện thoại:</strong> {order.shippingInfo?.phone || "N/A"}</p>
+      <p>
+        <strong>ID đơn hàng:</strong> #{order.id}
+      </p>
+      <p>
+        <strong>Ngày đặt:</strong> {new Date(order.date).toLocaleString("vi-VN")}
+      </p>
+      <p>
+        <strong>Tổng tiền:</strong> {formatCurrency(order.totalPrice || 0)}
+      </p>
+      <p>
+        <strong>Địa chỉ:</strong> {order.shippingInfo?.address || "N/A"}
+      </p>
+      <p>
+        <strong>Điện thoại:</strong> {order.shippingInfo?.phone || "N/A"}
+      </p>
       <div className="order-items-detail">
         <h5>Chi tiết sản phẩm:</h5>
         <ul>
@@ -96,19 +54,6 @@ const OrderItem = React.memo(({ order }) => {
   );
 });
 
-const OrderItemsList = React.memo(({ items }) => {
-  if (!Array.isArray(items) || items.length === 0) {
-    return <li>Không có sản phẩm nào</li>;
-  }
-
-  return items.map((item, index) => (
-    <li key={item.id || index}>
-      {item.name || "S?n ph?m kh?ng r?"} (x{item.quantity || 0}) -{" "}
-      {formatCurrency((item.price || 0) * (item.quantity || 0))}
-    </li>
-  ));
-});
-
 const OrderStatus = ({ isLoading, error, hasOrders }) => {
   if (isLoading) {
     return <div className="order-history-status">{ERROR_MESSAGES.LOADING}</div>;
@@ -117,8 +62,8 @@ const OrderStatus = ({ isLoading, error, hasOrders }) => {
   if (error) {
     return (
       <div className="order-history-status error">
-        <p>❌ {error}</p>
-        <button onClick={() => window.location.reload()} aria-label="Thử lại tải trang">
+        <p>⚠️ {error}</p>
+        <button onClick={() => window.location.reload()} aria-label="Thử tải lại">
           Thử lại
         </button>
       </div>
@@ -132,19 +77,20 @@ const OrderStatus = ({ isLoading, error, hasOrders }) => {
   return null;
 };
 
-// --- Thành phần chính ---
 const OrderHistory = () => {
-  const { userOrders, isLoading, error } = useUserOrders();
   const { user, isLoggedIn } = useContext(AuthContext) || { user: null, isLoggedIn: false };
+  const { userOrders, isLoading, error } = useUserOrders();
+
   if (!isLoggedIn || !user?.username) {
     return (
       <div className="order-history-container">
         <div className="order-history-status">{ERROR_MESSAGES.LOGIN_REQUIRED}</div>
-        <Link to="/" className="order-history-back">??ng nh?p</Link>
+        <Link to="/" className="order-history-back">
+          Đăng nhập
+        </Link>
       </div>
     );
   }
-
 
   const hasOrders = userOrders.length > 0;
 

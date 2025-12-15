@@ -4,11 +4,11 @@ import React, { useReducer, useContext, useEffect, useCallback } from "react";
 // React Router hooks và components
 import { useNavigate, Link } from "react-router-dom";
 // Context xác thực người dùng
-import { AuthContext } from "../account/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 // Components
 import OrderHistory from "./OrderHistory";
 // Styles
-import "./UserProfilePage.css";
+import "../styles/UserProfilePage.css";
 
 // ===== CONSTANTS =====
 // Cấu hình localStorage

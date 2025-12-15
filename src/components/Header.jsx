@@ -1,8 +1,8 @@
 import React, { useContext, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../pages/CartContext";
-import { AuthContext } from "../account/AuthContext";
-import "./Header.css";
+import { CartContext } from "../context/CartContext";
+import { AuthContext } from "../context/AuthContext";
+import "../styles/Header.css";
 
 /**
  * Hàm tiện ích để tính tổng số lượng sản phẩm trong giỏ hàng

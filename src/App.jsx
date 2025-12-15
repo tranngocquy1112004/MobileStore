@@ -17,9 +17,9 @@ import AdminDashboard from "./pages/AdminDashboard"; // Component AdminDashboard
 import UserProfilePage from "./pages/UserProfilePage"; // Component UserProfilePage (trang hồ sơ người dùng)
 import CheckoutPage from "./pages/CheckoutPage";
 // Import AuthProvider (default export) và AuthContext (named export) từ cùng file
-import AuthProvider, { AuthContext } from "./account/AuthContext";
+import AuthProvider, { AuthContext } from "./context/AuthContext";
 // Import CartProvider (named export) từ file CartContext
-import { CartProvider } from "./pages/CartContext";
+import { CartProvider } from "./context/CartContext";
 
 // Import các component layout chung
 import Footer from "./components/Footer"; // Component Footer chung
