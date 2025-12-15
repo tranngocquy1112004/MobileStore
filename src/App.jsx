@@ -7,23 +7,23 @@ import React, { useContext } from "react"; // Import hook useContext từ thư v
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 // Import các page và component từ thư mục tương ứng:
-import ProductPage from "./pages/ProductPage"; // Trang danh sách sản phẩm
+import ProductPage from "./features/products/ProductPage"; // Trang danh sách sản phẩm
 // Import ProductDetail từ thư mục pages (đúng như comment đã ghi nhận chuyển sang pages)
-import ProductDetail from "./components/ProductDetail"; // Trang chi tiết sản phẩm
-import Account from "./account/Account"; // Trang đăng nhập/đăng ký/đăng xuất
-import CartPage from "./pages/CartPage"; // Trang giỏ hàng
-import OrderHistory from "./pages/OrderHistory"; // Trang lịch sử đơn hàng
-import AdminDashboard from "./pages/AdminDashboard"; // Component AdminDashboard
-import UserProfilePage from "./pages/UserProfilePage"; // Component UserProfilePage (trang hồ sơ người dùng)
-import CheckoutPage from "./pages/CheckoutPage";
+import ProductDetail from "./features/products/ProductDetail"; // Trang chi tiết sản phẩm
+import Account from "./features/auth/Account"; // Trang đăng nhập/đăng ký/đăng xuất
+import CartPage from "./features/cart/CartPage"; // Trang giỏ hàng
+import OrderHistory from "./features/orders/OrderHistory"; // Trang lịch sử đơn hàng
+import AdminDashboard from "./features/admin"; // Component AdminDashboard
+import UserProfilePage from "./features/profile/UserProfilePage"; // Component UserProfilePage (trang hồ sơ người dùng)
+import CheckoutPage from "./features/checkout";
 // Import AuthProvider (default export) và AuthContext (named export) từ cùng file
 import AuthProvider, { AuthContext } from "./context/AuthContext";
 // Import CartProvider (named export) từ file CartContext
 import { CartProvider } from "./context/CartContext";
 
 // Import các component layout chung
-import Footer from "./components/Footer"; // Component Footer chung
-import Header from "./components/Header"; // Component Header chung
+import Footer from "./features/layout/Footer"; // Component Footer chung
+import Header from "./features/layout/Header"; // Component Header chung
 
 // --- Component ProtectedRoute - Bảo vệ các route yêu cầu đăng nhập ---
 // Component này nhận các component con (children) làm prop.
