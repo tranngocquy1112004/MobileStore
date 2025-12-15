@@ -1,8 +1,9 @@
 import React, { useState, useContext, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { AuthContext } from "../account/AuthContext";
 import { CartContext } from "../pages/CartContext";
+import { formatCurrency } from "../utils/formatters";
 import "./CheckoutPage.css";
 
 // --- Các hằng số ---
@@ -61,7 +62,7 @@ const sendEmailConfirmation = (order, user, setMessage) => {
     user_name: order.shippingInfo.name,
     user_email: user.email,
     email: user.email,
-    order_total: order.totalPrice.toLocaleString("vi-VN"),
+    order_total: formatCurrency(order.totalPrice),
     order_date: new Date(order.date).toLocaleString("vi-VN"),
     items: order.items.map((item) => `${item.name} (x${item.quantity})`).join(", "),
   };
@@ -96,13 +97,13 @@ const OrderSummary = React.memo(({ cart, cartTotal, navigate }) => (
               <span className="item-name">{item.name || "Sản phẩm không rõ"}</span>
               <span className="item-quantity">x{item.quantity || 0}</span>
               <span className="item-price">
-                {((item.price || 0) * (item.quantity || 0)).toLocaleString("vi-VN")} VNĐ
+                {formatCurrency((item.price || 0) * (item.quantity || 0))}
               </span>
             </li>
           ))}
         </ul>
         <p className="checkout-total-price">
-          <strong>Tổng tiền:</strong> {cartTotal.toLocaleString("vi-VN")} VNĐ
+          <strong>Tổng tiền:</strong> {formatCurrency(cartTotal)}
         </p>
       </>
     ) : (
@@ -251,12 +252,10 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (!isLoggedIn || !user) {
       setState((prev) => ({ ...prev, message: MESSAGES.LOGIN_REQUIRED }));
-      navigate("/");
       return;
     }
     if (!cart?.length) {
       setState((prev) => ({ ...prev, message: MESSAGES.EMPTY_CART }));
-      navigate("/cart");
       return;
     }
     if (user.addresses?.length) {
@@ -270,7 +269,8 @@ const CheckoutPage = () => {
     } else {
       setState((prev) => ({ ...prev, showManualAddressForm: true }));
     }
-  }, [user, isLoggedIn, cart, navigate]);
+  }, [user, isLoggedIn, cart]);
+
 
   // Xử lý khi chọn địa chỉ đã lưu
   const handleSelectSavedAddress = (addressId) => {
@@ -371,6 +371,26 @@ const CheckoutPage = () => {
   };
 
   // Render component
+  if (!isLoggedIn || !user) {
+    return (
+      <div className="checkout-container">
+        <h1 className="page-title">Thanh to?n</h1>
+        <div className="message error">{MESSAGES.LOGIN_REQUIRED}</div>
+        <Link to="/" className="back-to-home">??ng nh?p</Link>
+      </div>
+    );
+  }
+
+  if (!cart?.length) {
+    return (
+      <div className="checkout-container">
+        <h1 className="page-title">Thanh to?n</h1>
+        <div className="message error">{MESSAGES.EMPTY_CART}</div>
+        <Link to="/cart" className="back-to-home">Quay l?i gi? h?ng</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="checkout-container">
       <h1 className="page-title">Thanh toán</h1>

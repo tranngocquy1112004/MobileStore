@@ -1,10 +1,13 @@
 import React, { useEffect, useReducer, useMemo, useContext } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../account/AuthContext";
+import { formatCurrency } from "../utils/formatters";
 import "./OrderHistory.css";
 
 // --- Hằng số ---
 const LOCAL_STORAGE_ORDERS_KEY = "orders";
 const ERROR_MESSAGES = {
+  LOGIN_REQUIRED: "Vui l?ng ??ng nh?p ?? xem ??n h?ng.",
   STORAGE_ERROR: "Không thể lấy dữ liệu đơn hàng từ bộ nhớ. Vui lòng thử lại.",
   LOAD_ERROR: "Không thể tải lịch sử đơn hàng. Vui lòng thử lại.",
   NO_ORDERS: "Bạn chưa có đơn hàng nào",
@@ -80,8 +83,7 @@ const OrderItem = React.memo(({ order }) => {
     <li className="order-item" aria-label={`Đơn hàng #${order.id}`}>
       <p><strong>ID Đơn hàng:</strong> #{order.id}</p>
       <p><strong>Ngày đặt:</strong> {new Date(order.date).toLocaleString("vi-VN")}</p>
-      <p><strong>Tổng tiền:</strong> {(order.totalPrice || 0).toLocaleString("vi-VN")} VNĐ</p>
-      <p><strong>Người nhận:</strong> {order.shippingInfo?.name || "N/A"}</p>
+      <p><strong>T?ng ti?n:</strong> {formatCurrency(order.totalPrice || 0)}</p>
       <p><strong>Địa chỉ:</strong> {order.shippingInfo?.address || "N/A"}</p>
       <p><strong>Điện thoại:</strong> {order.shippingInfo?.phone || "N/A"}</p>
       <div className="order-items-detail">
@@ -101,8 +103,8 @@ const OrderItemsList = React.memo(({ items }) => {
 
   return items.map((item, index) => (
     <li key={item.id || index}>
-      {item.name || "Sản phẩm không rõ"} (x{item.quantity || 0}) -{" "}
-      {((item.price || 0) * (item.quantity || 0)).toLocaleString("vi-VN")} VNĐ
+      {item.name || "S?n ph?m kh?ng r?"} (x{item.quantity || 0}) -{" "}
+      {formatCurrency((item.price || 0) * (item.quantity || 0))}
     </li>
   ));
 });
@@ -133,6 +135,16 @@ const OrderStatus = ({ isLoading, error, hasOrders }) => {
 // --- Thành phần chính ---
 const OrderHistory = () => {
   const { userOrders, isLoading, error } = useUserOrders();
+  const { user, isLoggedIn } = useContext(AuthContext) || { user: null, isLoggedIn: false };
+  if (!isLoggedIn || !user?.username) {
+    return (
+      <div className="order-history-container">
+        <div className="order-history-status">{ERROR_MESSAGES.LOGIN_REQUIRED}</div>
+        <Link to="/" className="order-history-back">??ng nh?p</Link>
+      </div>
+    );
+  }
+
 
   const hasOrders = userOrders.length > 0;
 

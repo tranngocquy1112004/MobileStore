@@ -2,16 +2,17 @@ import React, { useContext, useMemo, useState } from "react"; // Import các Rea
 import { Link, useNavigate } from "react-router-dom"; // Import các component và hook hỗ trợ định tuyến: Link để liên kết, useNavigate để điều hướng
 import { CartContext } from "./CartContext"; // Import context giỏ hàng
 import { AuthContext } from "../account/AuthContext"; // Import context xác thực người dùng
+import { formatCurrency } from "../utils/formatters";
 import "./CartPage.css"; // Import file CSS của trang giỏ hàng
 
 // --- CÁC HẺ SỐ THÔNG BÁO (MESSAGES) ---
 // Định nghĩa các thông báo sẽ hiển thị cho người dùng trong các trường hợp khác nhau
 const MESSAGES = {
   EMPTY_CART: "Giỏ hàng của bạn đang trống.",
-  LOGIN_REQUIRED: "Vui lòng đăng nhập để thanh toán.",
-  CONTEXT_ERROR: "Lỗi hệ thống: Không thể truy cập giỏ hàng hoặc thông tin đăng nhập.",
+  LOGIN_REQUIRED: "Vui lòng đăng nhập để tiếp tục.",
+  CONTEXT_ERROR: "Không thể truy cập giỏ hàng. Vui lòng thử lại.",
   BACK_TO_SHOP: "Quay lại cửa hàng",
-  PROCEED_TO_CHECKOUT: "Tiến hành Thanh toán",
+  PROCEED_TO_CHECKOUT: "Tiến hành thanh toán",
   TOTAL_LABEL: "Tổng cộng:",
 };
 
@@ -27,6 +28,7 @@ const useCart = () => {
   const authContext = useContext(AuthContext); // Lấy thông tin từ AuthContext
   const navigate = useNavigate(); // Hook điều hướng trang
   const [error, setError] = useState(null); // State lưu trữ thông báo lỗi
+  const [guardMessage, setGuardMessage] = useState(null);
 
   // Nếu không lấy được thông tin từ context, cập nhật error và trả về
   if (!cartContext || !authContext) {
@@ -44,29 +46,26 @@ const useCart = () => {
 
   // Hàm xử lý khi người dùng nhấn "Tiến hành Thanh toán"
   const handleProceedToCheckout = () => {
-    // Nếu giỏ hàng trống, hiển thị thông báo và không thực hiện chuyển hướng
     if (!cart.length) {
-      alert(MESSAGES.EMPTY_CART);
+      setGuardMessage(MESSAGES.EMPTY_CART);
       return;
     }
-    // Nếu người dùng chưa đăng nhập, hiển thị thông báo và điều hướng về trang chủ
     if (!isLoggedIn) {
-      alert(MESSAGES.LOGIN_REQUIRED);
+      setGuardMessage(MESSAGES.LOGIN_REQUIRED);
       navigate("/");
       return;
     }
-    // Nếu đã đăng nhập và giỏ hàng có sản phẩm, điều hướng đến trang thanh toán
+    setGuardMessage(null);
     navigate("/checkout");
   };
-
   return {
     cart,
     cartTotal,
     isLoggedIn,
-    // Nếu các hàm chưa được định nghĩa trong context, in cảnh báo ra console
     removeFromCart: removeFromCart || (() => console.warn("removeFromCart not implemented")),
     updateQuantity: updateQuantity || (() => console.warn("updateQuantity not implemented")),
     handleProceedToCheckout,
+    guardMessage,
     error,
   };
 };
@@ -95,9 +94,6 @@ const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
       <div className="item-details">
         <span className="item-name">{item.name}</span>
         {/* Hiển thị giá sản phẩm được định dạng theo chuẩn tiền Việt */}
-        <span className="item-price">
-          {item.price.toLocaleString("vi-VN")} VNĐ
-        </span>
         {/* Điều chỉnh số lượng sản phẩm */}
         <div className="quantity-control">
           <button onClick={handleDecrease} disabled={item.quantity <= 1} aria-label="Giảm số lượng">
@@ -110,7 +106,7 @@ const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
         </div>
         {/* Hiển thị tổng tiền cho sản phẩm: giá x số lượng */}
         <span className="item-subtotal">
-          Tổng: {(item.price * item.quantity).toLocaleString("vi-VN")} VNĐ
+          Tổng: {formatCurrency((item.price || 0) * (item.quantity || 0))}
         </span>
       </div>
       {/* Nút xóa sản phẩm khỏi giỏ */}
@@ -126,7 +122,7 @@ const CartItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
 const CartSummary = React.memo(({ cartTotal, isLoggedIn, onProceedToCheckout }) => (
   <div className="cart-summary">
     <p className="total-price">
-      <strong>{MESSAGES.TOTAL_LABEL}</strong> {cartTotal.toLocaleString("vi-VN")} VNĐ
+      <strong>{MESSAGES.TOTAL_LABEL}</strong> {formatCurrency(cartTotal)}
     </p>
     <button
       className="proceed-to-checkout-button"
@@ -164,11 +160,21 @@ const CartPage = () => {
     removeFromCart,
     updateQuantity,
     handleProceedToCheckout,
+    guardMessage,
     error,
-  } = useCart(); // Lấy các giá trị cần thiết từ hook useCart
+  } = useCart(); // L?y c?c gi? tr? c?n thi?t t? hook useCart
 
   // Nếu có lỗi từ custom hook, hiển thị thông báo lỗi
   if (error) return <div className="cart-error-message">{error}</div>;
+  if (!isLoggedIn) {
+    return (
+      <div className="cart-container">
+        <div className="cart-error-message">{MESSAGES.LOGIN_REQUIRED}</div>
+        <Link to="/" className="back-to-home">{MESSAGES.BACK_TO_SHOP}</Link>
+      </div>
+    );
+  }
+
 
   // Kiểm tra giỏ hàng có chứa sản phẩm nào hay không
   const hasItems = cart.length > 0;
@@ -176,6 +182,9 @@ const CartPage = () => {
   return (
     <div className="cart-container">
       <h1 className="page-title">Giỏ hàng của bạn</h1>
+      {guardMessage && (
+        <div className="cart-error-message">{guardMessage}</div>
+      )}
       {hasItems ? (
         <>
           {/* Danh sách các sản phẩm trong giỏ */}

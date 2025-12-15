@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import "./AdminDashboard.css";
+import { formatCurrency } from "../utils/formatters";
 
 // --- Constants ---
 const LOCAL_STORAGE_USERS_KEY = "users";
@@ -31,10 +32,10 @@ const OrderItem = React.memo(({ order }) => {
   if (!order?.id) return null;
 
   return (
-    <li className="order-item-admin" aria-label={`Đơn hàng #${order.id}`}>
-      <p><strong>ID Đơn hàng:</strong> #{order.id}</p>
+    <li className="order-item-admin" aria-label={`??n h?ng #${order.id}`}>
+      <p><strong>ID đơn hàng:</strong> #{order.id}</p>
       <p><strong>Ngày:</strong> {order.date ? new Date(order.date).toLocaleString("vi-VN") : "N/A"}</p>
-      <p><strong>Tổng cộng:</strong> {(order.totalPrice || 0).toLocaleString("vi-VN")} VNĐ</p>
+      <p><strong>Tổng cộng:</strong> {formatCurrency(order.totalPrice || 0)}</p>
       <p><strong>Người nhận:</strong> {order.shippingInfo?.name || "N/A"}</p>
       <p><strong>Địa chỉ:</strong> {order.shippingInfo?.address || "N/A"}</p>
       <p><strong>Điện thoại:</strong> {order.shippingInfo?.phone || "N/A"}</p>
@@ -43,13 +44,13 @@ const OrderItem = React.memo(({ order }) => {
         <ul role="list">
           {order.items.map((item, index) => (
             <li key={item?.id || index}>
-              {item?.name || "Sản phẩm không rõ"} (x{item?.quantity || 0}) -{" "}
-              {((item?.price || 0) * (item?.quantity || 0)).toLocaleString("vi-VN")} VNĐ
+              {item?.name || "S?n ph?m kh?ng r?"} (x{item?.quantity || 0}) -{" "}
+              {formatCurrency((item?.price || 0) * (item?.quantity || 0))}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="empty-state-small">Không có sản phẩm trong đơn hàng này.</p>
+        <p className="empty-state-small">Không có sản phẩm nào trong đơn hàng.</p>
       )}
     </li>
   );

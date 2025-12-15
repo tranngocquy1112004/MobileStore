@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext, useCallback } from "react"; // 
 import { Link, useParams, useNavigate } from "react-router-dom"; // Import các component và hook định tuyến từ react-router-dom
 import { CartContext } from "../pages/CartContext"; // Import context giỏ hàng để sử dụng trong component
 import { AuthContext } from "../account/AuthContext"; // Import context xác thực người dùng
+import { formatCurrency } from "../utils/formatters";
 import "./ProductDetail.css"; // Import file CSS dành cho component ProductDetail
 
 // Khai báo các hằng số sử dụng trong component
@@ -220,9 +221,7 @@ const ProductDetail = () => {
         />
         
         <div className="price-section">
-          <p className="price">
-            💰 {product.price?.toLocaleString("vi-VN") || '0'} VNĐ {/* Định dạng giá sản phẩm theo tiền tệ Việt Nam */}
-          </p>
+          <p className="price">{formatCurrency(product.price)}</p>
         </div>
         
         <p className="description">
